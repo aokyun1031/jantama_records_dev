@@ -49,7 +49,7 @@ body{
 .hero{text-align:center;padding:48px 20px 40px;margin-bottom:32px;position:relative;overflow:hidden}
 .hero-tiles{
   position:absolute;top:0;left:0;width:100%;height:100%;
-  font-size:28px;opacity:0.08;pointer-events:none;
+  font-size:28px;opacity:0.25;pointer-events:none;
   display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px;
   animation:tilesDrift 30s linear infinite;
 }
@@ -59,6 +59,7 @@ body{
   color:#fff;font-size:0.7rem;font-weight:700;
   padding:4px 14px;border-radius:20px;margin-bottom:16px;letter-spacing:2px;
   animation:fadeDown 0.8s ease both;
+  box-shadow:0 2px 12px rgba(184,160,232,0.3);
 }
 .hero-title{
   font-family:'Inter','Noto Sans JP',sans-serif;
@@ -68,6 +69,7 @@ body{
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   animation:titleGrad 6s ease infinite, fadeUp 1s ease both;
   line-height:1.2;margin-bottom:12px;
+  filter:drop-shadow(0 2px 8px rgba(155,140,232,0.2));
 }
 @keyframes titleGrad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -76,14 +78,17 @@ body{
 .hero-rules span{
   display:inline-block;background:var(--card);backdrop-filter:blur(8px);
   padding:4px 12px;border-radius:8px;margin:3px;font-weight:600;
-  border:1px solid rgba(255,255,255,0.6);
+  border:1px solid rgba(255,255,255,0.6);transition:transform 0.2s,box-shadow 0.2s;
 }
-.hero-record{margin-top:20px;animation:fadeUp 1s ease 0.6s both}
+.hero-rules span:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(100,80,160,0.1)}
+.hero-record{margin-top:20px;animation:fadeUp 1s ease 0.6s both;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
 .hero-record-inner{
   display:inline-flex;align-items:center;gap:8px;
   background:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.05));
   border:1px solid rgba(212,168,76,0.3);padding:8px 20px;border-radius:12px;font-size:0.82rem;
+  transition:transform 0.2s,box-shadow 0.2s;
 }
+.hero-record-inner:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(212,168,76,0.15)}
 .hero-record-inner .label{color:var(--gold);font-weight:700}
 .hero-record-inner .value{font-family:'Inter',sans-serif;font-weight:800;font-size:1.1rem;color:var(--gold)}
 .hero-record-inner .player{color:var(--text-sub);font-weight:600}
@@ -104,7 +109,7 @@ body{
 .step-circle.done{background:linear-gradient(135deg,var(--mint),#48b090);color:#fff;box-shadow:0 4px 16px rgba(92,200,176,0.3)}
 .step-circle.active{
   background:linear-gradient(135deg,var(--pink),var(--coral));color:#fff;
-  box-shadow:0 4px 16px rgba(232,140,173,0.4);animation:pulse 2s ease infinite;
+  box-shadow:0 4px 16px rgba(232,140,173,0.4),0 0 0 4px rgba(232,140,173,0.15);animation:pulse 2s ease infinite;
 }
 .step-circle.upcoming{background:rgba(0,0,0,0.04);color:var(--text-light);border:2px dashed rgba(0,0,0,0.1)}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
@@ -118,7 +123,7 @@ body{
 
 /* Section */
 .section{margin-bottom:32px}
-.section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:0 4px}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:0 4px;padding-bottom:10px;border-bottom:2px solid rgba(155,140,232,0.12)}
 .section-title{font-size:1.2rem;font-weight:800;letter-spacing:1px}
 .section-badge{font-size:0.6rem;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:1px}
 .badge-live{background:linear-gradient(135deg,#fce4ec,#f8bbd0);color:#c0507a;animation:pulse 2s ease infinite}
@@ -137,6 +142,9 @@ body{
 }
 .standing-item.visible{opacity:1;transform:translateY(0)}
 .standing-item:hover{background:var(--card-hover);transform:translateY(-2px) !important;box-shadow:var(--shadow)}
+.standing-item.top-1{border-left:3px solid var(--gold)}
+.standing-item.top-2{border-left:3px solid #a8b4c4}
+.standing-item.top-3{border-left:3px solid #c8956c}
 .standing-bar{
   position:absolute;top:0;left:0;height:100%;opacity:0.10;
   border-radius:var(--radius-sm);width:0;
@@ -155,6 +163,22 @@ body{
   font-size:0.55rem;font-weight:700;
   background:linear-gradient(135deg,#fff3e0,#ffe0b2);color:#e65100;
   padding:2px 7px;border-radius:6px;
+}
+.badge-elim{
+  font-size:0.55rem;font-weight:700;
+  background:linear-gradient(135deg,#f5f5f5,#e0e0e0);color:#888;
+  padding:2px 7px;border-radius:6px;
+}
+.standing-item.eliminated{opacity:0.55}
+.standing-item.eliminated .standing-score{color:var(--text-light)!important}
+.standing-elim-divider{
+  text-align:center;padding:12px 0 6px;color:var(--text-light);
+  font-size:0.7rem;font-weight:700;letter-spacing:2px;
+  display:flex;align-items:center;gap:12px;
+}
+.standing-elim-divider::before,.standing-elim-divider::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,0,0,0.1),transparent);
 }
 .medal{font-size:1.1rem;line-height:1}
 .standing-divider{
@@ -180,6 +204,7 @@ body{
 .tab-btn.active{
   background:linear-gradient(135deg,var(--purple),var(--pink));
   color:#fff;border-color:transparent;box-shadow:0 4px 16px rgba(155,140,232,0.3);
+  transform:translateY(-1px);
 }
 .tab-btn small{font-weight:400;font-size:0.6rem;opacity:0.8}
 .tab-content{display:none;animation:tabIn 0.4s ease}
@@ -191,9 +216,9 @@ body{
 .table-card{
   background:var(--card);backdrop-filter:blur(8px);
   border:1px solid var(--glass-border);border-radius:var(--radius-sm);
-  padding:12px;box-shadow:var(--shadow-sm);transition:transform 0.3s;
+  padding:12px;box-shadow:var(--shadow-sm);transition:transform 0.3s,box-shadow 0.3s;
 }
-.table-card:hover{transform:translateY(-2px)}
+.table-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
 .table-card-head{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid rgba(155,140,232,0.15);
@@ -236,7 +261,9 @@ body{
   display:inline-flex;flex-direction:column;align-items:center;gap:4px;
   background:linear-gradient(135deg,rgba(212,168,76,0.1),rgba(212,168,76,0.03));
   border:1px solid rgba(212,168,76,0.2);border-radius:var(--radius-sm);padding:16px 32px;
+  transition:transform 0.3s,box-shadow 0.3s;
 }
+.record-highlight:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(100,80,160,0.12)}
 .record-label{font-size:0.7rem;color:var(--gold);font-weight:700}
 .record-score{font-family:'Inter',sans-serif;font-size:2.2rem;font-weight:900;color:var(--gold);letter-spacing:1px}
 .record-player{font-size:0.85rem;color:var(--text-sub);font-weight:600}
@@ -253,6 +280,40 @@ body{
   border-radius:var(--radius-sm);border:1px dashed rgba(255,152,0,0.3);
 }
 .note-small{text-align:right;margin-top:4px;font-size:0.6rem;color:var(--text-light)}
+
+/* Table Detail Results */
+.table-details{margin-top:20px}
+.table-detail-block{
+  background:var(--card);backdrop-filter:blur(12px);
+  border:1px solid var(--glass-border);border-radius:var(--radius-sm);
+  padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow-sm);
+  transition:box-shadow 0.3s;
+}
+.table-detail-block:hover{box-shadow:var(--shadow)}
+.table-detail-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;padding-bottom:8px;
+  border-bottom:2px solid rgba(155,140,232,0.15);
+}
+.table-detail-name{font-weight:800;font-size:0.9rem;color:var(--purple)}
+.table-detail-badge{font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:8px}
+.badge-top{background:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.08));color:var(--gold);border:1px solid rgba(212,168,76,0.25)}
+.table-detail-row{
+  display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;
+  padding:6px 8px;border-radius:6px;font-size:0.85rem;
+}
+.table-detail-row:nth-child(1){background:linear-gradient(90deg,rgba(212,168,76,0.08),transparent)}
+.table-detail-pos{font-family:'Inter',sans-serif;font-weight:800;font-size:0.75rem;color:var(--text-light);text-align:center}
+.table-detail-pos.pos-1{color:var(--gold)}
+.table-detail-player{font-weight:600;display:flex;align-items:center;gap:5px}
+.table-detail-score{font-family:'Inter',sans-serif;font-weight:700;font-size:0.9rem}
+.table-detail-score.plus{color:var(--plus-text)}
+.table-detail-score.minus{color:var(--minus-text)}
+.table-detail-pending{
+  text-align:center;padding:12px;color:var(--text-light);font-size:0.75rem;font-weight:600;
+  background:linear-gradient(135deg,rgba(255,248,225,0.5),rgba(255,224,178,0.3));
+  border-radius:var(--radius-sm);border:1px dashed rgba(255,152,0,0.3);
+}
 
 .reveal{opacity:0;transform:translateY(24px);transition:all 0.7s cubic-bezier(0.4,0,0.2,1)}
 .reveal.visible{opacity:1;transform:translateY(0)}
@@ -279,7 +340,7 @@ body{
 <!-- Hero -->
 <section class="hero">
   <div class="hero-tiles">&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;&#x1F010;&#x1F011;&#x1F012;&#x1F013;&#x1F014;&#x1F015;&#x1F016;&#x1F017;&#x1F018;&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;&#x1F01D;&#x1F01E;&#x1F01F;&#x1F020;&#x1F021;&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;</div>
-  <div class="hero-badge">MAHJONG TOURNAMENT</div>
+  <div class="hero-badge">麻雀トーナメント</div>
   <h1 class="hero-title">最強位戦</h1>
   <div class="hero-rules">
     <span>赤4</span><span>60秒</span><span>トビ無</span>
@@ -322,39 +383,39 @@ body{
   </div>
 </section>
 
+<!-- Round Details -->
+<section class="section reveal">
+  <div class="section-header">
+    <div class="section-title">&#x1F4CB; 対戦結果</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn" onclick="switchTab(0)">1回戦<br><small>5卓 20名</small></button>
+    <button class="tab-btn" onclick="switchTab(1)">2回戦<br><small>4卓 16名</small></button>
+    <button class="tab-btn active" onclick="switchTab(2)">3回戦<br><small>3卓 12名</small></button>
+  </div>
+
+  <!-- Round 1 -->
+  <div class="tab-content" id="tab0"></div>
+  <!-- Round 2 -->
+  <div class="tab-content" id="tab1"></div>
+  <!-- Round 3 -->
+  <div class="tab-content active" id="tab2"></div>
+</section>
+
 <!-- Cumulative Standings -->
 <section class="section reveal" id="standings-section">
   <div class="section-header">
-    <div class="section-title">&#x1F4CA; 総合ランキング</div>
-    <span class="section-badge badge-live">LIVE</span>
+    <div class="section-title">&#x1F4CA; 総合ポイント</div>
+    <!-- <span class="section-badge badge-live">LIVE</span> -->
   </div>
   <div id="standings"></div>
   <div class="note-small">※ 3回戦 3卓は未対戦のため暫定順位</div>
 </section>
 
-<!-- Round Details -->
-<section class="section reveal">
-  <div class="section-header">
-    <div class="section-title">&#x1F4CB; 各回戦 詳細</div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(0)">1回戦<br><small>5卓 20名</small></button>
-    <button class="tab-btn" onclick="switchTab(1)">2回戦<br><small>4卓 16名</small></button>
-    <button class="tab-btn" onclick="switchTab(2)">3回戦<br><small>3卓 12名</small></button>
-  </div>
-
-  <!-- Round 1 -->
-  <div class="tab-content active" id="tab0"></div>
-  <!-- Round 2 -->
-  <div class="tab-content" id="tab1"></div>
-  <!-- Round 3 -->
-  <div class="tab-content" id="tab2"></div>
-</section>
-
 <!-- Records -->
 <section class="records reveal">
-  <div class="records-title">TOURNAMENT RECORDS</div>
+  <div class="records-title">トーナメントレコード</div>
   <div class="record-highlight">
     <span class="record-label">大会最高得点</span>
     <span class="record-score" data-count="65400">0</span>
@@ -367,7 +428,7 @@ body{
   </div>
 </section>
 
-<div class="footer">最強位戦 - Jantama Tournament</div>
+<div class="footer">最強位戦 - 麻雀トーナメント</div>
 
 </div>
 
@@ -377,18 +438,29 @@ var MAX_BAR = 130;
 var MEDALS = ['\u{1F947}','\u{1F948}','\u{1F949}'];
 
 var standings = [
-  {rank:1,name:'みか',total:118.0,r:[22.3,54.6,41.1],pending:false},
-  {rank:2,name:'ホロホロ',total:102.9,r:[10.9,43.4,48.6],pending:false},
-  {rank:3,name:'あはん',total:101.3,r:[82.5,18.8],pending:true},
-  {rank:4,name:'がちゃ',total:76.8,r:[51.9,24.9],pending:true},
-  {rank:5,name:'ぎり',total:68.7,r:[10.2,58.5],pending:true},
-  {rank:6,name:'シーマ',total:55.5,r:[51.7,2.3,1.5],pending:false},
-  {rank:7,name:'みーた',total:47.8,r:[26.9,-10.3,31.2],pending:false},
-  {rank:8,name:'あき',total:-0.7,r:[-16.1,37.3,-21.9],pending:false},
-  {rank:9,name:'するが',total:-1.2,r:[-44.4,10.0,33.2],pending:false},
-  {rank:10,name:'イラチ',total:-53.4,r:[-49.1,-4.3],pending:true},
-  {rank:11,name:'りあ',total:-68.0,r:[-6.5,-33.3,-28.2],pending:false},
-  {rank:12,name:'がう',total:-73.0,r:[28.7,3.8,-105.5],pending:false}
+  // 現役（3回戦進出）
+  {rank:1,name:'みか',total:118.0,r:[22.3,54.6,41.1],pending:false,elim:0},
+  {rank:2,name:'ホロホロ',total:102.9,r:[10.9,43.4,48.6],pending:false,elim:0},
+  {rank:3,name:'あはん',total:101.3,r:[82.5,18.8],pending:true,elim:0},
+  {rank:4,name:'がちゃ',total:76.8,r:[51.9,24.9],pending:true,elim:0},
+  {rank:5,name:'ぎり',total:68.7,r:[10.2,58.5],pending:true,elim:0},
+  {rank:6,name:'シーマ',total:55.5,r:[51.7,2.3,1.5],pending:false,elim:0},
+  {rank:7,name:'みーた',total:47.8,r:[26.9,-10.3,31.2],pending:false,elim:0},
+  {rank:8,name:'あき',total:-0.7,r:[-16.1,37.3,-21.9],pending:false,elim:0},
+  {rank:9,name:'するが',total:-1.2,r:[-44.4,10.0,33.2],pending:false,elim:0},
+  {rank:10,name:'イラチ',total:-53.4,r:[-49.1,-4.3],pending:true,elim:0},
+  {rank:11,name:'りあ',total:-68.0,r:[-6.5,-33.3,-28.2],pending:false,elim:0},
+  {rank:12,name:'がう',total:-73.0,r:[28.7,3.8,-105.5],pending:false,elim:0},
+  // 2回戦敗退
+  {rank:13,name:'ぶる',total:-22.7,r:[11.9,-34.6],pending:false,elim:2},
+  {rank:14,name:'そぼろ',total:-27.4,r:[12.2,-39.6],pending:false,elim:2},
+  {rank:15,name:'けちゃこ',total:-71.2,r:[1.1,-72.3],pending:false,elim:2},
+  {rank:16,name:'梅',total:-80.4,r:[-22.0,-58.4],pending:false,elim:2},
+  // 1回戦敗退
+  {rank:17,name:'こいぬ',total:40.3,r:[40.3],pending:false,elim:1},
+  {rank:18,name:'ぱーらめんこ',total:-63.7,r:[-63.7],pending:false,elim:1},
+  {rank:19,name:'あーす',total:-72.8,r:[-72.8],pending:false,elim:1},
+  {rank:20,name:'なぎ',total:-76.0,r:[-76.0],pending:false,elim:1}
 ];
 
 var r1Tables = [
@@ -451,23 +523,39 @@ function barW(s){return Math.min(Math.abs(s)/MAX_BAR*100,100)}
   var box=document.getElementById('standings');
   var html='';
   var shownDivider=false;
+  var shownElimDivider=false;
   for(var i=0;i<standings.length;i++){
     var p=standings[i];
-    if(p.total<0 && !shownDivider){
+    // 敗退者セクション区切り
+    if(p.elim>0 && !shownElimDivider){
+      shownElimDivider=true;
+      html+='<div class="standing-elim-divider">\u25BC 敗退者</div>';
+    }
+    // ±0 ライン
+    if(p.elim===0 && p.total<0 && !shownDivider){
       shownDivider=true;
       html+='<div class="standing-divider">\u00B1 0</div>';
     }
     var c=cls(p.total);
     var bw=barW(p.total);
+    // ポイント推移テキスト
     var detail=p.r.map(function(v){return (v>=0?'+':'')+v.toFixed(1)}).join(' \u2192 ');
+    if(p.elim===1) detail+=' \u2192 1回戦敗退';
+    else if(p.elim===2) detail+=' \u2192 2回戦敗退';
     var rankHtml=p.rank<=3?'<span class="medal">'+MEDALS[p.rank-1]+'</span>':''+p.rank;
-    var pendHtml=p.pending?'<span class="badge-pending">3回戦未</span>':'';
+    // バッジ
+    var badgeHtml='';
+    if(p.pending) badgeHtml='<span class="badge-pending">3回戦未</span>';
+    else if(p.elim===1) badgeHtml='<span class="badge-elim">1回戦敗退</span>';
+    else if(p.elim===2) badgeHtml='<span class="badge-elim">2回戦敗退</span>';
 
-    html+='<div class="standing-item" data-delay="'+(i*0.08)+'" data-bar="'+bw+'">'
+    var topCls=p.rank<=3?' top-'+p.rank:'';
+    var elimCls=p.elim>0?' eliminated':'';
+    html+='<div class="standing-item'+topCls+elimCls+'" data-delay="'+(i*0.08)+'" data-bar="'+bw+'">'
       +'<div class="standing-bar '+c+'"></div>'
       +'<div class="standing-rank">'+rankHtml+'</div>'
       +'<div class="standing-info">'
-        +'<div class="standing-name">'+esc(p.name)+' '+pendHtml+'</div>'
+        +'<div class="standing-name">'+esc(p.name)+' '+badgeHtml+'</div>'
         +'<div class="standing-detail">'+detail+'</div>'
       +'</div>'
       +'<div class="standing-score '+c+'" data-target="'+p.total+'">'+fmt(p.total)+'</div>'
@@ -527,28 +615,79 @@ function renderElim(results,startRank){
   return html+'</div>';
 }
 
+// Build score lookup from results arrays
+function buildScoreMap(above,below){
+  var map={};
+  for(var i=0;i<above.length;i++) map[above[i][0]]=above[i][1];
+  for(var i=0;i<below.length;i++) map[below[i][0]]=below[i][1];
+  return map;
+}
+
+// Render per-table detail results
+function renderTableDetails(tables,scoreMap,opts){
+  var html='<div class="table-details">';
+  var posLabels=['1st','2nd','3rd','4th'];
+  for(var i=0;i<tables.length;i++){
+    var t=tables[i];
+    var isPending=opts&&opts.showDone&&!t.done;
+    html+='<div class="table-detail-block">';
+    html+='<div class="table-detail-head">'
+      +'<span class="table-detail-name">'+esc(t.name)+' 結果</span>';
+    if(isPending){
+      html+='<span class="table-detail-badge" style="background:rgba(255,152,0,0.1);color:#e65100;border:1px solid rgba(255,152,0,0.3)">\u23F3 未対戦</span>';
+    }
+    html+='</div>';
+    if(isPending){
+      html+='<div class="table-detail-pending">'+t.players.map(function(p){return esc(p)}).join('・')+' の対戦待ち</div>';
+    } else {
+      // Sort players by score descending
+      var sorted=t.players.map(function(p){return {name:p,score:scoreMap[p]||0}});
+      sorted.sort(function(a,b){return b.score-a.score});
+      for(var j=0;j<sorted.length;j++){
+        var p=sorted[j];
+        var posCls=j===0?'pos-1':'';
+        var trophy=j===0?'\u{1F451} ':'';
+        html+='<div class="table-detail-row">'
+          +'<div class="table-detail-pos '+posCls+'">'+posLabels[j]+'</div>'
+          +'<div class="table-detail-player">'+trophy+esc(p.name)+'</div>'
+          +'<div class="table-detail-score '+cls(p.score)+'">'+fmt(p.score)+'</div>'
+        +'</div>';
+      }
+    }
+    html+='</div>';
+  }
+  return html+'</div>';
+}
+
+var r1Scores=buildScoreMap(r1Above,r1Below);
+var r2Scores=buildScoreMap(r2Above,r2Below);
+var r3Scores=buildScoreMap(r3Above,r3Below);
+
+
 // Round 1
 document.getElementById('tab0').innerHTML=
   renderTables(r1Tables,null)
-  +'<div class="results-list">'+renderResults(r1Above,1)+'</div>'
+  +renderTableDetails(r1Tables,r1Scores,null)
+  +'<div class="results-list"><div class="results-sub">全体順位</div>'+renderResults(r1Above,1)+'</div>'
   +renderElim(r1Below,17);
 
 // Round 2
 document.getElementById('tab1').innerHTML=
   renderTables(r2Tables,null)
-  +'<div class="results-list">'+renderResults(r2Above,1)+'</div>'
+  +renderTableDetails(r2Tables,r2Scores,null)
+  +'<div class="results-list"><div class="results-sub">全体順位</div>'+renderResults(r2Above,1)+'</div>'
   +renderElim(r2Below,13);
 
 // Round 3
 document.getElementById('tab2').innerHTML=
   renderTables(r3Tables,{showDone:true})
+  +renderTableDetails(r3Tables,r3Scores,{showDone:true})
   +'<div class="results-list">'
     +'<div class="results-sub">1卓・2卓 結果</div>'
     +renderResults(r3Above,1)
     +'<div class="result-divider"></div>'
     +renderResults(r3Below,5)
   +'</div>'
-  +'<div class="pending-note">\u23F3 3卓（あはん・イラチ・がちゃ・ぎり）の対戦待ち</div>';
 
 // ===== TAB SWITCHING =====
 function switchTab(idx){
