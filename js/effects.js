@@ -3,18 +3,8 @@
    Particles, scroll animations, counters, finals effects
    ====================== */
 
-// Background particles
-(function(){
-  var c=['#d0b8f0','#f0b8c8','#b8e8d8','#f0d8a0','#a8c8f0','#f0a8b8'];
-  var el=document.getElementById('particles');
-  for(var i=0;i<18;i++){
-    var d=document.createElement('div');
-    d.className='particle';
-    var sz=6+Math.random()*14;
-    d.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;background:'+c[i%c.length]+';animation-delay:'+(Math.random()*20)+'s;animation-duration:'+(12+Math.random()*16)+'s;bottom:-'+sz+'px';
-    el.appendChild(d);
-  }
-})();
+// Background particles — initial build handled by theme-toggle.js
+// (particles are rebuilt on every theme switch with matching colors)
 
 // Scroll reveal
 var revealObs=new IntersectionObserver(function(entries){

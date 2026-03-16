@@ -9,8 +9,19 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/finals.css">
+<link rel="stylesheet" href="css/theme-dark.css" id="theme-dark">
+<link rel="stylesheet" href="css/theme-toggle.css">
 </head>
 <body>
+
+<!-- Theme Toggle -->
+<div class="theme-toggle" id="theme-toggle">
+  <span class="theme-toggle-icon theme-toggle-sun">&#x2600;</span>
+  <div class="theme-toggle-track" id="theme-track">
+    <div class="theme-toggle-thumb"></div>
+  </div>
+  <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
+</div>
 
 <!-- Floating Particles -->
 <div class="particles" id="particles"></div>
@@ -169,5 +180,6 @@
 <script src="js/data.js"></script>
 <script src="js/render.js"></script>
 <script src="js/effects.js"></script>
+<script src="js/theme-toggle.js"></script>
 </body>
 </html>
