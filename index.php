@@ -318,6 +318,254 @@ body{
 .reveal{opacity:0;transform:translateY(24px);transition:all 0.7s cubic-bezier(0.4,0,0.2,1)}
 .reveal.visible{opacity:1;transform:translateY(0)}
 
+/* ===== FINALS SHOWDOWN SECTION ===== */
+.finals-section{
+  position:relative;margin-bottom:40px;overflow:visible;
+}
+.finals-stage{
+  position:relative;
+  background:linear-gradient(135deg,rgba(20,15,40,0.95),rgba(40,20,60,0.92),rgba(20,15,50,0.95));
+  border-radius:20px;padding:40px 20px 36px;
+  border:2px solid rgba(212,168,76,0.4);
+  box-shadow:0 0 60px rgba(212,168,76,0.15),0 0 120px rgba(155,140,232,0.08),0 20px 60px rgba(0,0,0,0.3);
+  overflow:hidden;
+}
+/* Animated background grid */
+.finals-stage::before{
+  content:'';position:absolute;top:0;left:0;width:200%;height:200%;
+  background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(212,168,76,0.03) 40px,rgba(212,168,76,0.03) 41px),
+             repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(212,168,76,0.03) 40px,rgba(212,168,76,0.03) 41px);
+  animation:gridScroll 20s linear infinite;
+  pointer-events:none;
+}
+@keyframes gridScroll{0%{transform:translate(0,0)}100%{transform:translate(-40px,-40px)}}
+
+/* Spotlight sweep */
+.finals-stage::after{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(from 0deg,transparent 0%,rgba(212,168,76,0.06) 5%,transparent 10%);
+  animation:spotlightSweep 8s linear infinite;
+  pointer-events:none;
+}
+@keyframes spotlightSweep{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/* Corner decorations */
+.finals-corner{
+  position:absolute;width:40px;height:40px;
+  border-color:rgba(212,168,76,0.6);border-style:solid;border-width:0;
+}
+.finals-corner.tl{top:10px;left:10px;border-top-width:3px;border-left-width:3px;border-radius:4px 0 0 0}
+.finals-corner.tr{top:10px;right:10px;border-top-width:3px;border-right-width:3px;border-radius:0 4px 0 0}
+.finals-corner.bl{bottom:10px;left:10px;border-bottom-width:3px;border-left-width:3px;border-radius:0 0 0 4px}
+.finals-corner.br{bottom:10px;right:10px;border-bottom-width:3px;border-right-width:3px;border-radius:0 0 4px 0}
+
+/* Header */
+.finals-header{text-align:center;position:relative;z-index:2;margin-bottom:28px}
+.finals-pretitle{
+  display:inline-block;
+  font-size:0.65rem;font-weight:700;letter-spacing:6px;color:rgba(212,168,76,0.7);
+  text-transform:uppercase;margin-bottom:8px;
+  animation:finalsPretitle 1s ease 0.3s both;
+}
+@keyframes finalsPretitle{from{opacity:0;letter-spacing:20px}to{opacity:1;letter-spacing:6px}}
+.finals-title{
+  font-family:'Inter','Noto Sans JP',sans-serif;
+  font-size:2.8rem;font-weight:900;letter-spacing:8px;
+  background:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
+  background-size:400% 400%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:finalsGold 3s ease infinite,finalsReveal 1s ease 0.5s both;
+  filter:drop-shadow(0 0 20px rgba(212,168,76,0.4));
+  line-height:1.2;
+}
+@keyframes finalsGold{
+  0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}
+}
+@keyframes finalsReveal{
+  from{opacity:0;transform:scale(0.8) translateY(20px);filter:drop-shadow(0 0 0px rgba(212,168,76,0))}
+  to{opacity:1;transform:scale(1) translateY(0);filter:drop-shadow(0 0 20px rgba(212,168,76,0.4))}
+}
+.finals-subtitle{
+  font-size:0.8rem;color:rgba(255,255,255,0.5);font-weight:600;margin-top:8px;
+  animation:fadeUp 1s ease 0.8s both;
+}
+.finals-subtitle span{color:rgba(212,168,76,0.9);font-weight:800}
+
+/* Sparkle line */
+.finals-sparkle-line{
+  width:200px;height:2px;margin:16px auto 0;position:relative;
+  background:linear-gradient(90deg,transparent,rgba(212,168,76,0.6),transparent);
+  animation:fadeUp 1s ease 1s both;
+}
+.finals-sparkle-line::after{
+  content:'';position:absolute;top:-3px;width:8px;height:8px;
+  background:rgba(212,168,76,0.9);border-radius:50%;
+  box-shadow:0 0 10px rgba(212,168,76,0.6);
+  animation:sparkleSlide 3s ease-in-out infinite;
+}
+@keyframes sparkleSlide{0%{left:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{left:calc(100% - 8px);opacity:0}}
+
+/* Player cards grid */
+.finals-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:16px;
+  position:relative;z-index:2;margin-bottom:20px;
+}
+
+/* VS badge in center */
+.finals-vs{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,#1a1030,#2a1540);
+  border:2px solid rgba(212,168,76,0.6);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Inter',sans-serif;font-weight:900;font-size:0.85rem;
+  color:rgba(212,168,76,0.9);letter-spacing:2px;
+  box-shadow:0 0 30px rgba(212,168,76,0.2),inset 0 0 20px rgba(212,168,76,0.05);
+  animation:vsPulse 2s ease infinite;
+}
+@keyframes vsPulse{
+  0%,100%{transform:translate(-50%,-50%) scale(1);box-shadow:0 0 30px rgba(212,168,76,0.2)}
+  50%{transform:translate(-50%,-50%) scale(1.1);box-shadow:0 0 50px rgba(212,168,76,0.35)}
+}
+
+/* Individual player card */
+.finalist-card{
+  position:relative;
+  background:linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+  border:1px solid rgba(212,168,76,0.25);border-radius:14px;
+  padding:20px 16px;text-align:center;
+  backdrop-filter:blur(8px);
+  transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+  overflow:hidden;
+  opacity:0;transform:scale(0.8) translateY(30px);
+}
+.finalist-card.revealed{
+  opacity:1;transform:scale(1) translateY(0);
+}
+.finalist-card:hover{
+  border-color:rgba(212,168,76,0.5);
+  box-shadow:0 0 40px rgba(212,168,76,0.15);
+  transform:scale(1.03) translateY(-4px);
+}
+/* Shimmer effect on cards */
+.finalist-card::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:linear-gradient(45deg,transparent 30%,rgba(212,168,76,0.08) 50%,transparent 70%);
+  animation:cardShimmer 4s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes cardShimmer{
+  0%{transform:translateX(-100%) translateY(-100%) rotate(0deg)}
+  100%{transform:translateX(100%) translateY(100%) rotate(0deg)}
+}
+
+.finalist-seed{
+  display:inline-block;font-size:0.6rem;font-weight:700;letter-spacing:3px;
+  color:rgba(212,168,76,0.6);margin-bottom:8px;
+}
+.finalist-avatar{
+  width:64px;height:64px;margin:0 auto 12px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(212,168,76,0.2),rgba(155,140,232,0.2));
+  border:2px solid rgba(212,168,76,0.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;
+  animation:avatarGlow 3s ease infinite;
+  position:relative;
+}
+@keyframes avatarGlow{
+  0%,100%{box-shadow:0 0 15px rgba(212,168,76,0.15)}
+  50%{box-shadow:0 0 30px rgba(212,168,76,0.3)}
+}
+/* Ring animation around avatar */
+.finalist-avatar::after{
+  content:'';position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;
+  border-radius:50%;border:1px solid transparent;
+  border-top-color:rgba(212,168,76,0.5);
+  animation:ringRotate 3s linear infinite;
+}
+@keyframes ringRotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+.finalist-name{
+  font-size:1.15rem;font-weight:900;color:#fff;margin-bottom:4px;
+  text-shadow:0 0 20px rgba(212,168,76,0.3);
+}
+.finalist-score{
+  font-family:'Inter',sans-serif;font-weight:800;font-size:0.9rem;
+  margin-bottom:6px;
+}
+.finalist-score.plus{color:#e88cad}
+.finalist-score.minus{color:#7ca8e8}
+.finalist-trend{
+  font-size:0.65rem;color:rgba(255,255,255,0.35);font-family:'Inter',sans-serif;
+  letter-spacing:1px;
+}
+
+/* Bottom text */
+.finals-bottom{
+  text-align:center;position:relative;z-index:2;
+  animation:fadeUp 1s ease 2.5s both;
+}
+.finals-status{
+  display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,rgba(212,168,76,0.12),rgba(212,168,76,0.05));
+  border:1px solid rgba(212,168,76,0.25);
+  padding:8px 20px;border-radius:20px;
+  font-size:0.75rem;font-weight:700;color:rgba(212,168,76,0.8);
+}
+.finals-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(212,168,76,0.8);
+  animation:dotBlink 1.5s ease infinite;
+}
+@keyframes dotBlink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* Floating embers around finals section */
+.finals-embers{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:1;overflow:hidden;border-radius:20px;
+}
+.ember{
+  position:absolute;width:3px;height:3px;border-radius:50%;
+  background:rgba(212,168,76,0.7);
+  box-shadow:0 0 6px rgba(212,168,76,0.4);
+  animation:emberFloat linear infinite;
+}
+@keyframes emberFloat{
+  0%{opacity:0;transform:translateY(100%) scale(0)}
+  20%{opacity:1}80%{opacity:0.6}
+  100%{opacity:0;transform:translateY(-300px) translateX(var(--drift)) scale(0)}
+}
+
+/* Confetti burst */
+.confetti-container{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:3;overflow:hidden;border-radius:20px;
+}
+.confetti{
+  position:absolute;width:6px;height:10px;opacity:0;
+  animation:confettiFall linear forwards;
+}
+@keyframes confettiFall{
+  0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}
+  50%{opacity:1}
+  100%{opacity:0;transform:translateY(400px) rotate(720deg) scale(0.5)}
+}
+
+/* Energy lines radiating from center */
+.energy-lines{
+  position:absolute;top:50%;left:50%;width:300px;height:300px;
+  transform:translate(-50%,-50%);pointer-events:none;z-index:0;
+}
+.energy-line{
+  position:absolute;top:50%;left:50%;width:150px;height:1px;
+  transform-origin:0 50%;
+  background:linear-gradient(90deg,rgba(212,168,76,0.3),transparent);
+  animation:energyPulse 4s ease infinite;
+}
+@keyframes energyPulse{
+  0%{opacity:0;width:0}30%{opacity:0.6}100%{opacity:0;width:150px}
+}
+
 @media(max-width:480px){
   .hero-title{font-size:2.2rem;letter-spacing:2px}
   .standing-item{padding:12px;grid-template-columns:28px 1fr auto;gap:8px}
@@ -327,6 +575,12 @@ body{
   .step-circle{width:36px;height:36px;font-size:0.75rem}
   .step-line{min-width:16px;max-width:40px}
   .records-stats{gap:20px}
+  .finals-title{font-size:2rem;letter-spacing:4px}
+  .finals-grid{gap:10px}
+  .finalist-card{padding:14px 10px}
+  .finalist-avatar{width:50px;height:50px;font-size:1.3rem}
+  .finalist-name{font-size:1rem}
+  .finals-vs{width:44px;height:44px;font-size:0.7rem}
 }
 </style>
 </head>
@@ -379,6 +633,76 @@ body{
       <div class="step-circle active">決</div>
       <div class="step-label">決勝</div>
       <div class="step-count">4名</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINALS SHOWDOWN ===== -->
+<section class="finals-section reveal" id="finals-section">
+  <div class="finals-stage">
+    <!-- Corner decorations -->
+    <div class="finals-corner tl"></div>
+    <div class="finals-corner tr"></div>
+    <div class="finals-corner bl"></div>
+    <div class="finals-corner br"></div>
+
+    <!-- Floating embers -->
+    <div class="finals-embers" id="finals-embers"></div>
+
+    <!-- Confetti burst -->
+    <div class="confetti-container" id="confetti-container"></div>
+
+    <!-- Energy lines -->
+    <div class="energy-lines" id="energy-lines"></div>
+
+    <!-- Header -->
+    <div class="finals-header">
+      <div class="finals-pretitle">THE FINAL TABLE</div>
+      <h2 class="finals-title">決勝卓</h2>
+      <div class="finals-subtitle">予選を勝ち抜いた<span>4名</span>が最強位の座を賭けて激突</div>
+      <div class="finals-sparkle-line"></div>
+    </div>
+
+    <!-- Player Grid with VS -->
+    <div class="finals-grid" id="finals-grid">
+      <div class="finalist-card" data-delay="1.2">
+        <div class="finalist-seed">1ST SEED</div>
+        <div class="finalist-avatar">&#x1F47A;</div>
+        <div class="finalist-name">みか</div>
+        <div class="finalist-score plus">+118.0</div>
+        <div class="finalist-trend">+22.3 → +54.6 → +41.1</div>
+      </div>
+      <div class="finalist-card" data-delay="1.5">
+        <div class="finalist-seed">2ND SEED</div>
+        <div class="finalist-avatar">&#x1F525;</div>
+        <div class="finalist-name">がちゃ</div>
+        <div class="finalist-score plus">+114.3</div>
+        <div class="finalist-trend">+51.9 → +24.9 → +37.5</div>
+      </div>
+      <div class="finalist-card" data-delay="1.8">
+        <div class="finalist-seed">3RD SEED</div>
+        <div class="finalist-avatar">&#x26A1;</div>
+        <div class="finalist-name">ホロホロ</div>
+        <div class="finalist-score plus">+102.9</div>
+        <div class="finalist-trend">+10.9 → +43.4 → +48.6</div>
+      </div>
+      <div class="finalist-card" data-delay="2.1">
+        <div class="finalist-seed">4TH SEED</div>
+        <div class="finalist-avatar">&#x1F300;</div>
+        <div class="finalist-name">するが</div>
+        <div class="finalist-score minus">-1.2</div>
+        <div class="finalist-trend">-44.4 → +10.0 → +33.2</div>
+      </div>
+      <!-- VS Badge -->
+      <div class="finals-vs">VS</div>
+    </div>
+
+    <!-- Bottom status -->
+    <div class="finals-bottom">
+      <div class="finals-status">
+        <div class="finals-dot"></div>
+        決勝戦 ― 開催準備中
+      </div>
     </div>
   </div>
 </section>
@@ -767,6 +1091,78 @@ var statObs=new IntersectionObserver(function(entries){
   });
 },{threshold:0.3});
 document.querySelectorAll('[data-count]').forEach(function(el){statObs.observe(el)});
+
+// ===== FINALS EFFECTS =====
+
+// Ember particles
+(function(){
+  var container=document.getElementById('finals-embers');
+  if(!container) return;
+  for(var i=0;i<20;i++){
+    var e=document.createElement('div');
+    e.className='ember';
+    var drift=(Math.random()-0.5)*80;
+    e.style.cssText='left:'+Math.random()*100+'%;bottom:-10px;'+
+      '--drift:'+drift+'px;'+
+      'animation-delay:'+(Math.random()*6)+'s;'+
+      'animation-duration:'+(3+Math.random()*4)+'s;'+
+      'width:'+(2+Math.random()*3)+'px;height:'+(2+Math.random()*3)+'px';
+    container.appendChild(e);
+  }
+})();
+
+// Energy lines radiating from center
+(function(){
+  var container=document.getElementById('energy-lines');
+  if(!container) return;
+  for(var i=0;i<12;i++){
+    var l=document.createElement('div');
+    l.className='energy-line';
+    l.style.cssText='transform:rotate('+(i*30)+'deg);animation-delay:'+(i*0.4)+'s';
+    container.appendChild(l);
+  }
+})();
+
+// Confetti burst on scroll
+var finalsObserver=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){
+      // Trigger confetti
+      var container=document.getElementById('confetti-container');
+      var colors=['#ffd700','#ffec80','#e88cad','#9b8ce8','#5cc8b0','#ff6b6b','#4ecdc4','#ffe66d'];
+      for(var i=0;i<60;i++){
+        (function(idx){
+          setTimeout(function(){
+            var c=document.createElement('div');
+            c.className='confetti';
+            c.style.cssText='left:'+((Math.random()*80)+10)+'%;top:'+(Math.random()*30)+'%;'+
+              'width:'+(4+Math.random()*6)+'px;height:'+(6+Math.random()*10)+'px;'+
+              'background:'+colors[idx%colors.length]+';'+
+              'border-radius:'+(Math.random()>0.5?'50%':'2px')+';'+
+              'animation-duration:'+(2+Math.random()*2)+'s;'+
+              'animation-delay:0s';
+            container.appendChild(c);
+            setTimeout(function(){c.remove()},4000);
+          },idx*40);
+        })(i);
+      }
+
+      // Reveal finalist cards with staggered timing
+      var cards=document.querySelectorAll('.finalist-card');
+      cards.forEach(function(card){
+        var delay=parseFloat(card.dataset.delay)||1;
+        setTimeout(function(){
+          card.classList.add('revealed');
+        },delay*1000);
+      });
+
+      finalsObserver.unobserve(e.target);
+    }
+  });
+},{threshold:0.2});
+
+var finalsEl=document.getElementById('finals-section');
+if(finalsEl) finalsObserver.observe(finalsEl);
 </script>
 </body>
 </html>
