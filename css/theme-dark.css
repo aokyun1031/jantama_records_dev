@@ -265,3 +265,13 @@ body{
 .finals-dot{background:rgba(212,168,76,0.8)}
 .ember{background:rgba(212,168,76,0.7);box-shadow:0 0 6px rgba(212,168,76,0.4)}
 .energy-line{background:linear-gradient(90deg,rgba(212,168,76,0.3),transparent)}
+
+/* ---------- Mahjong decorations (dark overrides) ---------- */
+.tile-divider-line{background:linear-gradient(90deg,transparent,rgba(212,168,76,0.3),transparent)}
+.tile-divider-tiles{opacity:0.3}
+.section-tiles{opacity:0.06}
+.records-tile-frame span{opacity:0.07}
+.hero-tile-accent{opacity:0.08}
+.footer-tiles{opacity:0.2}
+.tile-scatter span{opacity:0.04}
+.progress-tile-bg{opacity:0.06}

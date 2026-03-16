@@ -1,0 +1,113 @@
+/* ======================
+   mahjong-deco.css
+   Mahjong tile decorations, dividers, scattered accents
+   Light mode (default) values
+   ====================== */
+
+/* ---------- Tile dividers between sections ---------- */
+.tile-divider{
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;padding:12px 0;margin:0 auto;
+  max-width:360px;user-select:none;
+}
+.tile-divider-line{
+  flex:1;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(155,140,232,0.35),transparent);
+}
+.tile-divider-tiles{
+  display:flex;gap:6px;font-size:1.6rem;opacity:0.45;
+  animation:tileFloat 4s ease-in-out infinite;
+}
+@keyframes tileFloat{
+  0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}
+}
+
+/* ---------- Section background tiles ---------- */
+.section-tiles{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;overflow:hidden;
+  font-size:2.2rem;opacity:0.10;
+  z-index:0;
+}
+.section-tiles span{
+  position:absolute;
+  animation:tileSpin 20s linear infinite;
+}
+@keyframes tileSpin{
+  0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}
+}
+
+/* Sections that carry bg tiles need relative positioning */
+.section--decorated{position:relative}
+.section--decorated>.section-header,
+.section--decorated>.tabs,
+.section--decorated>.tab-content,
+.section--decorated>#standings{position:relative;z-index:1}
+
+/* ---------- Records section tile frame ---------- */
+.records{position:relative}
+.records-tile-frame{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;overflow:hidden;border-radius:var(--radius);
+  z-index:0;
+}
+.records-tile-frame span{
+  position:absolute;font-size:2rem;opacity:0.12;
+}
+.records>.records-title,
+.records>.record-highlight,
+.records>.records-stats{position:relative;z-index:1}
+
+/* ---------- Footer tile row ---------- */
+.footer-tiles{
+  display:flex;justify-content:center;gap:6px;
+  font-size:1.3rem;opacity:0.3;margin-bottom:8px;
+  user-select:none;letter-spacing:3px;
+}
+
+/* ---------- Hero tile enhancement ---------- */
+.hero{position:relative}
+.hero-tile-accent{
+  position:absolute;font-size:3.5rem;opacity:0.14;
+  pointer-events:none;z-index:0;
+}
+.hero-tile-accent.top-left{top:6px;left:6px;transform:rotate(-15deg)}
+.hero-tile-accent.top-right{top:6px;right:6px;transform:rotate(12deg)}
+.hero-tile-accent.bot-left{bottom:6px;left:12px;transform:rotate(8deg)}
+.hero-tile-accent.bot-right{bottom:6px;right:12px;transform:rotate(-10deg)}
+
+/* ---------- Progress track tile accents ---------- */
+.progress-track{position:relative}
+.progress-tile-bg{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;overflow:hidden;border-radius:var(--radius);
+  display:flex;align-items:center;justify-content:center;
+  gap:24px;font-size:2.2rem;opacity:0.09;
+  letter-spacing:16px;
+}
+
+/* ---------- Floating page-level tile scatter ---------- */
+.tile-scatter{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;overflow:hidden;
+}
+.tile-scatter span{
+  position:absolute;opacity:0.07;
+  font-size:2.4rem;
+  animation:scatterDrift linear infinite;
+}
+@keyframes scatterDrift{
+  0%{transform:translateY(0) rotate(0deg)}
+  100%{transform:translateY(-110vh) rotate(180deg)}
+}
+
+/* ---------- Responsive ---------- */
+@media(max-width:480px){
+  .tile-divider-tiles{font-size:1.2rem;gap:4px}
+  .hero-tile-accent{font-size:2.4rem}
+  .footer-tiles{font-size:1rem}
+  .section-tiles{font-size:1.6rem}
+  .tile-scatter span{font-size:1.8rem}
+  .progress-tile-bg{font-size:1.6rem;gap:16px}
+  .records-tile-frame span{font-size:1.5rem}
+}

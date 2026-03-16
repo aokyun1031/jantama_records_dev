@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/finals.css">
+<link rel="stylesheet" href="css/mahjong-deco.css">
 <link rel="stylesheet" href="css/theme-dark.css" id="theme-dark">
 <link rel="stylesheet" href="css/theme-toggle.css">
 </head>
@@ -26,11 +27,18 @@
 <!-- Floating Particles -->
 <div class="particles" id="particles"></div>
 
+<!-- Floating Tile Scatter (page-level) -->
+<div class="tile-scatter" id="tile-scatter"></div>
+
 <div class="main">
 
 <!-- Hero -->
 <section class="hero">
   <div class="hero-tiles">&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;&#x1F010;&#x1F011;&#x1F012;&#x1F013;&#x1F014;&#x1F015;&#x1F016;&#x1F017;&#x1F018;&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;&#x1F01D;&#x1F01E;&#x1F01F;&#x1F020;&#x1F021;&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;</div>
+  <span class="hero-tile-accent top-left">&#x1F004;</span>
+  <span class="hero-tile-accent top-right">&#x1F005;</span>
+  <span class="hero-tile-accent bot-left">&#x1F000;</span>
+  <span class="hero-tile-accent bot-right">&#x1F006;</span>
   <div class="hero-badge">麻雀トーナメント</div>
   <h1 class="hero-title">最強位戦</h1>
   <div class="hero-rules">
@@ -45,9 +53,17 @@
   </div>
 </section>
 
+<!-- Divider -->
+<div class="tile-divider">
+  <div class="tile-divider-line"></div>
+  <div class="tile-divider-tiles">&#x1F000;&#x1F001;&#x1F002;&#x1F003;</div>
+  <div class="tile-divider-line"></div>
+</div>
+
 <!-- Progress Tracker -->
 <section class="progress-section">
   <div class="progress-track">
+    <div class="progress-tile-bg">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;</div>
     <div class="progress-step">
       <div class="step-circle done">&#10003;</div>
       <div class="step-label">1回戦</div>
@@ -133,10 +149,18 @@
   </div>
 </section>
 
+<!-- Divider -->
+<div class="tile-divider">
+  <div class="tile-divider-line"></div>
+  <div class="tile-divider-tiles">&#x1F010;&#x1F011;&#x1F012;&#x1F013;</div>
+  <div class="tile-divider-line"></div>
+</div>
+
 <!-- Round Details -->
-<section class="section reveal">
+<section class="section section--decorated reveal">
+  <div class="section-tiles" id="section-tiles-rounds"></div>
   <div class="section-header">
-    <div class="section-title">&#x1F4CB; 対戦結果</div>
+    <div class="section-title">&#x1F004; 対戦結果</div>
   </div>
 
   <div class="tabs">
@@ -150,17 +174,33 @@
   <div class="tab-content active" id="tab2"></div>
 </section>
 
+<!-- Divider -->
+<div class="tile-divider">
+  <div class="tile-divider-line"></div>
+  <div class="tile-divider-tiles">&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;</div>
+  <div class="tile-divider-line"></div>
+</div>
+
 <!-- Cumulative Standings -->
-<section class="section reveal" id="standings-section">
+<section class="section section--decorated reveal" id="standings-section">
+  <div class="section-tiles" id="section-tiles-standings"></div>
   <div class="section-header">
-    <div class="section-title">&#x1F4CA; 総合ポイント</div>
+    <div class="section-title">&#x1F005; 総合ポイント</div>
   </div>
   <div id="standings"></div>
 </section>
 
+<!-- Divider -->
+<div class="tile-divider">
+  <div class="tile-divider-line"></div>
+  <div class="tile-divider-tiles">&#x1F006;&#x1F004;&#x1F005;&#x1F006;</div>
+  <div class="tile-divider-line"></div>
+</div>
+
 <!-- Records -->
 <section class="records reveal">
-  <div class="records-title">トーナメントレコード</div>
+  <div class="records-tile-frame" id="records-tile-frame"></div>
+  <div class="records-title">&#x1F000; トーナメントレコード &#x1F000;</div>
   <div class="record-highlight">
     <span class="record-label">大会最高得点</span>
     <span class="record-score" data-count="65400">0</span>
@@ -173,6 +213,7 @@
   </div>
 </section>
 
+<div class="footer-tiles">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;</div>
 <div class="footer">最強位戦 - 麻雀トーナメント</div>
 
 </div>
