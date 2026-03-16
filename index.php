@@ -370,15 +370,15 @@ body{
     </div>
     <div class="step-line done"></div>
     <div class="progress-step">
-      <div class="step-circle active">3</div>
+      <div class="step-circle done">&#10003;</div>
       <div class="step-label">3回戦</div>
       <div class="step-count">12名</div>
     </div>
-    <div class="step-line active"></div>
+    <div class="step-line done"></div>
     <div class="progress-step">
-      <div class="step-circle upcoming">?</div>
+      <div class="step-circle active">決</div>
       <div class="step-label">決勝</div>
-      <div class="step-count">—</div>
+      <div class="step-count">4名</div>
     </div>
   </div>
 </section>
@@ -410,7 +410,6 @@ body{
     <!-- <span class="section-badge badge-live">LIVE</span> -->
   </div>
   <div id="standings"></div>
-  <div class="note-small">※ 3回戦 3卓は未対戦のため暫定順位</div>
 </section>
 
 <!-- Records -->
@@ -423,7 +422,7 @@ body{
   </div>
   <div class="records-stats">
     <div class="stat"><div class="stat-num" data-count="20">0</div><div class="stat-label">参加者</div></div>
-    <div class="stat"><div class="stat-num" data-count="12">0</div><div class="stat-label">残り</div></div>
+    <div class="stat"><div class="stat-num" data-count="4">0</div><div class="stat-label">残り</div></div>
     <div class="stat"><div class="stat-num" data-count="3">0</div><div class="stat-label">回戦目</div></div>
   </div>
 </section>
@@ -438,29 +437,26 @@ var MAX_BAR = 130;
 var MEDALS = ['\u{1F947}','\u{1F948}','\u{1F949}'];
 
 var standings = [
-  // 現役（3回戦進出）
-  {rank:1,name:'みか',total:118.0,r:[22.3,54.6,41.1],pending:false,elim:0},
-  {rank:2,name:'ホロホロ',total:102.9,r:[10.9,43.4,48.6],pending:false,elim:0},
-  {rank:3,name:'あはん',total:101.3,r:[82.5,18.8],pending:true,elim:0},
-  {rank:4,name:'がちゃ',total:76.8,r:[51.9,24.9],pending:true,elim:0},
-  {rank:5,name:'ぎり',total:68.7,r:[10.2,58.5],pending:true,elim:0},
-  {rank:6,name:'シーマ',total:55.5,r:[51.7,2.3,1.5],pending:false,elim:0},
-  {rank:7,name:'みーた',total:47.8,r:[26.9,-10.3,31.2],pending:false,elim:0},
-  {rank:8,name:'あき',total:-0.7,r:[-16.1,37.3,-21.9],pending:false,elim:0},
-  {rank:9,name:'するが',total:-1.2,r:[-44.4,10.0,33.2],pending:false,elim:0},
-  {rank:10,name:'イラチ',total:-53.4,r:[-49.1,-4.3],pending:true,elim:0},
-  {rank:11,name:'りあ',total:-68.0,r:[-6.5,-33.3,-28.2],pending:false,elim:0},
-  {rank:12,name:'がう',total:-73.0,r:[28.7,3.8,-105.5],pending:false,elim:0},
-  // 2回戦敗退
-  {rank:13,name:'ぶる',total:-22.7,r:[11.9,-34.6],pending:false,elim:2},
-  {rank:14,name:'そぼろ',total:-27.4,r:[12.2,-39.6],pending:false,elim:2},
+  {rank:1,name:'あはん',total:130.4,r:[82.5,18.8,29.1],pending:false,elim:3},
+  {rank:2,name:'みか',total:118.0,r:[22.3,54.6,41.1],pending:false,elim:0},
+  {rank:3,name:'がちゃ',total:114.3,r:[51.9,24.9,37.5],pending:false,elim:0},
+  {rank:4,name:'ホロホロ',total:102.9,r:[10.9,43.4,48.6],pending:false,elim:0},
+  {rank:5,name:'ぎり',total:56.5,r:[10.2,58.5,-12.2],pending:false,elim:3},
+  {rank:6,name:'シーマ',total:55.5,r:[51.7,2.3,1.5],pending:false,elim:3},
+  {rank:7,name:'みーた',total:47.8,r:[26.9,-10.3,31.2],pending:false,elim:3},
+  {rank:8,name:'こいぬ',total:40.3,r:[40.3],pending:false,elim:1},
+  {rank:9,name:'あき',total:-0.7,r:[-16.1,37.3,-21.9],pending:false,elim:3},
+  {rank:10,name:'するが',total:-1.2,r:[-44.4,10.0,33.2],pending:false,elim:0},
+  {rank:11,name:'ぶる',total:-22.7,r:[11.9,-34.6],pending:false,elim:2},
+  {rank:12,name:'そぼろ',total:-27.4,r:[12.2,-39.6],pending:false,elim:2},
+  {rank:13,name:'ぱーらめんこ',total:-63.7,r:[-63.7],pending:false,elim:1},
+  {rank:14,name:'りあ',total:-68.0,r:[-6.5,-33.3,-28.2],pending:false,elim:3},
   {rank:15,name:'けちゃこ',total:-71.2,r:[1.1,-72.3],pending:false,elim:2},
-  {rank:16,name:'梅',total:-80.4,r:[-22.0,-58.4],pending:false,elim:2},
-  // 1回戦敗退
-  {rank:17,name:'こいぬ',total:40.3,r:[40.3],pending:false,elim:1},
-  {rank:18,name:'ぱーらめんこ',total:-63.7,r:[-63.7],pending:false,elim:1},
-  {rank:19,name:'あーす',total:-72.8,r:[-72.8],pending:false,elim:1},
-  {rank:20,name:'なぎ',total:-76.0,r:[-76.0],pending:false,elim:1}
+  {rank:16,name:'あーす',total:-72.8,r:[-72.8],pending:false,elim:1},
+  {rank:17,name:'がう',total:-73.0,r:[28.7,3.8,-105.5],pending:false,elim:3},
+  {rank:18,name:'なぎ',total:-76.0,r:[-76.0],pending:false,elim:1},
+  {rank:19,name:'梅',total:-80.4,r:[-22.0,-58.4],pending:false,elim:2},
+  {rank:20,name:'イラチ',total:-107.8,r:[-49.1,-4.3,-54.4],pending:false,elim:3}
 ];
 
 var r1Tables = [
@@ -494,10 +490,10 @@ var r2Below = [['ぶる',-34.6],['そぼろ',-39.6],['梅',-58.4],['けちゃこ
 var r3Tables = [
   {name:'1卓',sched:'',players:['あき','ホロホロ','シーマ','りあ'],done:true},
   {name:'2卓',sched:'日曜夜',players:['みか','みーた','がう','するが'],done:true},
-  {name:'3卓',sched:'',players:['あはん','イラチ','がちゃ','ぎり'],done:false}
+  {name:'3卓',sched:'',players:['あはん','イラチ','がちゃ','ぎり'],done:true}
 ];
-var r3Above = [['ホロホロ',48.6],['みか',41.1],['するが',33.2],['みーた',31.2]];
-var r3Below = [['シーマ',1.5],['あき',-21.9],['りあ',-28.2],['がう',-105.5]];
+var r3Above = [['ホロホロ',48.6],['みか',41.1],['がちゃ',37.5],['するが',33.2]];
+var r3Below = [['みーた',31.2],['あはん',29.1],['シーマ',1.5],['ぎり',-12.2],['あき',-21.9],['りあ',-28.2],['イラチ',-54.4],['がう',-105.5]];
 
 // ===== HELPERS =====
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
@@ -523,14 +519,8 @@ function barW(s){return Math.min(Math.abs(s)/MAX_BAR*100,100)}
   var box=document.getElementById('standings');
   var html='';
   var shownDivider=false;
-  var shownElimDivider=false;
   for(var i=0;i<standings.length;i++){
     var p=standings[i];
-    // 敗退者セクション区切り
-    if(p.elim>0 && !shownElimDivider){
-      shownElimDivider=true;
-      html+='<div class="standing-elim-divider">\u25BC 敗退者</div>';
-    }
     // ±0 ライン
     if(p.elim===0 && p.total<0 && !shownDivider){
       shownDivider=true;
@@ -542,12 +532,14 @@ function barW(s){return Math.min(Math.abs(s)/MAX_BAR*100,100)}
     var detail=p.r.map(function(v){return (v>=0?'+':'')+v.toFixed(1)}).join(' \u2192 ');
     if(p.elim===1) detail+=' \u2192 1回戦敗退';
     else if(p.elim===2) detail+=' \u2192 2回戦敗退';
+    else if(p.elim===3) detail+=' \u2192 3回戦敗退';
     var rankHtml=p.rank<=3?'<span class="medal">'+MEDALS[p.rank-1]+'</span>':''+p.rank;
     // バッジ
     var badgeHtml='';
     if(p.pending) badgeHtml='<span class="badge-pending">3回戦未</span>';
     else if(p.elim===1) badgeHtml='<span class="badge-elim">1回戦敗退</span>';
     else if(p.elim===2) badgeHtml='<span class="badge-elim">2回戦敗退</span>';
+    else if(p.elim===3) badgeHtml='<span class="badge-elim">3回戦敗退</span>';
 
     var topCls=p.rank<=3?' top-'+p.rank:'';
     var elimCls=p.elim>0?' eliminated':'';
@@ -682,12 +674,8 @@ document.getElementById('tab1').innerHTML=
 document.getElementById('tab2').innerHTML=
   renderTables(r3Tables,{showDone:true})
   +renderTableDetails(r3Tables,r3Scores,{showDone:true})
-  +'<div class="results-list">'
-    +'<div class="results-sub">1卓・2卓 結果</div>'
-    +renderResults(r3Above,1)
-    +'<div class="result-divider"></div>'
-    +renderResults(r3Below,5)
-  +'</div>'
+  +'<div class="results-list"><div class="results-sub">全体順位</div>'+renderResults(r3Above,1)+'</div>'
+  +renderElim(r3Below,5)
 
 // ===== TAB SWITCHING =====
 function switchTab(idx){
