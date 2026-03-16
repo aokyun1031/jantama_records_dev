@@ -1,0 +1,6 @@
+# 除外したいファイル・ディレクトリ
+.git
+node_modules
+*.md
+.env
+.DS_Store
