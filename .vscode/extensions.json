@@ -1,0 +1,14 @@
+{
+    "recommendations": [
+        "davidanson.vscode-markdownlint",
+        "oderwat.indent-rainbow",
+        "ecmel.vscode-html-css",
+        "junstyle.php-cs-fixer",
+        "ckolkman.vscode-postgres",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "github.copilot-chat",
+        "usernamehw.errorlens",
+        "ms-vscode.live-server"
+    ]
+}
