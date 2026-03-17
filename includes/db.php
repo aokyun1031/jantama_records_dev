@@ -1,9 +1,9 @@
 <?php
 /**
- * Neon PostgreSQL 接続
+ * PostgreSQL 接続
  *
  * 接続優先順位:
- *   1. DATABASE_URL（Neonの接続文字列）
+ *   1. DATABASE_URL（接続文字列）
  *   2. 個別のPG*環境変数
  */
 
