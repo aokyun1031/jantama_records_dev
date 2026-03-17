@@ -1,0 +1,18 @@
+# 環境変数（機密情報）
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+
+# Docker
+docker-compose.override.yml
+
+# PHP
+vendor/
+
+# Phinx（将来用）
+phinx.php
