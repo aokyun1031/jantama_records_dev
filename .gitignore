@@ -14,5 +14,8 @@ docker-compose.override.yml
 # PHP
 vendor/
 
-# Phinx（将来用）
+# Phinx
 phinx.php
+
+# Composer
+composer.lock

@@ -1,0 +1,26 @@
+{
+  "name": "jantama-records",
+  "image": "mcr.microsoft.com/devcontainers/php:8.2",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ecmel.vscode-html-css",
+        "ckolkman.vscode-postgres",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "usernamehw.errorlens",
+        "ms-vscode.live-server"
+      ]
+    }
+  },
+  "forwardPorts": [8080],
+  "secrets": {
+    "DATABASE_URL": {
+      "description": "Neon devブランチの接続文字列"
+    }
+  }
+}

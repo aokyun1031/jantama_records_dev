@@ -1,6 +1,20 @@
-# 除外したいファイル・ディレクトリ
+# Git
 .git
-node_modules
-*.md
+
+# 環境・設定
 .env
+phinx.php
+
+# 開発ツール（本番不要）
+.devcontainer/
+vendor/
+composer.json
+composer.lock
+node_modules
+
+# ドキュメント
+*.md
+
+# OS
 .DS_Store
+Thumbs.db

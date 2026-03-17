@@ -2,44 +2,139 @@
 
 雀魂（じゃんたま）で開催する身内向け麻雀トーナメント「最強位戦」の戦績ページです。
 
-## 概要
-
-- 参加者20名によるトーナメント形式の大会
-- 1回戦(20名) → 2回戦(16名) → 3回戦(12名) → 決勝(4名) の4段階
-- ルール: 赤4 / 60秒 / トビ無
-- 各ラウンドの対戦結果・累計ポイント・決勝進出者を表示
-
-## ファイル構成
-
-```
-├── index.html            メインページ（HTML構造）
-├── index.php             同内容（Docker/Apache用）
-├── css/
-│   ├── base.css          変数・リセット・レイアウト・Hero・プログレス
-│   ├── components.css    順位表・タブ・卓カード・結果・レコード
-│   └── finals.css        決勝卓セクションの演出・アニメーション
-├── js/
-│   ├── data.js           大会データ（順位・卓・各回戦結果）
-│   ├── render.js         DOM描画・タブ切替
-│   └── effects.js        パーティクル・スクロールアニメ・決勝エフェクト
-├── Dockerfile            Render デプロイ用
-└── README.md
-```
-
 ## 技術スタック
 
 - HTML / CSS / JavaScript（フレームワーク不使用）
 - Google Fonts（Noto Sans JP, Inter）
-- Docker（PHP 8.2 Apache）でホスティング
+- PHP 8.2（Apache）
+- PostgreSQL（Neon）
+- Phinx（DBマイグレーション）
+- Docker / Docker Compose（ローカル開発）
+- Render（ホスティング）
+- GitHub Codespaces（開発環境）
+
+## ファイル構成
+
+```
+├── index.html                  メインページ（HTML構造）
+├── index.php                   同内容（Docker/Apache用）
+├── css/
+│   ├── base.css                変数・リセット・レイアウト・Hero・プログレス
+│   ├── components.css          順位表・タブ・卓カード・結果・レコード
+│   ├── finals.css              決勝卓セクションの演出・アニメーション
+│   ├── mahjong-deco.css        麻雀牌の装飾
+│   ├── theme-dark.css          ダークテーマ
+│   └── theme-toggle.css        テーマ切替トグル
+├── js/
+│   ├── data.js                 大会データ（順位・卓・各回戦結果）
+│   ├── render.js               DOM描画・タブ切替
+│   ├── effects.js              パーティクル・スクロールアニメ・決勝エフェクト
+│   └── theme-toggle.js         テーマ切替（localStorage永続化）
+├── includes/
+│   └── db.php                  PostgreSQL接続（DATABASE_URL対応）
+├── db/
+│   ├── init.sql                初期スキーマ（手動投入用）
+│   ├── seed.sql                初期データ（手動投入用）
+│   ├── migrations/             Phinxマイグレーション
+│   └── seeds/                  Phinxシーダー
+├── .devcontainer/
+│   ├── devcontainer.json       GitHub Codespaces設定
+│   └── setup.sh                Codespaces初回セットアップ
+├── Dockerfile                  Render デプロイ用
+├── docker-compose.yml          ローカル開発用
+├── render.yaml                 Renderデプロイ設定
+├── composer.json               PHP依存（Phinx）
+├── phinx.php.example           Phinx設定テンプレート
+├── .env.example                環境変数テンプレート
+├── .gitignore
+└── .dockerignore
+```
+
+## 環境構成
+
+```
+本番:  Render ──→ Neon (productionブランチ)
+開発:  Codespaces / Docker ──→ Neon (devブランチ)
+```
+
+## 開発環境セットアップ
+
+### GitHub Codespaces（推奨）
+
+1. GitHubリポジトリ → **Code** → **Codespaces** → **Create codespace**
+2. 初回起動時に `.devcontainer/setup.sh` が自動実行される
+3. `DATABASE_URL` の設定（以下のいずれか）:
+   - **Codespaces Secrets**（推奨）: GitHub → Settings → Codespaces → Secrets → `DATABASE_URL` を追加
+   - **手動**: `.env` を編集して Neon devブランチの接続文字列を設定
+
+### Docker Compose（ローカル）
+
+```bash
+# ローカルPostgreSQLで開発する場合
+docker compose up -d
+
+# Neon devブランチで開発する場合
+cp .env.example .env
+# .env にNeon devブランチの接続文字列を記入
+cp phinx.php.example phinx.php
+docker compose run --rm web composer install
+```
+
+### ブラウザのみ
+
+`index.html` をブラウザで直接開くだけでフロントエンドは動作します（DB不要）。
+
+## Phinx（DBマイグレーション）
+
+### コマンド
+
+```bash
+# Codespaces内
+php vendor/bin/phinx status              # ステータス確認
+php vendor/bin/phinx migrate             # マイグレーション実行
+php vendor/bin/phinx seed:run            # シーダー実行
+php vendor/bin/phinx create AddNewColumn # 新しいマイグレーション作成
+php vendor/bin/phinx rollback            # ロールバック
+
+# Docker Compose経由（ローカル）
+docker compose run --rm web php vendor/bin/phinx status
+docker compose run --rm web php vendor/bin/phinx migrate
+```
+
+### 初回セットアップ（phinx導入前にinit.sqlでテーブル作成済みの環境）
+
+既存のDBをPhinx管理下に置くには `--fake` を使います:
+
+```bash
+php vendor/bin/phinx migrate --fake
+```
+
+## Neonブランチ運用
+
+```
+Neon production (default) ← Render本番が接続
+Neon dev                  ← 開発環境が接続
+```
+
+### 開発フロー
+
+1. devブランチで開発・テスト
+2. 確認OK → productionに対してマイグレーション実行
+3. devブランチを削除 → 再作成（productionのコピーでクリーンに戻す）
+
+### productionへのマイグレーション反映
+
+```bash
+# .envのDATABASE_URLをproductionの接続文字列に一時変更して実行
+php vendor/bin/phinx migrate
+```
 
 ## データ更新方法
 
-大会の結果を更新するには `js/data.js` を編集してください。
+現在、大会データは `js/data.js` にハードコードされています。
 
 - `standings` : 総合順位・累計ポイント・各回戦スコア・敗退ラウンド
 - `r1Tables` / `r2Tables` / `r3Tables` : 各回戦の卓割り
 - `r1Above` / `r1Below` 等 : 各回戦の個別結果（通過 / 敗退）
 
-## ローカルで確認
-
-`index.html` をブラウザで直接開くだけで動作します。
+DB連携後はPHP経由でNeonからデータを取得する形に移行予定です。

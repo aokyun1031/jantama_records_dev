@@ -1,0 +1,49 @@
+<?php
+
+// .envファイルを読み込み（ローカル開発用）
+$envFile = __DIR__ . '/.env';
+if (file_exists($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        if (str_starts_with($line, '#')) continue;
+        putenv($line);
+    }
+}
+
+// DATABASE_URL をパースするか、個別のPG*変数を使う
+$databaseUrl = getenv('DATABASE_URL');
+
+if ($databaseUrl) {
+    $params = parse_url($databaseUrl);
+    $host = $params['host'] ?? 'localhost';
+    $port = $params['port'] ?? 5432;
+    $name = ltrim($params['path'] ?? '', '/');
+    $user = $params['user'] ?? '';
+    $pass = $params['pass'] ?? '';
+} else {
+    $host = getenv('PGHOST') ?: 'localhost';
+    $port = getenv('PGPORT') ?: 5432;
+    $name = getenv('PGDATABASE') ?: 'jantama';
+    $user = getenv('PGUSER') ?: 'postgres';
+    $pass = getenv('PGPASSWORD') ?: '';
+}
+
+return [
+    'paths' => [
+        'migrations' => '%%PHINX_CONFIG_DIR%%/db/migrations',
+        'seeds'      => '%%PHINX_CONFIG_DIR%%/db/seeds',
+    ],
+    'environments' => [
+        'default_migration_table' => 'phinxlog',
+        'default_environment'     => 'default',
+        'default' => [
+            'adapter' => 'pgsql',
+            'host'    => $host,
+            'port'    => $port,
+            'name'    => $name,
+            'user'    => $user,
+            'pass'    => $pass,
+            'charset' => 'utf8',
+        ],
+    ],
+    'version_order' => 'creation',
+];
