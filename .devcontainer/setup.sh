@@ -5,6 +5,8 @@ set -e
 sudo apt-get update && sudo apt-get install -y libpq-dev
 sudo mkdir -p /conf.d /usr/local/etc/php/conf.d
 sudo docker-php-ext-install pdo_pgsql pgsql
+# sudoで実行する場合は環境変数を保持して有効化
+sudo --preserve-env=PHP_INI_DIR PHP_INI_DIR=/usr/local/etc/php docker-php-ext-enable pdo_pgsql pgsql
 
 # Composer依存をインストール
 composer install --no-interaction
