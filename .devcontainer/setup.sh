@@ -3,10 +3,8 @@ set -e
 
 # PostgreSQL用PHP拡張をインストール
 sudo apt-get update && sudo apt-get install -y libpq-dev
+sudo mkdir -p /conf.d /usr/local/etc/php/conf.d
 sudo docker-php-ext-install pdo_pgsql pgsql
-# docker-php-ext-enableのパス問題を回避して手動でini登録
-echo "extension=pdo_pgsql.so" | sudo tee /usr/local/etc/php/conf.d/docker-php-ext-pdo_pgsql.ini > /dev/null
-echo "extension=pgsql.so" | sudo tee /usr/local/etc/php/conf.d/docker-php-ext-pgsql.ini > /dev/null
 
 # Composer依存をインストール
 composer install --no-interaction
