@@ -2,25 +2,13 @@
 set -e
 
 # PostgreSQL用PHP拡張をインストール
-echo "PostgreSQL関連ライブラリをインストール中..."
 sudo apt-get update && sudo apt-get install -y libpq-dev
-
-# PostgreSQL拡張をインストール試行
-echo "PostgreSQL拡張をインストール中..."
-if command -v docker-php-ext-install &> /dev/null; then
-  # docker-php-ext-installが利用可能な場合
-  docker-php-ext-install pdo pdo_pgsql pgsql 2>/dev/null || {
-    echo "警告: docker-php-ext-installでのインストール失敗。PECLで試行します..."
-    pecl install pdo_pgsql 2>/dev/null || echo "警告: PECLでもインストール失敗。libpq-devのみ利用可能です。"
-  }
-else
-  # PECLを使用（libpq-devインストール後）
-  echo "PECLでPostgreSQL拡張をインストール中..."
-  pecl install pdo_pgsql 2>/dev/null || echo "警告: PostgreSQL拡張がインストールできませんでしたが、libpq-devはインストール済みです。PDOが\$_ENV['DATABASE_URL']などで利用可能です。"
-fi
+sudo docker-php-ext-install pdo_pgsql pgsql
+# docker-php-ext-enableのパス問題を回避して手動でini登録
+echo "extension=pdo_pgsql.so" | sudo tee /usr/local/etc/php/conf.d/docker-php-ext-pdo_pgsql.ini > /dev/null
+echo "extension=pgsql.so" | sudo tee /usr/local/etc/php/conf.d/docker-php-ext-pgsql.ini > /dev/null
 
 # Composer依存をインストール
-echo "Composer依存をインストール中..."
 composer install --no-interaction
 
 # phinx.phpが無ければテンプレートからコピー
