@@ -9,7 +9,7 @@
 - PHP 8.2（Apache）
 - PostgreSQL（Neon）
 - Phinx（DBマイグレーション）
-- Docker / Docker Compose（ローカル開発）
+- Docker Compose（ローカル開発）
 - Render（ホスティング）
 - GitHub Codespaces（開発環境）
 
@@ -40,7 +40,7 @@
 ├── .devcontainer/
 │   ├── devcontainer.json       GitHub Codespaces設定
 │   └── setup.sh                Codespaces初回セットアップ
-├── Dockerfile                  Render デプロイ用
+├── Dockerfile                  Render デプロイ / ローカルDocker用
 ├── docker-compose.yml          ローカル開発用
 ├── render.yaml                 Renderデプロイ設定
 ├── composer.json               PHP依存（Phinx）
@@ -70,14 +70,16 @@
 ### Docker Compose（ローカル）
 
 ```bash
-# ローカルPostgreSQLで開発する場合
-docker compose up -d
-
-# Neon devブランチで開発する場合
 cp .env.example .env
-# .env にNeon devブランチの接続文字列を記入
+# .env にNeon devブランチの接続文字列を設定
 cp phinx.php.example phinx.php
-docker compose run --rm web composer install
+docker compose up -d
+docker compose exec web composer install
+
+# Phinxコマンド
+docker compose exec web php vendor/bin/phinx status
+docker compose exec web php vendor/bin/phinx migrate
+docker compose exec web php vendor/bin/phinx seed:run
 ```
 
 ### ブラウザのみ
@@ -95,10 +97,6 @@ php vendor/bin/phinx migrate             # マイグレーション実行
 php vendor/bin/phinx seed:run            # シーダー実行
 php vendor/bin/phinx create AddNewColumn # 新しいマイグレーション作成
 php vendor/bin/phinx rollback            # ロールバック
-
-# Docker Compose経由（ローカル）
-docker compose run --rm web php vendor/bin/phinx status
-docker compose run --rm web php vendor/bin/phinx migrate
 ```
 
 ### 初回セットアップ（phinx導入前にinit.sqlでテーブル作成済みの環境）
