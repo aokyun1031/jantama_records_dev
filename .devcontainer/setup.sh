@@ -1,9 +1,8 @@
 #!/bin/bash
 set -e
 
-# PostgreSQL拡張をインストール
-sudo apt-get update && sudo apt-get install -y libpq-dev
-sudo docker-php-ext-install pdo pdo_pgsql pgsql
+# PostgreSQL用PHP拡張をインストール
+sudo apt-get update && sudo apt-get install -y php8.2-pgsql
 
 # Composer依存をインストール
 composer install --no-interaction
