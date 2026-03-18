@@ -82,6 +82,8 @@ docker compose exec web php vendor/bin/phinx migrate
 docker compose exec web php vendor/bin/phinx seed:run
 ```
 
+起動後 `http://localhost:8080` でアクセスできます。
+
 ### ブラウザのみ
 
 `index.html` をブラウザで直接開くだけでフロントエンドは動作します（DB不要）。
