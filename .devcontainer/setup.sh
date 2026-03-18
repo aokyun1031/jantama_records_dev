@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
-# PostgreSQL用PHP拡張をインストール
-sudo apt-get update && sudo apt-get install -y php8.2-pgsql
+# PostgreSQL用PHP拡張をインストール（PHPバージョンを自動検出）
+PHP_VER=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
+sudo apt-get update && sudo apt-get install -y "php${PHP_VER}-pgsql"
 
 # Composer依存をインストール
 composer install --no-interaction
