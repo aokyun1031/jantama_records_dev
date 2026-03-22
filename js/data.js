@@ -7,16 +7,16 @@ var MAX_BAR = 130;
 var MEDALS = ['\u{1F947}','\u{1F948}','\u{1F949}'];
 
 var standings = [
-  {rank:1,name:'あはん',total:130.4,r:[82.5,18.8,29.1],pending:false,elim:3},
-  {rank:2,name:'みか',total:118.0,r:[22.3,54.6,41.1],pending:false,elim:0},
-  {rank:3,name:'がちゃ',total:114.3,r:[51.9,24.9,37.5],pending:false,elim:0},
-  {rank:4,name:'ホロホロ',total:102.9,r:[10.9,43.4,48.6],pending:false,elim:0},
-  {rank:5,name:'ぎり',total:56.5,r:[10.2,58.5,-12.2],pending:false,elim:3},
+  {rank:1,name:'ホロホロ',total:171.2,r:[10.9,43.4,48.6,68.3],pending:false,elim:0},
+  {rank:2,name:'あはん',total:130.4,r:[82.5,18.8,29.1],pending:false,elim:3},
+  {rank:3,name:'するが',total:63.3,r:[-44.4,10.0,33.2,64.5],pending:false,elim:0},
+  {rank:4,name:'ぎり',total:56.5,r:[10.2,58.5,-12.2],pending:false,elim:3},
+  {rank:5,name:'がちゃ',total:55.8,r:[51.9,24.9,37.5,-58.5],pending:false,elim:0},
   {rank:6,name:'シーマ',total:55.5,r:[51.7,2.3,1.5],pending:false,elim:3},
   {rank:7,name:'みーた',total:47.8,r:[26.9,-10.3,31.2],pending:false,elim:3},
-  {rank:8,name:'こいぬ',total:40.3,r:[40.3],pending:false,elim:1},
-  {rank:9,name:'あき',total:-0.7,r:[-16.1,37.3,-21.9],pending:false,elim:3},
-  {rank:10,name:'するが',total:-1.2,r:[-44.4,10.0,33.2],pending:false,elim:0},
+  {rank:8,name:'みか',total:43.7,r:[22.3,54.6,41.1,-74.3],pending:false,elim:0},
+  {rank:9,name:'こいぬ',total:40.3,r:[40.3],pending:false,elim:1},
+  {rank:10,name:'あき',total:-0.7,r:[-16.1,37.3,-21.9],pending:false,elim:3},
   {rank:11,name:'ぶる',total:-22.7,r:[11.9,-34.6],pending:false,elim:2},
   {rank:12,name:'そぼろ',total:-27.4,r:[12.2,-39.6],pending:false,elim:2},
   {rank:13,name:'ぱーらめんこ',total:-63.7,r:[-63.7],pending:false,elim:1},
@@ -67,3 +67,10 @@ var r3Tables = [
 ];
 var r3Above = [['ホロホロ',48.6],['みか',41.1],['がちゃ',37.5],['するが',33.2]];
 var r3Below = [['みーた',31.2],['あはん',29.1],['シーマ',1.5],['ぎり',-12.2],['あき',-21.9],['りあ',-28.2],['イラチ',-54.4],['がう',-105.5]];
+
+// Round 4 (Finals)
+var r4Tables = [
+  {name:'決勝卓',sched:'3月22日（日）20時30分より開始！',players:['ホロホロ','みか','がちゃ','するが'],done:true}
+];
+var r4Above = [['ホロホロ',68.3],['するが',64.5]];
+var r4Below = [['がちゃ',-58.5],['みか',-74.3]];

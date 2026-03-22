@@ -148,6 +148,10 @@ function renderTableDetails(tables,scoreMap,opts){
 var r1Scores=buildScoreMap(r1Above,r1Below);
 var r2Scores=buildScoreMap(r2Above,r2Below);
 var r3Scores=buildScoreMap(r3Above,r3Below);
+var r4Scores=buildScoreMap(r4Above,r4Below);
+
+// Finals results sorted
+var r4Results = r4Above.concat(r4Below).sort(function(a,b){return b[1]-a[1]});
 
 // Populate round tabs
 document.getElementById('tab0').innerHTML=
@@ -167,6 +171,11 @@ document.getElementById('tab2').innerHTML=
   +renderTableDetails(r3Tables,r3Scores,{showDone:true})
   +'<div class="results-list"><div class="results-sub">全体順位</div>'+renderResults(r3Above,1)+'</div>'
   +renderElim(r3Below,5);
+
+document.getElementById('tab3').innerHTML=
+  renderTables(r4Tables,{showDone:true})
+  +renderTableDetails(r4Tables,r4Scores,{showDone:true})
+  +'<div class="results-list"><div class="results-sub">全体順位</div>'+renderResults(r4Results,1)+'</div>';
 
 // Tab switching
 function switchTab(idx){

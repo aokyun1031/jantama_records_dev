@@ -1,0 +1,53 @@
+/* finals-countdown.css */
+.finals-countdown-container {
+  margin: 10px auto 20px auto;
+  padding: 8px 24px;
+  background: linear-gradient(135deg, #ff3366, #ff9933);
+  border-radius: 50px;
+  display: inline-block;
+  box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
+  animation: pulse-countdown 2s infinite;
+  position: relative;
+  z-index: 10;
+}
+
+.finals-countdown-text {
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.finals-countdown-text .days {
+  font-size: 2rem;
+  margin: 0 6px;
+  color: #fff;
+  font-weight: 900;
+}
+
+.finals-countdown-text.today {
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+}
+
+/* 終了後のスタイル */
+.finals-countdown-container.finished-container {
+  background: #444;
+  box-shadow: none;
+  animation: none;
+  border: 1px solid #666;
+}
+
+.finals-countdown-text.finished {
+  color: #bbb;
+  text-shadow: none;
+  font-weight: 600;
+}
+
+@keyframes pulse-countdown {
+  0% { transform: scale(1); box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 4px 25px rgba(255, 51, 102, 0.7); }
+  100% { transform: scale(1); box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4); }
+}
