@@ -1,0 +1,302 @@
+/* champion.css */
+.champion-section {
+  position: relative;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  overflow: hidden;
+  margin: 40px 0;
+}
+
+.champion-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.champion-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.1) 50%, transparent 70%);
+  border-radius: 50%;
+  animation: champion-glow-pulse 3s ease-in-out infinite alternate;
+  z-index: 1;
+}
+
+.champion-sparkles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.champion-sparkle {
+  position: absolute;
+  background: #ffd700;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  animation: sparkle-twinkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.champion-tiles-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 2rem;
+  opacity: 0.1;
+  color: #ffd700;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  animation: tiles-float 20s linear infinite;
+  z-index: 1;
+}
+
+.champion-header {
+  margin-bottom: 40px;
+}
+
+.champion-pretitle {
+  font-size: 1.5rem;
+  color: #ffd700;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  animation: text-glow 2s ease-in-out infinite alternate;
+  margin-bottom: 10px;
+}
+
+.champion-title {
+  font-size: 3rem;
+  color: #ffffff;
+  font-weight: 900;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+  margin: 0;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.champion-subtitle {
+  font-size: 1.2rem;
+  color: #ffd700;
+  font-weight: 600;
+  margin-top: 10px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.champion-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.champion-avatar {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+  animation: avatar-float 3s ease-in-out infinite;
+}
+
+.champion-image {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border: 5px solid #ffd700;
+  border-radius: 50%;
+}
+
+.champion-crown {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 3rem;
+  animation: crown-bounce 2s ease-in-out infinite;
+}
+
+.champion-info {
+  text-align: left;
+  max-width: 300px;
+}
+
+.champion-name {
+  font-size: 2.5rem;
+  color: #ffffff;
+  font-weight: 900;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  margin-bottom: 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.champion-score {
+  font-size: 1.5rem;
+  color: #ffd700;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.champion-message {
+  font-size: 1.1rem;
+  color: #ffffff;
+  line-height: 1.6;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+.champion-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+  border-radius: 20px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+}
+
+.champion-trophy {
+  font-size: 3rem;
+  animation: trophy-spin 4s linear infinite;
+}
+
+.champion-text {
+  font-size: 1.2rem;
+  color: #ffd700;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+@keyframes champion-glow-pulse {
+  0% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+@keyframes tiles-float {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100px); }
+}
+
+@keyframes text-glow {
+  0% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+  100% { text-shadow: 0 0 30px rgba(255, 215, 0, 1); }
+}
+
+@keyframes avatar-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes crown-bounce {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.2); }
+}
+
+@keyframes trophy-spin {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .champion-title {
+    font-size: 2.5rem;
+  }
+  .champion-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .champion-name {
+    font-size: 2rem;
+  }
+  .champion-image {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+/* Tournament Ended Message */
+.tournament-ended-message {
+  margin: 30px auto;
+  text-align: center;
+  animation: endedFadeIn 1s ease-out;
+}
+
+.ended-container {
+  display: inline-block;
+  padding: 20px 40px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 30px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3), 0 0 20px rgba(26, 26, 46, 0.5);
+  position: relative;
+  overflow: hidden;
+  animation: endedGlow 3s ease-in-out infinite alternate;
+}
+
+.ended-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: endedShine 4s ease-in-out infinite;
+}
+
+.ended-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  display: block;
+  animation: endedIconBounce 1.5s ease-in-out infinite;
+}
+
+.ended-text {
+  font-size: 1.4rem;
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 215, 0, 0.3);
+  font-family: 'Noto Sans JP', sans-serif;
+  letter-spacing: 1px;
+}
+
+@keyframes endedFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes endedGlow {
+  from { box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3), 0 0 20px rgba(26, 26, 46, 0.5); }
+  to { box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4), 0 0 30px rgba(26, 26, 46, 0.6); }
+}
+
+@keyframes endedShine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@keyframes endedIconBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}

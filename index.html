@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="css/theme-dark.css" id="theme-dark">
 <link rel="stylesheet" href="css/theme-toggle.css">
 <link rel="stylesheet" href="css/finals-countdown.css">
+<link rel="stylesheet" href="css/champion.css">
 </head>
 <body>
 
@@ -61,13 +62,44 @@
   <div class="hero-rules">
     <span>赤4</span><span>60秒</span><span>トビ無</span>
   </div>
-  <div class="hero-record">
-    <div class="hero-record-inner">
-      <span class="label">&#x1F3C5; 大会最高得点</span>
-      <span class="value">65,400</span>
-      <span class="player">するが</span>
+
+  <!-- Champion Celebration -->
+  <section class="champion-section reveal">
+    <div class="champion-container">
+      <div class="champion-glow"></div>
+      <div class="champion-sparkles" id="champion-sparkles"></div>
+      <div class="champion-tiles-bg">&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;&#x1F010;&#x1F011;&#x1F012;&#x1F013;&#x1F014;&#x1F015;&#x1F016;&#x1F017;&#x1F018;&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;&#x1F01D;&#x1F01E;&#x1F01F;&#x1F020;&#x1F021;&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;</div>
+      <div class="champion-header">
+        <div class="champion-pretitle">🏆 CHAMPION 🏆</div>
+        <h2 class="champion-title">優勝おめでとう！</h2>
+        <div class="champion-subtitle">最強位戦 優勝者</div>
+      </div>
+      <div class="champion-content">
+        <div class="champion-avatar">
+          <img src="img/nino.png" alt="優勝者 ホロホロ" class="champion-image">
+          <div class="champion-crown">👑</div>
+        </div>
+        <div class="champion-info">
+          <div class="champion-name">ホロホロ</div>
+          <div class="champion-score">総得点: +171.2</div>
+          <div class="champion-message">見事な戦いぶりで、最強位の座を獲得！<br>おめでとうございます！</div>
+        </div>
+      </div>
+      <div class="champion-footer">
+        <div class="champion-trophy">🏆</div>
+        <div class="champion-text">2026 麻雀トーナメント 最強位戦 優勝</div>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <!-- Tournament Ended Message -->
+  <!-- <div class="tournament-ended-message">
+    <div class="ended-container">
+      <div class="ended-icon">🏁</div>
+      <div class="ended-text">大会は終了しました</div>
+    </div>
+  </div> -->
+
 </section>
 
 <!-- Divider -->
@@ -122,11 +154,6 @@
       <div class="finals-pretitle">THE FINAL TABLE</div>
       <h2 class="finals-title">決勝卓</h2>
       
-      <!-- ★追加: カウントダウン表示 -->
-      <div class="finals-countdown-container" id="countdown-container">
-        <div class="finals-countdown-text" id="countdown-text"></div>
-      </div>
-      
       <div class="finals-subtitle">予選を勝ち抜いた<span>4名</span>が最強位の座を賭けて激突</div>
       <div class="finals-sparkle-line"></div>
     </div>
@@ -163,12 +190,6 @@
       <div class="finals-vs">VS</div>
     </div>
 
-    <div class="finals-bottom">
-      <div class="finals-status">
-        <div class="finals-dot"></div>
-        決勝戦 ― 終了！
-      </div>
-    </div>
   </div>
 </section>
 
@@ -226,16 +247,17 @@
 <section class="records reveal">
   <div class="records-tile-frame" id="records-tile-frame"></div>
   <div class="records-title">&#x1F000; トーナメントレコード &#x1F000;</div>
+
   <div class="record-highlight">
     <span class="record-label">大会最高得点</span>
-    <span class="record-score" data-count="65400">0</span>
+    <span class="record-score" data-count="71200">0</span>
     <span class="record-player">するが</span>
   </div>
-  <div class="records-stats">
+  <!-- <div class="records-stats">
     <div class="stat"><div class="stat-num" data-count="20">0</div><div class="stat-label">参加者</div></div>
     <div class="stat"><div class="stat-num" data-count="0">0</div><div class="stat-label">残り</div></div>
     <div class="stat"><div class="stat-num" data-count="4">0</div><div class="stat-label">回戦目</div></div>
-  </div>
+  </div> -->
 </section>
 
 <div class="footer-tiles">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;</div>

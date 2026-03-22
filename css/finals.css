@@ -178,20 +178,6 @@
   letter-spacing:1px;
 }
 
-/* Bottom status */
-.finals-bottom{text-align:center;position:relative;z-index:2;animation:fadeUp 1s ease 2.5s both}
-.finals-status{
-  display:inline-flex;align-items:center;gap:8px;
-  background:linear-gradient(135deg,rgba(155,140,232,0.1),rgba(232,140,173,0.06));
-  border:1px solid rgba(155,140,232,0.2);
-  padding:8px 20px;border-radius:20px;
-  font-size:0.75rem;font-weight:700;color:var(--purple);
-}
-.finals-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--purple);
-  animation:dotBlink 1.5s ease infinite;
-}
 @keyframes dotBlink{0%,100%{opacity:1}50%{opacity:0.3}}
 
 /* Embers */

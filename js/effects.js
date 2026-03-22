@@ -221,3 +221,18 @@ if(finalsEl) finalsObserver.observe(finalsEl);
     }
   }
 })();
+
+// Champion sparkles effect
+(function(){
+  var container=document.getElementById('champion-sparkles');
+  if(!container) return;
+  for(var i=0;i<50;i++){
+    var sparkle=document.createElement('div');
+    sparkle.className='champion-sparkle';
+    sparkle.style.cssText='left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;'+
+      'animation-delay:'+(Math.random()*3)+'s;'+
+      'animation-duration:'+(2+Math.random()*2)+'s;'+
+      'width:'+(2+Math.random()*3)+'px;height:'+(2+Math.random()*3)+'px';
+    container.appendChild(sparkle);
+  }
+})();
