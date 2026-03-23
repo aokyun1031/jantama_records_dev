@@ -5,20 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>最強位戦 - 麻雀大会</title>
 
-<!-- OGP設定（ここから追加） -->
+<!-- OGP設定 -->
 <meta property="og:title" content="最強位戦 - 麻雀大会">
-<meta property="og:description" content="予選を勝ち抜いた4名が最強位の座を賭けて激突！麻雀トーナメント「最強位戦」の特設サイトです。">
+<meta property="og:description" content="2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://あなたのサイトのURL/"> <!-- ※実際のURLに変更してください -->
-<meta property="og:image" content="https://あなたのサイトのURL/images/ogp.png"> <!-- ※表示させたい画像のURLに変更してください -->
+<meta property="og:url" content="https://jantama-records.onrender.com/">
+<meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
 <meta property="og:site_name" content="最強位戦">
 
 <!-- Twitter（X）カード設定 -->
-<meta name="twitter:card" content="summary_large_image"> <!-- 大きい画像のカード形式 -->
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="最強位戦 - 麻雀大会">
-<meta name="twitter:description" content="予選を勝ち抜いた4名が最強位の座を賭けて激突！麻雀トーナメント「最強位戦」の特設サイトです。">
-<meta name="twitter:image" content="https://あなたのサイトのURL/images/ogp.png"> <!-- ※表示させたい画像のURLに変更してください -->
-<!-- OGP設定（ここまで） -->
+<meta name="twitter:description" content="2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。">
+<meta name="twitter:image" content="https://jantama-records.onrender.com/img/logo.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
