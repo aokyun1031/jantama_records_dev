@@ -203,3 +203,8 @@
   .table-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
   .records-stats{gap:20px}
 }
+
+/* Mobile performance: disable backdrop-filter */
+@media(max-width:768px){
+  .standing-item,.table-card,.table-detail-block,.records,.progress-track{backdrop-filter:none}
+}

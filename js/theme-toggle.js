@@ -17,7 +17,8 @@
     var el=document.getElementById('particles');
     el.innerHTML='';
     var c=isDark?darkColors:lightColors;
-    for(var i=0;i<18;i++){
+    var count=window.innerWidth<=768?8:14;
+    for(var i=0;i<count;i++){
       var d=document.createElement('div');
       d.className='particle';
       var sz=6+Math.random()*14;

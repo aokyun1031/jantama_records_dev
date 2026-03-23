@@ -31,10 +31,6 @@
 }
 .section-tiles span{
   position:absolute;
-  animation:tileSpin 20s linear infinite;
-}
-@keyframes tileSpin{
-  0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}
 }
 
 /* Sections that carry bg tiles need relative positioning */
@@ -110,4 +106,11 @@
   .tile-scatter span{font-size:1.8rem}
   .progress-tile-bg{font-size:1.6rem;gap:16px}
   .records-tile-frame span{font-size:1.5rem}
+}
+
+/* Mobile performance */
+@media(max-width:768px){
+  .tile-divider-tiles{animation:none}
+  .tile-scatter{display:none}
+  .section-tiles{display:none}
 }

@@ -94,7 +94,8 @@ document.querySelectorAll('[data-count]').forEach(function(el){statObs.observe(e
 (function(){
   var container=document.getElementById('finals-embers');
   if(!container) return;
-  for(var i=0;i<20;i++){
+  var isMobile=window.innerWidth<=768;
+  for(var i=0,max=isMobile?0:10;i<max;i++){
     var e=document.createElement('div');
     e.className='ember';
     var drift=(Math.random()-0.5)*80;
@@ -111,7 +112,8 @@ document.querySelectorAll('[data-count]').forEach(function(el){statObs.observe(e
 (function(){
   var container=document.getElementById('energy-lines');
   if(!container) return;
-  for(var i=0;i<12;i++){
+  var isMobile=window.innerWidth<=768;
+  for(var i=0,max=isMobile?0:6;i<max;i++){
     var l=document.createElement('div');
     l.className='energy-line';
     l.style.cssText='transform:rotate('+(i*30)+'deg);animation-delay:'+(i*0.4)+'s';
@@ -125,7 +127,8 @@ var finalsObserver=new IntersectionObserver(function(entries){
     if(e.isIntersecting){
       var container=document.getElementById('confetti-container');
       var colors=['#ffd700','#ffec80','#e88cad','#9b8ce8','#5cc8b0','#ff6b6b','#4ecdc4','#ffe66d'];
-      for(var i=0;i<60;i++){
+      var confettiCount=window.innerWidth<=768?0:25;
+      for(var i=0;i<confettiCount;i++){
         (function(idx){
           setTimeout(function(){
             var c=document.createElement('div');
@@ -185,8 +188,9 @@ if(finalsEl) finalsObserver.observe(finalsEl);
       el.appendChild(s);
     }
   }
-  fillSectionTiles('section-tiles-rounds',10);
-  fillSectionTiles('section-tiles-standings',12);
+  var isMobileDeco=window.innerWidth<=768;
+  fillSectionTiles('section-tiles-rounds',isMobileDeco?0:8);
+  fillSectionTiles('section-tiles-standings',isMobileDeco?0:8);
 
   // Records tile frame
   var frame=document.getElementById('records-tile-frame');
@@ -209,8 +213,8 @@ if(finalsEl) finalsObserver.observe(finalsEl);
 
   // Page-level floating tile scatter
   var scatter=document.getElementById('tile-scatter');
-  if(scatter){
-    for(var i=0;i<10;i++){
+  if(scatter&&!isMobileDeco){
+    for(var i=0;i<6;i++){
       var s=document.createElement('span');
       s.textContent=pick();
       s.style.cssText='left:'+Math.random()*95+'%;top:'+(100+Math.random()*20)+'%;'+
