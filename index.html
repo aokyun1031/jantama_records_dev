@@ -26,10 +26,10 @@
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/finals.css">
 <link rel="stylesheet" href="css/mahjong-deco.css">
+<link rel="stylesheet" href="css/champion.css">
+<link rel="stylesheet" href="css/finals-countdown.css">
 <link rel="stylesheet" href="css/theme-dark.css" id="theme-dark">
 <link rel="stylesheet" href="css/theme-toggle.css">
-<link rel="stylesheet" href="css/finals-countdown.css">
-<link rel="stylesheet" href="css/champion.css">
 </head>
 <body>
 

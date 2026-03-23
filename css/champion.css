@@ -1,8 +1,8 @@
-/* champion.css */
+/* champion.css — Light theme default */
 .champion-section {
   position: relative;
   padding: 60px 20px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #f5f0ff 0%, #fff5f8 50%, #fef9ec 100%);
   overflow: hidden;
   margin: 40px 0;
 }
@@ -22,7 +22,7 @@
   transform: translate(-50%, -50%);
   width: 120%;
   height: 120%;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.1) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(212, 168, 76, 0.15) 0%, rgba(212, 168, 76, 0.05) 50%, transparent 70%);
   border-radius: 50%;
   animation: champion-glow-pulse 3s ease-in-out infinite alternate;
   z-index: 1;
@@ -40,9 +40,9 @@
 
 .champion-sparkle {
   position: absolute;
-  background: #ffd700;
+  background: var(--gold);
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  box-shadow: 0 0 8px rgba(212, 168, 76, 0.5);
   animation: sparkle-twinkle 2s ease-in-out infinite;
 }
 
@@ -58,8 +58,8 @@
   width: 100%;
   height: 100%;
   font-size: 2rem;
-  opacity: 0.1;
-  color: #ffd700;
+  opacity: 0.08;
+  color: var(--gold);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -74,29 +74,29 @@
 
 .champion-pretitle {
   font-size: 1.5rem;
-  color: #ffd700;
+  color: var(--gold);
   font-weight: 700;
   letter-spacing: 2px;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  text-shadow: 0 0 12px rgba(212, 168, 76, 0.3);
   animation: text-glow 2s ease-in-out infinite alternate;
   margin-bottom: 10px;
 }
 
 .champion-title {
   font-size: 3rem;
-  color: #ffffff;
+  color: var(--text);
   font-weight: 900;
-  text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+  text-shadow: 0 0 16px rgba(212, 168, 76, 0.2);
   margin: 0;
   font-family: 'Noto Sans JP', sans-serif;
 }
 
 .champion-subtitle {
   font-size: 1.2rem;
-  color: #ffd700;
+  color: var(--gold);
   font-weight: 600;
   margin-top: 10px;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  text-shadow: 0 0 8px rgba(212, 168, 76, 0.2);
 }
 
 .champion-content {
@@ -112,7 +112,7 @@
   position: relative;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 30px rgba(212, 168, 76, 0.25);
   animation: avatar-float 3s ease-in-out infinite;
 }
 
@@ -120,7 +120,7 @@
   width: 200px;
   height: 200px;
   object-fit: cover;
-  border: 5px solid #ffd700;
+  border: 5px solid var(--gold);
   border-radius: 50%;
 }
 
@@ -140,26 +140,25 @@
 
 .champion-name {
   font-size: 2.5rem;
-  color: #ffffff;
+  color: var(--text);
   font-weight: 900;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  text-shadow: 0 0 12px rgba(212, 168, 76, 0.2);
   margin-bottom: 10px;
   font-family: 'Noto Sans JP', sans-serif;
 }
 
 .champion-score {
   font-size: 1.5rem;
-  color: #ffd700;
+  color: var(--gold);
   font-weight: 700;
   margin-bottom: 20px;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  text-shadow: 0 0 8px rgba(212, 168, 76, 0.2);
 }
 
 .champion-message {
   font-size: 1.1rem;
-  color: #ffffff;
+  color: var(--text);
   line-height: 1.6;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
 .champion-footer {
@@ -168,10 +167,10 @@
   justify-content: center;
   gap: 20px;
   padding: 20px;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+  background: linear-gradient(135deg, rgba(212, 168, 76, 0.12), rgba(212, 168, 76, 0.05));
   border-radius: 20px;
-  border: 2px solid #ffd700;
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+  border: 2px solid rgba(212, 168, 76, 0.3);
+  box-shadow: 0 4px 20px rgba(212, 168, 76, 0.1);
 }
 
 .champion-trophy {
@@ -181,9 +180,9 @@
 
 .champion-text {
   font-size: 1.2rem;
-  color: #ffd700;
+  color: var(--gold);
   font-weight: 700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  text-shadow: 0 0 8px rgba(212, 168, 76, 0.2);
 }
 
 @keyframes champion-glow-pulse {
@@ -197,8 +196,8 @@
 }
 
 @keyframes text-glow {
-  0% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
-  100% { text-shadow: 0 0 30px rgba(255, 215, 0, 1); }
+  0% { text-shadow: 0 0 12px rgba(212, 168, 76, 0.3); }
+  100% { text-shadow: 0 0 20px rgba(212, 168, 76, 0.5); }
 }
 
 @keyframes avatar-float {
@@ -244,10 +243,10 @@
 .ended-container {
   display: inline-block;
   padding: 20px 40px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #f5f0ff 0%, #fff5f8 50%, #fef9ec 100%);
   border-radius: 30px;
-  border: 2px solid #ffd700;
-  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3), 0 0 20px rgba(26, 26, 46, 0.5);
+  border: 2px solid rgba(212, 168, 76, 0.3);
+  box-shadow: 0 4px 15px rgba(212, 168, 76, 0.1), 0 0 20px rgba(245, 240, 255, 0.5);
   position: relative;
   overflow: hidden;
   animation: endedGlow 3s ease-in-out infinite alternate;
@@ -260,7 +259,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(212, 168, 76, 0.15), transparent);
   animation: endedShine 4s ease-in-out infinite;
 }
 
@@ -273,9 +272,9 @@
 
 .ended-text {
   font-size: 1.4rem;
-  color: #ffffff;
+  color: var(--text);
   font-weight: 800;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 215, 0, 0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   font-family: 'Noto Sans JP', sans-serif;
   letter-spacing: 1px;
 }
@@ -286,8 +285,8 @@
 }
 
 @keyframes endedGlow {
-  from { box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3), 0 0 20px rgba(26, 26, 46, 0.5); }
-  to { box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4), 0 0 30px rgba(26, 26, 46, 0.6); }
+  from { box-shadow: 0 4px 15px rgba(212, 168, 76, 0.1), 0 0 20px rgba(245, 240, 255, 0.5); }
+  to { box-shadow: 0 6px 20px rgba(212, 168, 76, 0.15), 0 0 30px rgba(245, 240, 255, 0.6); }
 }
 
 @keyframes endedShine {

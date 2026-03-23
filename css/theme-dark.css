@@ -266,6 +266,69 @@ body{
 .ember{background:rgba(212,168,76,0.7);box-shadow:0 0 6px rgba(212,168,76,0.4)}
 .energy-line{background:linear-gradient(90deg,rgba(212,168,76,0.3),transparent)}
 
+/* ---------- Champion section (dark overrides) ---------- */
+.champion-section{
+  background:linear-gradient(135deg,#0d0b1a 0%,#140f28 50%,#1a1430 100%);
+}
+.champion-glow{
+  background:radial-gradient(circle,rgba(212,168,76,0.25) 0%,rgba(212,168,76,0.08) 50%,transparent 70%);
+}
+.champion-sparkle{
+  background:#e8c06a;
+  box-shadow:0 0 10px rgba(212,168,76,0.7);
+}
+.champion-pretitle{
+  color:#e8c06a;
+  text-shadow:0 0 20px rgba(212,168,76,0.6);
+}
+.champion-title{
+  color:#fff;
+  text-shadow:0 0 30px rgba(212,168,76,0.5);
+}
+.champion-subtitle{
+  color:#e8c06a;
+  text-shadow:0 0 10px rgba(212,168,76,0.4);
+}
+.champion-avatar{
+  box-shadow:0 0 50px rgba(212,168,76,0.4);
+}
+.champion-image{
+  border-color:#e8c06a;
+}
+.champion-name{
+  color:#fff;
+  text-shadow:0 0 20px rgba(212,168,76,0.5);
+}
+.champion-score{
+  color:#e8c06a;
+  text-shadow:0 0 10px rgba(212,168,76,0.4);
+}
+.champion-message{
+  color:#e8e4f0;
+  text-shadow:0 0 5px rgba(255,255,255,0.15);
+}
+.champion-footer{
+  background:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.06));
+  border-color:rgba(212,168,76,0.4);
+  box-shadow:0 0 30px rgba(212,168,76,0.2);
+}
+.champion-text{
+  color:#e8c06a;
+  text-shadow:0 0 10px rgba(212,168,76,0.4);
+}
+.ended-container{
+  background:linear-gradient(135deg,#0d0b1a 0%,#140f28 50%,#1a1430 100%);
+  border-color:rgba(212,168,76,0.4);
+  box-shadow:0 4px 15px rgba(212,168,76,0.2),0 0 20px rgba(13,11,26,0.5);
+}
+.ended-container::before{
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+}
+.ended-text{
+  color:#fff;
+  text-shadow:0 2px 4px rgba(0,0,0,0.5),0 0 10px rgba(212,168,76,0.2);
+}
+
 /* ---------- Mahjong decorations (dark overrides) ---------- */
 .tile-divider-line{background:linear-gradient(90deg,transparent,rgba(212,168,76,0.3),transparent)}
 .tile-divider-tiles{opacity:0.3}
