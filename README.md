@@ -12,6 +12,7 @@
 - Docker Compose（ローカル開発）
 - Render（ホスティング）
 - GitHub Codespaces（開発環境）
+- UptimeRobot（監視）
 
 ## ファイル構成
 
@@ -22,14 +23,19 @@
 │   ├── base.css                変数・リセット・レイアウト・Hero・プログレス
 │   ├── components.css          順位表・タブ・卓カード・結果・レコード
 │   ├── finals.css              決勝卓セクションの演出・アニメーション
+│   ├── finals-countdown.css    決勝カウントダウン表示
+│   ├── champion.css            優勝おめでとうセクション
 │   ├── mahjong-deco.css        麻雀牌の装飾
-│   ├── theme-dark.css          ダークテーマ
+│   ├── theme-dark.css          ダークテーマ（champion含む全セクション対応）
 │   └── theme-toggle.css        テーマ切替トグル
 ├── js/
 │   ├── data.js                 大会データ（順位・卓・各回戦結果）
 │   ├── render.js               DOM描画・タブ切替
-│   ├── effects.js              パーティクル・スクロールアニメ・決勝エフェクト
-│   └── theme-toggle.js         テーマ切替（localStorage永続化）
+│   ├── effects.js              パーティクル・スクロールアニメ・決勝エフェクト・優勝エフェクト
+│   ├── theme-toggle.js         テーマ切替（localStorage永続化）
+│   └── countdown.js            決勝カウントダウン表示
+├── img/
+│   └── nino.png                優勝者アバター画像
 ├── includes/
 │   └── db.php                  PostgreSQL接続（DATABASE_URL対応）
 ├── db/
@@ -55,7 +61,32 @@
 ```
 本番:  Render ──→ Neon (productionブランチ)
 開発:  Codespaces / Docker ──→ Neon (devブランチ)
+監視:  UptimeRobot ──→ Render本番
 ```
+
+## 機能
+
+### テーマ切替
+
+ライトテーマ（デフォルト）とダークテーマを右上のトグルで切り替え可能。設定はlocalStorageに保存されます。
+
+### モバイル最適化
+
+768px以下の画面幅では以下のパフォーマンス最適化が適用されます:
+
+- backdrop-filter（blur）の無効化
+- 決勝セクションのエフェクト（ember・energy-line・confetti）の非表示
+- 背景アニメーション・装飾アニメーションの簡略化
+- パーティクル数の削減
+- フォントサイズの`clamp()`によるレスポンシブ対応
+
+### OGP対応
+
+SNSやアプリでURLを共有した際にサムネイル・説明文が表示されます。
+
+## 監視
+
+UptimeRobotによりRender本番環境の死活監視を行っています。ダウン検知時はアラート通知されます。
 
 ## 開発環境セットアップ
 
