@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>最強位戦 - 麻雀大会</title>
+<title>最強位戦 - 麻雀トーナメント</title>
 
 <!-- OGP設定 -->
-<meta property="og:title" content="最強位戦 - 麻雀大会">
+<meta property="og:title" content="最強位戦 - 麻雀トーナメント">
 <meta property="og:description" content="2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://jantama-records.onrender.com/">
@@ -15,7 +15,7 @@
 
 <!-- Twitter（X）カード設定 -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="最強位戦 - 麻雀大会">
+<meta name="twitter:title" content="最強位戦 - 麻雀トーナメント">
 <meta name="twitter:description" content="2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。">
 <meta name="twitter:image" content="https://jantama-records.onrender.com/img/logo.png">
 
@@ -67,7 +67,7 @@
     <div class="champion-container">
       <div class="champion-glow"></div>
       <div class="champion-sparkles" id="champion-sparkles"></div>
-      <div class="champion-tiles-bg">&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;&#x1F010;&#x1F011;&#x1F012;&#x1F013;&#x1F014;&#x1F015;&#x1F016;&#x1F017;&#x1F018;&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;&#x1F01D;&#x1F01E;&#x1F01F;&#x1F020;&#x1F021;&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;</div>
+      <!-- <div class="champion-tiles-bg">&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;&#x1F010;&#x1F011;&#x1F012;&#x1F013;&#x1F014;&#x1F015;&#x1F016;&#x1F017;&#x1F018;&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;&#x1F01D;&#x1F01E;&#x1F01F;&#x1F020;&#x1F021;&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;</div> -->
       <div class="champion-header">
         <div class="champion-pretitle">🏆 CHAMPION 🏆</div>
         <h2 class="champion-title">優勝おめでとう！</h2>
@@ -111,7 +111,7 @@
 <!-- Progress Tracker -->
 <section class="progress-section">
   <div class="progress-track">
-    <div class="progress-tile-bg">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;</div>
+    <!-- <div class="progress-tile-bg">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;</div> -->
     <div class="progress-step">
       <div class="step-circle done">&#10003;</div>
       <div class="step-label">1回戦</div>
@@ -150,11 +150,11 @@
     <div class="energy-lines" id="energy-lines"></div>
 
     <div class="finals-header">
-      <div class="finals-pretitle">THE FINAL TABLE</div>
+      <!-- <div class="finals-pretitle">THE FINAL TABLE</div> -->
       <h2 class="finals-title">決勝卓</h2>
       
       <div class="finals-subtitle">予選を勝ち抜いた<span>4名</span>が最強位の座を賭けて激突</div>
-      <div class="finals-sparkle-line"></div>
+      <!-- <div class="finals-sparkle-line"></div> -->
     </div>
 
     <div class="finals-grid" id="finals-grid">
@@ -259,7 +259,7 @@
   </div> -->
 </section>
 
-<div class="footer-tiles">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;</div>
+<!-- <div class="footer-tiles">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;</div> -->
 <div class="footer">最強位戦 - 麻雀トーナメント</div>
 
 </div>
