@@ -83,7 +83,7 @@
 }
 
 .champion-title {
-  font-size: 3rem;
+  font-size: clamp(1.8rem, 7vw, 3rem);
   color: var(--text);
   font-weight: 900;
   text-shadow: 0 0 16px rgba(212, 168, 76, 0.2);
@@ -179,7 +179,7 @@
 }
 
 .champion-text {
-  font-size: 1.2rem;
+  font-size: clamp(0.75rem, 3.2vw, 1.2rem);
   color: var(--gold);
   font-weight: 700;
   text-shadow: 0 0 8px rgba(212, 168, 76, 0.2);
@@ -217,9 +217,6 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .champion-title {
-    font-size: 2.5rem;
-  }
   .champion-content {
     flex-direction: column;
     gap: 20px;
