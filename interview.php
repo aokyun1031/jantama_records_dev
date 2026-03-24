@@ -317,7 +317,7 @@
     <div class="interview-item" style="animation-delay: 0.6s">
       <div class="interview-question">
         <span class="interview-q-label">Q7</span>
-        <span>他の参加者たち（敗者たち）へ、チャンピオンから愛のあるメッセージ・アドバイスをお願いします！</span>
+        <span>他の参加者たちへ、チャンピオンから愛のあるメッセージ・アドバイスをお願いします！</span>
       </div>
       <div class="interview-answer">勝ち負けにこだわらず楽しく麻雀しましょう。</div>
     </div>
@@ -325,7 +325,7 @@
     <div class="interview-item" style="animation-delay: 0.7s">
       <div class="interview-question">
         <span class="interview-q-label">Q8</span>
-        <span>最後に、次回大会への意気込み（防衛宣言）をお願いします！</span>
+        <span>最後に、次回大会への意気込みをお願いします！</span>
       </div>
       <div class="interview-answer">討伐賞は誰にも渡しません！</div>
     </div>
@@ -333,7 +333,7 @@
 
   <!-- Back Link -->
   <div style="text-align: center;">
-    <a href="index.html" class="interview-back">&#x2190; トップページに戻る</a>
+    <a href="index.php" class="interview-back">&#x2190; トップページに戻る</a>
   </div>
 </section>
 
