@@ -88,6 +88,9 @@
         <div class="champion-trophy">🏆</div>
         <div class="champion-text">2026 麻雀トーナメント 最強位戦 優勝</div>
       </div>
+      <div class="champion-interview-link">
+        <a href="interview.php" class="interview-link-btn">🎤 優勝インタビューを読む</a>
+      </div>
     </div>
   </section>
 

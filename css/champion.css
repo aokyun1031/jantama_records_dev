@@ -215,6 +215,37 @@
   100% { transform: rotateY(360deg); }
 }
 
+/* Interview Link */
+.champion-interview-link {
+  margin-top: 24px;
+  text-align: center;
+  position: relative;
+  z-index: 4;
+}
+
+.interview-link-btn {
+  display: inline-block;
+  padding: 14px 32px;
+  background: linear-gradient(135deg, rgba(212, 168, 76, 0.2), rgba(212, 168, 76, 0.08));
+  color: var(--gold);
+  text-decoration: none;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-family: 'Noto Sans JP', sans-serif;
+  border: 2px solid rgba(212, 168, 76, 0.35);
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+  box-shadow: 0 4px 16px rgba(212, 168, 76, 0.12);
+  letter-spacing: 1px;
+}
+
+.interview-link-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(212, 168, 76, 0.25);
+  background: linear-gradient(135deg, rgba(212, 168, 76, 0.3), rgba(212, 168, 76, 0.12));
+  border-color: rgba(212, 168, 76, 0.5);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .champion-content {

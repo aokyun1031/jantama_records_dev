@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>優勝インタビュー - 最強位戦</title>
+
+<!-- OGP設定 -->
+<meta property="og:title" content="優勝インタビュー - 最強位戦">
+<meta property="og:description" content="最強位戦 優勝者ホロホロへの優勝インタビューを掲載しています。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jantama-records.onrender.com/interview.php">
+<meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
+<meta property="og:site_name" content="最強位戦">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/champion.css">
+<link rel="stylesheet" href="css/theme-dark.css" id="theme-dark">
+<link rel="stylesheet" href="css/theme-toggle.css">
+<style>
+/* Interview Page Styles */
+.interview-section {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.interview-hero {
+  text-align: center;
+  padding: 48px 20px 32px;
+  position: relative;
+}
+
+.interview-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--lavender), var(--pink));
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+  box-shadow: 0 2px 12px rgba(184,160,232,0.3);
+  animation: fadeDown 0.8s ease both;
+}
+
+.interview-title {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #9b8ce8, #e88cad, #d4a84c, #5cc8b0);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleGrad 6s ease infinite, fadeUp 1s ease both;
+  margin-bottom: 8px;
+}
+
+.interview-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-sub);
+  animation: fadeUp 1s ease 0.3s both;
+}
+
+.interview-profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin: 32px 0;
+  padding: 24px;
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  animation: fadeUp 1s ease 0.4s both;
+}
+
+.interview-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.interview-avatar img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--gold);
+  box-shadow: 0 0 20px rgba(212, 168, 76, 0.2);
+}
+
+.interview-avatar .crown {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+}
+
+.interview-profile-info {
+  text-align: left;
+}
+
+.interview-profile-name {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.interview-profile-label {
+  font-size: 0.75rem;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.interview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.interview-item {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s, box-shadow 0.3s;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: interviewFadeIn 0.6s ease forwards;
+}
+
+.interview-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.interview-question {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(212, 168, 76, 0.15);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.6;
+}
+
+.interview-q-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, var(--gold), rgba(212, 168, 76, 0.8));
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.interview-answer {
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.8;
+  padding-left: 36px;
+}
+
+.interview-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: #fff;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 4px 16px rgba(155, 140, 232, 0.3);
+  margin-bottom: 40px;
+}
+
+.interview-back:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(155, 140, 232, 0.4);
+}
+
+@keyframes interviewFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .interview-profile {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  .interview-profile-info {
+    text-align: center;
+  }
+  .interview-item {
+    padding: 16px 18px;
+  }
+  .interview-answer {
+    padding-left: 0;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<div class="theme-toggle" id="theme-toggle">
+  <span class="theme-toggle-icon theme-toggle-sun">&#x2600;</span>
+  <div class="theme-toggle-track" id="theme-track">
+    <div class="theme-toggle-thumb"></div>
+  </div>
+  <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
+</div>
+
+<!-- Floating Particles -->
+<div class="particles" id="particles"></div>
+
+<div class="main">
+
+<!-- Hero -->
+<div class="interview-hero">
+  <div class="interview-badge">CHAMPION INTERVIEW</div>
+  <h1 class="interview-title">優勝インタビュー</h1>
+  <div class="interview-subtitle">最強位戦 チャンピオンに聞く</div>
+</div>
+
+<!-- Profile Card -->
+<section class="interview-section">
+  <div class="interview-profile">
+    <div class="interview-avatar">
+      <img src="img/nino.png" alt="ホロホロ">
+      <span class="crown">👑</span>
+    </div>
+    <div class="interview-profile-info">
+      <div class="interview-profile-label">🏆 2026 最強位戦 優勝</div>
+      <div class="interview-profile-name">ホロホロ</div>
+    </div>
+  </div>
+
+  <!-- Interview Q&A -->
+  <div class="interview-list">
+<?php
+$qa = [
+  [
+    'q' => '大会全体を通して、ご自身の調子やツモの感触はどうでしたか？',
+    'a' => '四人打ちにしてはいいところがよく入ったと思います。',
+  ],
+  [
+    'q' => '大会前に密かに立てていた『テーマ』や『作戦』はありましたか？',
+    'a' => '楽しく打てたらいいなぁって感じで特に作戦はありません。',
+  ],
+  [
+    'q' => '今大会を通じて、ご自身の中で『MVP』と言える最高のアガリ（または最高のファインプレー）はどの局でしたか？',
+    'a' => '決勝戦の親の時に清一色上がった時ですかね、、、配牌チートだったし思ってた所全部入って来ました、',
+  ],
+  [
+    'q' => '逆に『あれは危なかった』、『実はあの時、手が震えていた』というヒヤッとした場面や、裏目に出た局はありましたか？',
+    'a' => '特に無し',
+  ],
+  [
+    'q' => '一番警戒していた、あるいは『こいつにだけは負けたくない』と思っていたプレイヤーは誰でしたか？',
+    'a' => 'ミカさんですね！',
+  ],
+  [
+    'q' => '今回の優勝賞品は、どのように使いたいですか？',
+    'a' => '毎週水曜日会社にヤクルトさんくるのでそこで使います！<br>子供がよく飲むので。。。',
+  ],
+  [
+    'q' => '他の参加者たち（敗者たち）へ、チャンピオンから愛のあるメッセージ・アドバイスをお願いします！',
+    'a' => '勝ち負けにこだわらず楽しく麻雀しましょう。',
+  ],
+  [
+    'q' => '最後に、次回大会への意気込み（防衛宣言）をお願いします！',
+    'a' => '討伐賞は誰にも渡しません！',
+  ],
+];
+
+foreach ($qa as $i => $item):
+  $num = $i + 1;
+  $delay = 0.1 * $i;
+?>
+    <div class="interview-item" style="animation-delay: <?= $delay ?>s">
+      <div class="interview-question">
+        <span class="interview-q-label">Q<?= $num ?></span>
+        <span><?= htmlspecialchars($item['q'], ENT_QUOTES, 'UTF-8') ?></span>
+      </div>
+      <div class="interview-answer"><?= $item['a'] ?></div>
+    </div>
+<?php endforeach; ?>
+  </div>
+
+  <!-- Back Link -->
+  <div style="text-align: center;">
+    <a href="index.html" class="interview-back">&#x2190; トップページに戻る</a>
+  </div>
+</section>
+
+<div class="footer">最強位戦 - 麻雀トーナメント</div>
+
+</div>
+
+<script src="js/theme-toggle.js"></script>
+</body>
+</html>
