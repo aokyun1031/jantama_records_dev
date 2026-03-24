@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# .php 付きでアクセスされたら拡張子なしにリダイレクト
+RewriteCond %{THE_REQUEST} \s/([^\.]+)\.php[\s?] [NC]
+RewriteRule ^(.*)\.php$ /$1 [R=301,L]
+
+# 拡張子なしのURLを内部的に .php ファイルへルーティング
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]

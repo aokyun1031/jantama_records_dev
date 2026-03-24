@@ -4,6 +4,10 @@ FROM php:8.2-apache
 RUN apt-get update && apt-get install -y libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql pgsql
 
+# mod_rewrite を有効化し、.htaccess を許可
+RUN a2enmod rewrite
+RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+
 # 自分のコードをApacheの公開ディレクトリにコピー
 COPY . /var/www/html/
 
