@@ -1,60 +1,22 @@
 <?php
-// .envファイルを読み込み（ローカル開発用）
-$envFile = __DIR__ . '/.env';
-if (file_exists($envFile)) {
-    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        if (str_starts_with($line, '#')) continue;
-        putenv($line);
-    }
-}
+require __DIR__ . '/config/database.php';
 
-// DATABASE_URL をパース
-$databaseUrl = getenv('DATABASE_URL');
+// --- データ取得 ---
 $players = [];
 $error = null;
 
-if ($databaseUrl) {
-    $params = parse_url($databaseUrl);
-    $host = $params['host'] ?? 'localhost';
-    $port = $params['port'] ?? 5432;
-    $name = ltrim($params['path'] ?? '', '/');
-    $user = $params['user'] ?? '';
-    $pass = $params['pass'] ?? '';
-} else {
-    $host = getenv('PGHOST') ?: 'localhost';
-    $port = getenv('PGPORT') ?: 5432;
-    $name = getenv('PGDATABASE') ?: 'jantama';
-    $user = getenv('PGUSER') ?: 'postgres';
-    $pass = getenv('PGPASSWORD') ?: '';
-}
-
 try {
-    $sslmode = getenv('PGSSLMODE') ?: 'require';
-    $dsn = "pgsql:host={$host};port={$port};dbname={$name};sslmode={$sslmode}";
-    $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
+    $pdo = getDbConnection();
     $stmt = $pdo->query('SELECT id, name FROM players ORDER BY id');
     $players = $stmt->fetchAll();
 } catch (PDOException $e) {
-    $error = $e->getMessage();
+    error_log('[players] DB error: ' . $e->getMessage());
+    $error = true;
 }
-?>
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>選手一覧 - 最強位戦</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/theme-dark.css" id="theme-dark">
-<link rel="stylesheet" href="css/theme-toggle.css">
-<style>
+// --- テンプレート変数 ---
+$pageTitle = '選手一覧 - 最強位戦';
+$pageStyle = <<<'CSS'
 .players-hero {
   text-align: center;
   padding: 48px 20px 32px;
@@ -198,23 +160,11 @@ try {
     grid-template-columns: 1fr;
   }
 }
-</style>
-</head>
-<body>
+CSS;
 
-<!-- Theme Toggle -->
-<div class="theme-toggle" id="theme-toggle">
-  <span class="theme-toggle-icon theme-toggle-sun">&#x2600;</span>
-  <div class="theme-toggle-track" id="theme-track">
-    <div class="theme-toggle-thumb"></div>
-  </div>
-  <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
-</div>
-
-<!-- Floating Particles -->
-<div class="particles" id="particles"></div>
-
-<div class="main">
+// --- 表示 ---
+require __DIR__ . '/templates/header.php';
+?>
 
 <div class="players-hero">
   <div class="players-badge">PLAYERS</div>
@@ -225,7 +175,7 @@ try {
 <?php if ($error): ?>
   <div class="players-error">
     <div class="players-error-label">データベース接続エラー</div>
-    <div class="players-error-detail"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+    <div class="players-error-detail">一時的にデータを取得できません。しばらくしてから再度お試しください。</div>
   </div>
 <?php else: ?>
   <div class="players-grid">
@@ -242,10 +192,4 @@ try {
   <a href="index.html" class="players-back">&#x2190; トップページに戻る</a>
 </div>
 
-<div class="footer">最強位戦 - 麻雀トーナメント</div>
-
-</div>
-
-<script src="js/theme-toggle.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/templates/footer.php'; ?>
