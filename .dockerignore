@@ -1,15 +1,13 @@
 # Git
 .git
 
-# 環境・設定
+# 環境・設定（環境ごとに異なる）
 .env
 phinx.php
 
 # 開発ツール（本番不要）
 .devcontainer/
 vendor/
-composer.json
-composer.lock
 node_modules
 
 # ドキュメント
