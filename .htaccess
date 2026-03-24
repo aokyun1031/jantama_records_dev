@@ -1,5 +1,26 @@
 RewriteEngine On
 
+# --- セキュリティヘッダー ---
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "DENY"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; img-src 'self' data:"
+</IfModule>
+
+# --- 機密ファイルへのアクセス禁止 ---
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+# --- 機密ディレクトリへのアクセス禁止 ---
+RewriteRule ^config/ - [F,L]
+RewriteRule ^templates/ - [F,L]
+RewriteRule ^vendor/ - [F,L]
+RewriteRule ^db/ - [F,L]
+
+# --- URL書き換え ---
 # .php 付きでアクセスされたら拡張子なしにリダイレクト
 RewriteCond %{THE_REQUEST} \s/([^\.]+)\.php[\s?] [NC]
 RewriteRule ^(.*)\.php$ /$1 [R=301,L]
