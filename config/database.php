@@ -1,8 +1,15 @@
 <?php
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+// .envファイルから環境変数を読み込む（既存の環境変数は上書きしない）
+$envFile = dirname(__DIR__);
+if (file_exists($envFile . '/.env')) {
+    Dotenv\Dotenv::createImmutable($envFile)->safeLoad();
+}
+
 /**
  * DB接続を返す。
- * .env（ローカル）→ 環境変数（Render/Codespaces）の順で読み込む。
  * 同一リクエスト内では同じPDOインスタンスを再利用する。
  */
 function getDbConnection(): PDO
@@ -12,10 +19,7 @@ function getDbConnection(): PDO
         return $pdo;
     }
 
-    loadEnv();
-
-    // DATABASE_URL をパース
-    $databaseUrl = getenv('DATABASE_URL');
+    $databaseUrl = $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL');
 
     if ($databaseUrl) {
         $params = parse_url($databaseUrl);
@@ -28,14 +32,14 @@ function getDbConnection(): PDO
         $user = $params['user'] ?? '';
         $pass = $params['pass'] ?? '';
     } else {
-        $host = getenv('PGHOST') ?: 'localhost';
-        $port = getenv('PGPORT') ?: 5432;
-        $name = getenv('PGDATABASE') ?: 'jantama';
-        $user = getenv('PGUSER') ?: 'postgres';
-        $pass = getenv('PGPASSWORD') ?: '';
+        $host = $_ENV['PGHOST'] ?? getenv('PGHOST') ?: 'localhost';
+        $port = $_ENV['PGPORT'] ?? getenv('PGPORT') ?: 5432;
+        $name = $_ENV['PGDATABASE'] ?? getenv('PGDATABASE') ?: 'jantama';
+        $user = $_ENV['PGUSER'] ?? getenv('PGUSER') ?: 'postgres';
+        $pass = $_ENV['PGPASSWORD'] ?? getenv('PGPASSWORD') ?: '';
     }
 
-    $sslmode = getenv('PGSSLMODE') ?: 'require';
+    $sslmode = $_ENV['PGSSLMODE'] ?? getenv('PGSSLMODE') ?: 'require';
     $dsn = "pgsql:host={$host};port={$port};dbname={$name};sslmode={$sslmode}";
 
     $pdo = new PDO($dsn, $user, $pass, [
@@ -45,38 +49,4 @@ function getDbConnection(): PDO
     ]);
 
     return $pdo;
-}
-
-/**
- * .envファイルから環境変数を読み込む（ローカル開発用）。
- * 許可リストに含まれる変数のみ設定し、既存の環境変数は上書きしない。
- */
-function loadEnv(): void
-{
-    static $loaded = false;
-    if ($loaded) return;
-    $loaded = true;
-
-    $envFile = dirname(__DIR__) . '/.env';
-    if (!file_exists($envFile)) return;
-
-    $allowed = [
-        'DATABASE_URL', 'PGSSLMODE',
-        'PGHOST', 'PGPORT', 'PGDATABASE', 'PGUSER', 'PGPASSWORD',
-        'APP_ENV',
-    ];
-
-    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        $line = trim($line);
-        if ($line === '' || str_starts_with($line, '#')) continue;
-
-        $parts = explode('=', $line, 2);
-        if (count($parts) !== 2) continue;
-
-        $key = trim($parts[0]);
-        if (!in_array($key, $allowed, true)) continue;
-        if (getenv($key) !== false) continue;
-
-        putenv($line);
-    }
 }

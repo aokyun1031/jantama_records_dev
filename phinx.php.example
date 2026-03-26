@@ -1,16 +1,14 @@
 <?php
 
-// .envファイルを読み込み（ローカル開発用）
-$envFile = __DIR__ . '/.env';
-if (file_exists($envFile)) {
-    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        if (str_starts_with($line, '#')) continue;
-        putenv($line);
-    }
+require_once __DIR__ . '/vendor/autoload.php';
+
+// .envファイルから環境変数を読み込む（既存の環境変数は上書きしない）
+if (file_exists(__DIR__ . '/.env')) {
+    Dotenv\Dotenv::createImmutable(__DIR__)->safeLoad();
 }
 
 // DATABASE_URL をパースするか、個別のPG*変数を使う
-$databaseUrl = getenv('DATABASE_URL');
+$databaseUrl = $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL');
 
 if ($databaseUrl) {
     $params = parse_url($databaseUrl);
@@ -20,11 +18,11 @@ if ($databaseUrl) {
     $user = $params['user'] ?? '';
     $pass = $params['pass'] ?? '';
 } else {
-    $host = getenv('PGHOST') ?: 'localhost';
-    $port = getenv('PGPORT') ?: 5432;
-    $name = getenv('PGDATABASE') ?: 'jantama';
-    $user = getenv('PGUSER') ?: 'postgres';
-    $pass = getenv('PGPASSWORD') ?: '';
+    $host = $_ENV['PGHOST'] ?? getenv('PGHOST') ?: 'localhost';
+    $port = $_ENV['PGPORT'] ?? getenv('PGPORT') ?: 5432;
+    $name = $_ENV['PGDATABASE'] ?? getenv('PGDATABASE') ?: 'jantama';
+    $user = $_ENV['PGUSER'] ?? getenv('PGUSER') ?: 'postgres';
+    $pass = $_ENV['PGPASSWORD'] ?? getenv('PGPASSWORD') ?: '';
 }
 
 return [
