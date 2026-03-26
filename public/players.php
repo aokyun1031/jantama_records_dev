@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/config/database.php';
+require __DIR__ . '/../config/database.php';
 
 // --- データ取得 ---
 $players = [];
@@ -163,7 +163,7 @@ $pageStyle = <<<'CSS'
 CSS;
 
 // --- 表示 ---
-require __DIR__ . '/templates/header.php';
+require __DIR__ . '/../templates/header.php';
 ?>
 
 <div class="players-hero">
@@ -192,4 +192,4 @@ require __DIR__ . '/templates/header.php';
   <a href="index.html" class="players-back">&#x2190; トップページに戻る</a>
 </div>
 
-<?php require __DIR__ . '/templates/footer.php'; ?>
+<?php require __DIR__ . '/../templates/footer.php'; ?>

@@ -7,6 +7,8 @@ phinx.php
 
 # 開発ツール（本番不要）
 .devcontainer/
+.vscode/
+.claude/
 vendor/
 node_modules
 

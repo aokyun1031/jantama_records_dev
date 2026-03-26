@@ -27,27 +27,35 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 ## ファイル構成
 
 ```
-├── index.html                  メインページ（HTML構造）
-├── index.php                   同内容（Docker/Apache用）
-├── css/
-│   ├── base.css                変数・リセット・レイアウト・Hero・プログレス
-│   ├── components.css          順位表・タブ・卓カード・結果・レコード
-│   ├── finals.css              決勝卓セクションの演出・アニメーション
-│   ├── finals-countdown.css    決勝カウントダウン表示
-│   ├── champion.css            優勝おめでとうセクション
-│   ├── mahjong-deco.css        麻雀牌の装飾
-│   ├── theme-dark.css          ダークテーマ（champion含む全セクション対応）
-│   └── theme-toggle.css        テーマ切替トグル
-├── js/
-│   ├── data.js                 大会データ（順位・卓・各回戦結果）
-│   ├── render.js               DOM描画・タブ切替
-│   ├── effects.js              パーティクル・スクロールアニメ・決勝エフェクト・優勝エフェクト
-│   ├── theme-toggle.js         テーマ切替（localStorage永続化）
-│   └── countdown.js            決勝カウントダウン表示
-├── img/
-│   └── nino.png                優勝者アバター画像
-├── includes/
-│   └── db.php                  PostgreSQL接続（DATABASE_URL対応）
+├── public/                     Webサーバー公開ディレクトリ
+│   ├── index.html              メインページ（HTML構造）
+│   ├── index.php               同内容（Docker/Apache用）
+│   ├── interview.html          優勝インタビュー（静的）
+│   ├── interview.php           優勝インタビュー（PHP版）
+│   ├── players.php             選手一覧ページ
+│   ├── .htaccess               セキュリティヘッダー・URL書き換え
+│   ├── css/
+│   │   ├── base.css            変数・リセット・レイアウト・Hero・プログレス
+│   │   ├── components.css      順位表・タブ・卓カード・結果・レコード
+│   │   ├── finals.css          決勝卓セクションの演出・アニメーション
+│   │   ├── finals-countdown.css 決勝カウントダウン表示
+│   │   ├── champion.css        優勝おめでとうセクション
+│   │   ├── mahjong-deco.css    麻雀牌の装飾
+│   │   ├── theme-dark.css      ダークテーマ（champion含む全セクション対応）
+│   │   └── theme-toggle.css    テーマ切替トグル
+│   ├── js/
+│   │   ├── data.js             大会データ（順位・卓・各回戦結果）
+│   │   ├── render.js           DOM描画・タブ切替
+│   │   ├── effects.js          パーティクル・スクロールアニメ・決勝エフェクト・優勝エフェクト
+│   │   ├── theme-toggle.js     テーマ切替（localStorage永続化）
+│   │   └── countdown.js        決勝カウントダウン表示
+│   └── img/
+│       └── nino.png            優勝者アバター画像
+├── config/
+│   └── database.php            DB接続・環境変数読み込み
+├── templates/
+│   ├── header.php              共通ヘッダー
+│   └── footer.php              共通フッター
 ├── db/
 │   ├── migrations/             Phinxマイグレーション
 │   └── seeds/                  Phinxシーダー
@@ -58,12 +66,14 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 ├── Dockerfile                  Render デプロイ / ローカルDocker用
 ├── docker-compose.yml          ローカル開発用
 ├── render.yaml                 Renderデプロイ設定
-├── composer.json               PHP依存（Phinx）
+├── composer.json               PHP依存（Phinx, phpdotenv）
 ├── phinx.php.example           Phinx設定テンプレート
 ├── .env.example                環境変数テンプレート
 ├── .gitignore
 └── .dockerignore
 ```
+
+`public/` のみがWebサーバーから公開されます。`config/`、`templates/`、`db/`、`vendor/` はWeb経由でアクセスできません。
 
 ## 開発環境セットアップ
 
@@ -103,7 +113,7 @@ Codespaces起動時にPHPビルトインサーバー（ポート8080）が自動
 ターミナルで手動起動できます:
 
 ```bash
-php -S 0.0.0.0:8080
+php -S 0.0.0.0:8080 -t public
 ```
 
 ### Docker Compose（ローカル）
@@ -128,7 +138,7 @@ docker compose down
 
 ### ブラウザのみ
 
-`index.html` をブラウザで直接開くだけでフロントエンドは動作します（DB不要）。
+`public/index.html` をブラウザで直接開くだけでフロントエンドは動作します（DB不要）。
 
 ## Phinx（DBマイグレーション）
 
@@ -196,7 +206,7 @@ UptimeRobotによりRender本番環境の死活監視を行っています。ダ
 
 ## データ更新方法
 
-現在、大会データは `js/data.js` にハードコードされています。
+現在、大会データは `public/js/data.js` にハードコードされています。
 
 - `standings` : 総合順位・累計ポイント・各回戦スコア・敗退ラウンド
 - `r1Tables` / `r2Tables` / `r3Tables` : 各回戦の卓割り
