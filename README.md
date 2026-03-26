@@ -51,8 +51,14 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 │   │   └── countdown.js        決勝カウントダウン表示
 │   └── img/
 │       └── nino.png            優勝者アバター画像
+├── models/
+│   ├── Player.php              選手データの取得
+│   ├── Standing.php            総合順位の取得
+│   ├── RoundResult.php         ラウンド成績の取得
+│   ├── TableInfo.php           卓情報・メンバーの取得
+│   └── TournamentMeta.php      大会メタ情報の取得
 ├── config/
-│   └── database.php            DB接続・環境変数読み込み
+│   └── database.php            DB接続・ヘルパー関数・環境変数読み込み
 ├── templates/
 │   ├── header.php              共通ヘッダー
 │   └── footer.php              共通フッター
@@ -66,14 +72,16 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 ├── Dockerfile                  Render デプロイ / ローカルDocker用
 ├── docker-compose.yml          ローカル開発用
 ├── render.yaml                 Renderデプロイ設定
-├── composer.json               PHP依存（Phinx, phpdotenv）
+├── composer.json               PHP依存・autoload設定
 ├── phinx.php.example           Phinx設定テンプレート
 ├── .env.example                環境変数テンプレート
 ├── .gitignore
 └── .dockerignore
 ```
 
-`public/` のみがWebサーバーから公開されます。`config/`、`templates/`、`db/`、`vendor/` はWeb経由でアクセスできません。
+`public/` のみがWebサーバーから公開されます。`config/`、`models/`、`templates/`、`db/`、`vendor/` はWeb経由でアクセスできません。
+
+Neon無料枠のスリープからの復帰を考慮し、DB接続はリトライ付き（最大3回、指数バックオフ）で行います。
 
 ## 開発環境セットアップ
 

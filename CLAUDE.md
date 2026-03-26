@@ -13,7 +13,8 @@
 ## ディレクトリ構成
 
 - `public/` - Webサーバー公開ディレクトリ（DocumentRoot）
-- `config/` - DB接続等の設定ファイル
+- `models/` - データアクセス層（SQLはここに集約）
+- `config/` - DB接続・ヘルパー関数
 - `templates/` - 共通ヘッダー・フッター
 - `db/migrations/` - Phinxマイグレーション
 - `db/seeds/` - Phinxシーダー
@@ -49,9 +50,17 @@ php vendor/bin/phinx seed:run
 
 ## コーディング規約
 
-- PHPの新規ページは `public/` 配下に作成し、`config/database.php` を `require __DIR__ . '/../config/database.php'` で読み込む
+- SQLは `models/` のクラスに集約する。ビュー（`public/*.php`）にSQLを書かない
+- データ取得は `fetchData(fn() => ModelName::method())` を使う
+- HTMLエスケープは `h()` ヘルパーを使う
 - テンプレートは `templates/` の header.php / footer.php を使う
 - DB接続は `getDbConnection()` を使用。直接PDOを生成しない
-- 出力時は必ず `htmlspecialchars($val, ENT_QUOTES, 'UTF-8')` でエスケープ
 - SQLにユーザー入力を使う場合はプリペアドステートメント必須
+- モデル追加後は `composer dump-autoload` を実行する
 - `.env` の読み込みは phpdotenv (`Dotenv\Dotenv::createImmutable()`) を使う
+
+## 作業ルール
+
+- ファイルやディレクトリ構成を変更したら `README.md` のファイル構成セクションを更新する
+- 新しいモデルやスキルを追加したら対応する `.claude/skills/` の SKILL.md を更新する
+- コーディング規約やコマンドが変わったら `CLAUDE.md` を更新する
