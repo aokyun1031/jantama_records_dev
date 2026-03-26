@@ -10,6 +10,7 @@ if (file_exists($envFile . '/.env')) {
 
 /**
  * DB接続を返す。
+ * Neon無料枠のスリープからの復帰を考慮し、リトライを行う。
  * 同一リクエスト内では同じPDOインスタンスを再利用する。
  */
 function getDbConnection(): PDO
@@ -42,11 +43,57 @@ function getDbConnection(): PDO
     $sslmode = $_ENV['PGSSLMODE'] ?? getenv('PGSSLMODE') ?: 'require';
     $dsn = "pgsql:host={$host};port={$port};dbname={$name};sslmode={$sslmode}";
 
-    $pdo = new PDO($dsn, $user, $pass, [
+    $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
-    ]);
+        PDO::ATTR_TIMEOUT            => 10,
+    ];
 
-    return $pdo;
+    // Neon無料枠はスリープ状態からの復帰に時間がかかるためリトライする
+    $maxRetries = 3;
+    $retryDelay = 1; // 秒
+    $lastException = null;
+
+    for ($i = 0; $i < $maxRetries; $i++) {
+        try {
+            $pdo = new PDO($dsn, $user, $pass, $options);
+            return $pdo;
+        } catch (PDOException $e) {
+            $lastException = $e;
+            error_log("[DB] Connection attempt " . ($i + 1) . " failed: " . $e->getMessage());
+            if ($i < $maxRetries - 1) {
+                sleep($retryDelay);
+                $retryDelay *= 2; // 1秒 → 2秒 → 4秒
+            }
+        }
+    }
+
+    throw $lastException;
+}
+
+/**
+ * HTMLエスケープのショートカット。
+ */
+function h(string $value): string
+{
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * DBからデータを取得し、エラー時はnullを返す共通ラッパー。
+ * 呼び出し側でエラー表示を制御できる。
+ *
+ * @param callable $callback PDOを受け取りデータを返すコールバック
+ * @return array{data: mixed, error: bool}
+ */
+function fetchData(callable $callback): array
+{
+    try {
+        $pdo = getDbConnection();
+        return ['data' => $callback($pdo), 'error' => false];
+    } catch (PDOException $e) {
+        error_log('[DB] ' . $e->getMessage());
+        return ['data' => null, 'error' => true];
+    }
 }

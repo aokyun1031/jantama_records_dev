@@ -2,17 +2,9 @@
 require __DIR__ . '/../config/database.php';
 
 // --- データ取得 ---
-$players = [];
-$error = null;
-
-try {
-    $pdo = getDbConnection();
-    $stmt = $pdo->query('SELECT id, name FROM players ORDER BY id');
-    $players = $stmt->fetchAll();
-} catch (PDOException $e) {
-    error_log('[players] DB error: ' . $e->getMessage());
-    $error = true;
-}
+['data' => $players, 'error' => $error] = fetchData(function (PDO $pdo) {
+    return $pdo->query('SELECT id, name FROM players ORDER BY id')->fetchAll();
+});
 
 // --- テンプレート変数 ---
 $pageTitle = '選手一覧 - 最強位戦';
@@ -169,7 +161,7 @@ require __DIR__ . '/../templates/header.php';
 <div class="players-hero">
   <div class="players-badge">PLAYERS</div>
   <h1 class="players-title">選手一覧</h1>
-  <div class="players-count"><?= count($players) ?> 名の選手が登録されています</div>
+  <div class="players-count"><?= count($players ?? []) ?> 名の選手が登録されています</div>
 </div>
 
 <?php if ($error): ?>
@@ -182,7 +174,7 @@ require __DIR__ . '/../templates/header.php';
   <?php foreach ($players as $i => $player): ?>
     <div class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
       <div class="player-id"><?= (int)$player['id'] ?></div>
-      <div class="player-name"><?= htmlspecialchars($player['name'], ENT_QUOTES, 'UTF-8') ?></div>
+      <div class="player-name"><?= h($player['name']) ?></div>
     </div>
   <?php endforeach; ?>
   </div>
