@@ -5,7 +5,7 @@
     "ghcr.io/devcontainers/features/node:1": {}
   },
   "postCreateCommand": "bash .devcontainer/setup.sh",
-  "postStartCommand": "nohup php -S 0.0.0.0:8080 > /tmp/php-server.log 2>&1 &",
+  "postAttachCommand": "php -S 0.0.0.0:8080",
   "customizations": {
     "vscode": {
       "extensions": [
