@@ -17,10 +17,13 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # 依存関係を先にインストール（キャッシュ効率化）
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --optimize-autoloader
+RUN composer install --no-dev --no-interaction --no-autoloader
 
 # 自分のコードをApacheの公開ディレクトリにコピー
 COPY . /var/www/html/
+
+# models/ を含めたautoloadを生成
+RUN composer dump-autoload --no-dev --optimize
 
 # Apacheの書き込み権限設定
 RUN chown -R www-data:www-data /var/www/html

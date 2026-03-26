@@ -14,6 +14,15 @@ RewriteEngine On
   Require all denied
 </FilesMatch>
 
+# --- エラーページ ---
+ErrorDocument 404 /404.php
+ErrorDocument 500 /500.html
+
+# --- メンテナンスモード（有効化する場合は下3行のコメントを外す） ---
+# RewriteCond %{REQUEST_URI} !^/maintenance\.html$
+# RewriteCond %{REQUEST_URI} !^/css/ [NC]
+# RewriteRule ^(.*)$ /maintenance.html [R=503,L]
+
 # --- URL書き換え ---
 # .php 付きでアクセスされたら拡張子なしにリダイレクト
 RewriteCond %{THE_REQUEST} \s/([^\.]+)\.php[\s?] [NC]

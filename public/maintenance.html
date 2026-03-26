@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>メンテナンス中 - 最強位戦</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg1:#ede7f6;--bg2:#fce4ec;--bg3:#e0f7fa;--bg4:#fff8e1;
+  --text:#2d2b55;--text-sub:#8280a8;
+  --purple:#9b8ce8;--pink:#e88cad;--gold:#d4a84c;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Noto Sans JP','Inter',sans-serif;
+  color:var(--text);min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3),var(--bg4));
+}
+.maintenance-page{text-align:center;padding:40px 20px}
+.maintenance-icon{font-size:4rem;margin-bottom:16px}
+.maintenance-title{
+  font-size:clamp(1.5rem,5vw,2rem);font-weight:900;
+  background:linear-gradient(135deg,#9b8ce8,#e88cad,#d4a84c);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:12px;
+}
+.maintenance-detail{font-size:0.9rem;color:var(--text-sub);line-height:1.8}
+</style>
+</head>
+<body>
+<div class="maintenance-page">
+  <div class="maintenance-icon">🔧</div>
+  <div class="maintenance-title">メンテナンス中です</div>
+  <div class="maintenance-detail">
+    現在サイトのメンテナンスを行っています。<br>
+    しばらくしてから再度アクセスしてください。
+  </div>
+</div>
+</body>
+</html>

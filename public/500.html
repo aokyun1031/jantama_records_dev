@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サーバーエラー - 最強位戦</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg1:#ede7f6;--bg2:#fce4ec;--bg3:#e0f7fa;--bg4:#fff8e1;
+  --text:#2d2b55;--text-sub:#8280a8;
+  --purple:#9b8ce8;--pink:#e88cad;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Noto Sans JP','Inter',sans-serif;
+  color:var(--text);min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3),var(--bg4));
+}
+.error-page{text-align:center;padding:40px 20px}
+.error-code{
+  font-family:'Inter',sans-serif;
+  font-size:clamp(4rem,15vw,8rem);font-weight:900;
+  background:linear-gradient(135deg,#9b8ce8,#e88cad,#d4a84c);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;margin-bottom:16px;
+}
+.error-message{font-size:1.1rem;font-weight:700;margin-bottom:8px}
+.error-detail{font-size:0.85rem;color:var(--text-sub);margin-bottom:32px}
+.error-back{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 24px;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:#fff;text-decoration:none;border-radius:12px;
+  font-weight:700;font-size:0.85rem;
+  box-shadow:0 4px 16px rgba(155,140,232,0.3);
+}
+.error-back:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(155,140,232,0.4)}
+</style>
+</head>
+<body>
+<div class="error-page">
+  <div class="error-code">500</div>
+  <div class="error-message">サーバーエラーが発生しました</div>
+  <div class="error-detail">しばらくしてから再度お試しください。</div>
+  <a href="/" class="error-back">&#x2190; トップページに戻る</a>
+</div>
+</body>
+</html>
