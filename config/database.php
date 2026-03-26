@@ -81,17 +81,17 @@ function h(string $value): string
 }
 
 /**
- * DBからデータを取得し、エラー時はnullを返す共通ラッパー。
- * 呼び出し側でエラー表示を制御できる。
+ * データ取得の共通ラッパー。例外をキャッチしてエラー情報を返す。
+ * モデルのメソッドをそのまま渡せる。
  *
- * @param callable $callback PDOを受け取りデータを返すコールバック
+ * 使用例: ['data' => $players, 'error' => $error] = fetchData(fn() => Player::all());
+ *
  * @return array{data: mixed, error: bool}
  */
 function fetchData(callable $callback): array
 {
     try {
-        $pdo = getDbConnection();
-        return ['data' => $callback($pdo), 'error' => false];
+        return ['data' => $callback(), 'error' => false];
     } catch (PDOException $e) {
         error_log('[DB] ' . $e->getMessage());
         return ['data' => null, 'error' => true];

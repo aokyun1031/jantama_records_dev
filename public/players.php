@@ -2,9 +2,7 @@
 require __DIR__ . '/../config/database.php';
 
 // --- データ取得 ---
-['data' => $players, 'error' => $error] = fetchData(function (PDO $pdo) {
-    return $pdo->query('SELECT id, name FROM players ORDER BY id')->fetchAll();
-});
+['data' => $players, 'error' => $error] = fetchData(fn() => Player::all());
 
 // --- テンプレート変数 ---
 $pageTitle = '選手一覧 - 最強位戦';

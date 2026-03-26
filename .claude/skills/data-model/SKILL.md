@@ -1,6 +1,6 @@
 ---
 name: data-model
-description: DBテーブル構成とクエリパターン。データ取得・表示ページを作る際に参照する
+description: DBモデル層の構成とクエリパターン。データ取得ページやモデル追加時に参照する
 ---
 
 # データモデル
@@ -14,45 +14,54 @@ players (1) ──→ (1) standings
 tournament_meta（キーバリューストア）
 ```
 
-## 主要クエリパターン
+## モデル一覧（`models/` ディレクトリ）
 
-### 総合順位の取得（standings + players）
+### Player
 ```php
-$stmt = $pdo->query('
-    SELECT s.rank, p.name, s.total, s.pending, s.eliminated_round
-    FROM standings s
-    JOIN players p ON p.id = s.player_id
-    ORDER BY s.rank
-');
+Player::all();           // 全選手を取得
+Player::find($id);       // IDで1件取得（見つからなければnull）
+Player::count();         // 選手数を取得
 ```
 
-### 特定ラウンドの成績（round_results + players）
+### Standing
 ```php
-$stmt = $pdo->prepare('
-    SELECT p.name, r.score, r.is_above_cutoff
-    FROM round_results r
-    JOIN players p ON p.id = r.player_id
-    WHERE r.round_number = ?
-    ORDER BY r.score DESC
-');
-$stmt->execute([$roundNumber]);
+Standing::all();                  // 総合順位を取得（選手名付き）
+Standing::findByPlayer($playerId); // 特定選手の順位を取得
 ```
 
-### 卓情報と卓メンバー（tables_info + table_players + players）
+### RoundResult
 ```php
-$stmt = $pdo->prepare('
-    SELECT t.table_name, t.schedule, t.done, p.name, tp.seat_order
-    FROM tables_info t
-    JOIN table_players tp ON tp.table_id = t.id
-    JOIN players p ON p.id = tp.player_id
-    WHERE t.round_number = ?
-    ORDER BY t.table_name, tp.seat_order
-');
-$stmt->execute([$roundNumber]);
+RoundResult::byRound($roundNumber); // 特定ラウンドの成績（選手名付き、スコア降順）
+RoundResult::byPlayer($playerId);   // 特定選手の全ラウンド成績
+```
+
+### TableInfo
+```php
+TableInfo::byRound($roundNumber); // 特定ラウンドの卓情報（メンバー付き、卓ごとにグループ化済み）
+```
+
+### TournamentMeta
+```php
+TournamentMeta::all();                // 全メタ情報を連想配列で取得
+TournamentMeta::get($key, $default);  // 特定キーの値を取得
+```
+
+## 新しいモデルの追加手順
+
+1. `models/` にクラスファイルを作成
+2. `declare(strict_types=1)` を付ける
+3. `getDbConnection()` でPDOを取得
+4. ユーザー入力がある場合は必ずプリペアドステートメントを使う
+5. `composer dump-autoload` を実行
+
+## ページからの呼び出しパターン
+
+```php
+// fetchData() でエラーハンドリングを共通化
+['data' => $players, 'error' => $error] = fetchData(fn() => Player::all());
 ```
 
 ## DB接続
 
-- `config/database.php` の `getDbConnection()` を使う
-- PDOオプション: `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, `EMULATE_PREPARES=false`
-- ユーザー入力をSQLに含める場合は必ずプリペアドステートメントを使う
+- `getDbConnection()` はNeonスリープ対応（リトライ3回、指数バックオフ）
+- 同一リクエスト内でPDOインスタンスを再利用（staticキャッシュ）
