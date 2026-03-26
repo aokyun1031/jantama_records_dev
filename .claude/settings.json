@@ -9,5 +9,8 @@
       "Bash(ls:*)",
       "Bash(curl:*)"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": false
   }
 }
