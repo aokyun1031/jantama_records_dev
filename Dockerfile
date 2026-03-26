@@ -21,3 +21,6 @@ COPY . /var/www/html/
 
 # Apacheの書き込み権限設定
 RUN chown -R www-data:www-data /var/www/html
+
+# デプロイ時にマイグレーション実行後、Apache起動
+CMD ["bash", "start.sh"]
