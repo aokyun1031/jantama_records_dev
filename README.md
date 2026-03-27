@@ -78,6 +78,8 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 ├── composer.json               PHP依存・autoload設定
 ├── phinx.php.example           Phinx設定テンプレート
 ├── .env.example                環境変数テンプレート
+├── docs/
+│   └── database.md              データベース設計書
 ├── .gitignore
 └── .dockerignore
 ```
