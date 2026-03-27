@@ -7,7 +7,11 @@ class Player
     public static function all(): array
     {
         $pdo = getDbConnection();
-        return $pdo->query('SELECT id, name FROM players ORDER BY id')->fetchAll();
+        return $pdo->query(
+            "SELECT id, regexp_replace(name, '^[0-9]+', '') AS name
+               FROM players
+              ORDER BY regexp_replace(name, '^[0-9]+', '')"
+        )->fetchAll();
     }
 
     public static function find(int $id): ?array

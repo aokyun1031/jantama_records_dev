@@ -73,21 +73,6 @@ $pageStyle = <<<'CSS'
   box-shadow: var(--shadow);
 }
 
-.player-id {
-  font-family: 'Inter', sans-serif;
-  font-weight: 800;
-  font-size: 0.85rem;
-  color: var(--text-light);
-  min-width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, rgba(155,140,232,0.15), rgba(155,140,232,0.05));
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 .player-name {
   font-weight: 700;
   font-size: 1rem;
@@ -171,7 +156,6 @@ require __DIR__ . '/../templates/header.php';
   <div class="players-grid">
   <?php foreach ($players as $i => $player): ?>
     <div class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
-      <div class="player-id"><?= (int)$player['id'] ?></div>
       <div class="player-name"><?= h($player['name']) ?></div>
     </div>
   <?php endforeach; ?>
