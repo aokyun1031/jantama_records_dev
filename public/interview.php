@@ -9,7 +9,7 @@
 <meta property="og:title" content="優勝インタビュー - 最強位戦">
 <meta property="og:description" content="最強位戦 優勝者ホロホロへの優勝インタビューを掲載しています。">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://jantama-records.onrender.com/interview.html">
+<meta property="og:url" content="https://jantama-records.onrender.com/interview.php">
 <meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
 <meta property="og:site_name" content="最強位戦">
 
@@ -62,7 +62,7 @@
 }
 
 .interview-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-sub);
   animation: fadeUp 1s ease 0.3s both;
 }
@@ -238,9 +238,6 @@
   </div>
   <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
 </div>
-
-<!-- Floating Particles -->
-<div class="particles" id="particles"></div>
 
 <div class="main">
 

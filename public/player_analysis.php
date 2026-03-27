@@ -103,7 +103,7 @@ $pageStyle = <<<'CSS'
 }
 
 /* --- セクション --- */
-.section-title {
+.analysis-section-title {
   font-weight: 800;
   font-size: 0.85rem;
   color: var(--text);
@@ -332,7 +332,6 @@ $pageStyle = <<<'CSS'
 
 .bar-plus {
   background: linear-gradient(90deg, var(--coral), var(--pink));
-  margin-left: auto;
 }
 
 .bar-minus {
@@ -472,7 +471,7 @@ if ($scoreHistory) {
   <!-- 同卓対戦成績 -->
   <?php if ($headToHead): ?>
   <div class="h2h-section">
-    <div class="section-title">同卓対戦成績</div>
+    <div class="analysis-section-title">同卓対戦成績</div>
     <table class="h2h-table">
       <thead>
         <tr>
@@ -521,7 +520,7 @@ if ($scoreHistory) {
   <!-- スコア推移 -->
   <?php if ($scoreHistory): ?>
   <div class="history-section">
-    <div class="section-title">スコア推移</div>
+    <div class="analysis-section-title">スコア推移</div>
     <table class="history-table">
       <thead>
         <tr>

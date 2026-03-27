@@ -54,6 +54,12 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 - `tournament_meta` のPKを `(tournament_id, key)` の複合PKに変更
 - `round_results` のユニーク制約を `(tournament_id, player_id, round_number)` に変更
 
+### 決勝データ投入（20260327100000_add_finals_data）
+
+- 決勝（4回戦）の卓情報・成績データを投入（冪等: 既存データがあればスキップ）
+- スタンディングを決勝結果反映済みの正しい順位・スコアに更新
+- tournament_meta の current_round, remaining_players を更新
+
 ## デプロイ
 
 - 本番: Renderデプロイ時に `start.sh` 経由で自動実行される

@@ -165,7 +165,7 @@ require __DIR__ . '/../templates/header.php';
 <?php endif; ?>
 
 <div style="text-align: center;">
-  <a href="index.html" class="players-back">&#x2190; トップページに戻る</a>
+  <a href="index.php" class="players-back">&#x2190; トップページに戻る</a>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

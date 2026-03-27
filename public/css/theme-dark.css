@@ -339,6 +339,62 @@ body{
 .tile-scatter span{opacity:0.04}
 .progress-tile-bg{opacity:0.06}
 
+/* ---------- Interview ---------- */
+body .interview-badge{
+  background:linear-gradient(135deg,rgba(212,168,76,0.25),rgba(212,168,76,0.12));
+  color:var(--gold);
+  box-shadow:0 2px 12px rgba(212,168,76,0.15);
+  border:1px solid rgba(212,168,76,0.2);
+}
+body .interview-title{
+  background:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
+  background-size:300% 300%;
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 2px 12px rgba(212,168,76,0.25));
+}
+body .interview-item{
+  background:rgba(255,255,255,0.03);
+  border-color:rgba(212,168,76,0.08);
+}
+body .interview-item:hover{
+  border-color:rgba(212,168,76,0.2);
+  box-shadow:0 8px 24px rgba(212,168,76,0.08);
+}
+body .interview-profile{
+  background:rgba(255,255,255,0.03);
+  border-color:rgba(212,168,76,0.12);
+}
+body .interview-question{
+  border-bottom-color:rgba(212,168,76,0.2);
+}
+body .interview-back{
+  background:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
+  box-shadow:0 4px 16px rgba(212,168,76,0.2);
+}
+body .interview-back:hover{
+  box-shadow:0 6px 24px rgba(212,168,76,0.3);
+}
+body .interview-link-btn{
+  background:linear-gradient(135deg,rgba(212,168,76,0.2),rgba(212,168,76,0.08));
+  border-color:rgba(212,168,76,0.3);
+  color:var(--gold);
+}
+body .interview-link-btn:hover{
+  box-shadow:0 6px 24px rgba(212,168,76,0.15);
+}
+
+/* ---------- Players link ---------- */
+.players-link-btn{
+  background:rgba(255,255,255,0.03);
+  border-color:rgba(212,168,76,0.12);
+  color:var(--text-sub);
+}
+.players-link-btn:hover{
+  border-color:rgba(212,168,76,0.3);
+  color:var(--gold);
+  box-shadow:0 8px 24px rgba(212,168,76,0.08);
+}
+
 /* ---------- Player pages ---------- */
 
 /* badges & hero titles */

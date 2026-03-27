@@ -204,6 +204,26 @@
   .records-stats{gap:20px}
 }
 
+/* ---------- Players link ---------- */
+.players-link-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 24px;
+  font-size:0.85rem;font-weight:700;
+  color:var(--text-sub);
+  text-decoration:none;
+  background:var(--card);
+  border:1px solid var(--glass-border);
+  border-radius:10px;
+  backdrop-filter:blur(12px);
+  transition:transform 0.3s,box-shadow 0.3s,color 0.3s;
+  box-shadow:var(--shadow-sm);
+}
+.players-link-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow);
+  color:var(--purple);
+}
+
 /* Mobile performance: disable backdrop-filter */
 @media(max-width:768px){
   .standing-item,.table-card,.table-detail-block,.records,.progress-track{backdrop-filter:none}

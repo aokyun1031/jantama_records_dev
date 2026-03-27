@@ -41,7 +41,4 @@
   <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
 </div>
 
-<!-- Floating Particles -->
-<div class="particles" id="particles"></div>
-
 <div class="main">

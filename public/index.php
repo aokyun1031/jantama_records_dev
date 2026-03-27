@@ -41,9 +41,6 @@
   <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
 </div>
 
-<!-- Floating Particles -->
-<div class="particles" id="particles"></div>
-
 <!-- Floating Tile Scatter (page-level) -->
 <div class="tile-scatter" id="tile-scatter"></div>
 
@@ -236,6 +233,9 @@
     <div class="section-title">&#x1F005; 総合ポイント</div>
   </div>
   <div id="standings"></div>
+  <div style="text-align:center; margin-top:24px;">
+    <a href="players.php" class="players-link-btn">参加者一覧を見る &#x203A;</a>
+  </div>
 </section>
 
 <!-- Divider -->

@@ -402,3 +402,4 @@ PGSSLMODE=require
 |---|---|---|
 | 20260317000000 | CreateInitialSchema | 全6テーブルの初期スキーマ作成 |
 | 20260327000000 | AddTournamentsSupport | tournaments テーブル新規作成、既存テーブルに tournament_id カラム追加、外部キー・複合PK・複合ユニーク制約の変更 |
+| 20260327100000 | AddFinalsData | 決勝（4回戦）の卓情報・成績データ投入、スタンディングを決勝結果反映済みに更新 |

@@ -28,10 +28,8 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 
 ```
 ├── public/                     Webサーバー公開ディレクトリ
-│   ├── index.html              メインページ（HTML構造）
-│   ├── index.php               同内容（Docker/Apache用）
-│   ├── interview.html          優勝インタビュー（静的）
-│   ├── interview.php           優勝インタビュー（PHP版）
+│   ├── index.php               メインページ
+│   ├── interview.php           優勝インタビュー
 │   ├── player.php              選手詳細ページ（大会一覧）
 │   ├── player_analysis.php     選手の戦績分析ページ
 │   ├── player_tournament.php   選手の大会別戦績ページ
@@ -156,7 +154,7 @@ docker compose down
 
 ### ブラウザのみ
 
-`public/index.html` をブラウザで直接開くだけでフロントエンドは動作します（DB不要）。
+`public/index.php` をPHPサーバー経由で開くとフロントエンドが動作します。
 
 ## Phinx（DBマイグレーション）
 
@@ -233,17 +231,18 @@ UptimeRobotによりRender本番環境の死活監視を行っています。ダ
 
 ## データ管理
 
-メインページ（`index.html`）は `public/js/data.js` にハードコードされたデータで動作します。
+メインページ（`index.php`）は `public/js/data.js` にハードコードされたデータで動作します。
 
 選手関連ページ（`players.php`, `player.php`, `player_tournament.php`, `player_analysis.php`）はNeonデータベースからリアルタイムにデータを取得します。
 
 ### ページ遷移
 
 ```
-players.php（選手一覧）
-  └→ player.php（選手詳細 - 大会一覧・戦績分析リンク）
-       ├→ player_tournament.php（大会別戦績 - 卓・スコア・通過/敗退）
-       └→ player_analysis.php（戦績分析 - 対戦成績・スコア推移・統計）
+index.php（メインページ - 総合ポイント下部に「参加者一覧を見る」リンク）
+  └→ players.php（選手一覧）
+       └→ player.php（選手詳細 - 大会一覧・戦績分析リンク）
+            ├→ player_tournament.php（大会別戦績 - 卓・スコア・通過/敗退）
+            └→ player_analysis.php（戦績分析 - 対戦成績・スコア推移・統計）
 ```
 
 ### 大会管理
