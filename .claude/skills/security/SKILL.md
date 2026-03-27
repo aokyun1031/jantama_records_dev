@@ -53,10 +53,24 @@ $pdo->query("SELECT * FROM players WHERE id = $id");
 - `error_log()` でサーバーログに記録する
 - DBエラーは catch して汎用メッセージを表示（`players.php` のパターンを参照）
 
+## パラメータ検証
+
+GETパラメータは `filter_input()` で型を検証する。不正な値は404を返す。
+
+```php
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$id) {
+    http_response_code(404);
+    require __DIR__ . '/404.php';
+    exit;
+}
+```
+
 ## 新機能追加時のチェックリスト
 
 1. ユーザー入力はプリペアドステートメントで処理しているか
-2. HTML出力はエスケープしているか
-3. 機密情報がソースコードに含まれていないか
-4. 新しいファイルは `public/` 内に適切に配置されているか
-5. エラー時にスタックトレースや接続情報が漏れないか
+2. GETパラメータは `filter_input()` で検証しているか
+3. HTML出力はエスケープしているか
+4. 機密情報がソースコードに含まれていないか
+5. 新しいファイルは `public/` 内に適切に配置されているか
+6. エラー時にスタックトレースや接続情報が漏れないか

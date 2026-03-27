@@ -53,15 +53,17 @@ $pageStyle = <<<'CSS'
 }
 
 .player-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
   background: var(--card);
   backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 16px 20px;
   box-shadow: var(--shadow-sm);
-  display: flex;
-  align-items: center;
-  gap: 12px;
   transition: transform 0.3s, box-shadow 0.3s;
   opacity: 0;
   transform: translateY(16px);
@@ -155,9 +157,9 @@ require __DIR__ . '/../templates/header.php';
 <?php else: ?>
   <div class="players-grid">
   <?php foreach ($players as $i => $player): ?>
-    <div class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
+    <a href="player.php?id=<?= (int)$player['id'] ?>" class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
       <div class="player-name"><?= h($player['name']) ?></div>
-    </div>
+    </a>
   <?php endforeach; ?>
   </div>
 <?php endif; ?>

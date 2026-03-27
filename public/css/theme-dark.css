@@ -338,3 +338,127 @@ body{
 .footer-tiles{opacity:0.2}
 .tile-scatter span{opacity:0.04}
 .progress-tile-bg{opacity:0.06}
+
+/* ---------- Player pages ---------- */
+
+/* badges & hero titles */
+body .players-badge,
+body .player-badge,
+body .result-badge,
+body .analysis-badge{
+  background:linear-gradient(135deg,rgba(212,168,76,0.25),rgba(212,168,76,0.12));
+  color:var(--gold);
+  box-shadow:0 2px 12px rgba(212,168,76,0.15);
+  border:1px solid rgba(212,168,76,0.2);
+}
+body .players-title,
+body .player-title,
+body .result-title,
+body .analysis-title{
+  background:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
+  background-size:300% 300%;
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 2px 12px rgba(212,168,76,0.25));
+}
+
+/* players.php */
+.player-card{
+  background:rgba(255,255,255,0.03);
+  border-color:rgba(212,168,76,0.08);
+}
+.player-card:hover{
+  background:rgba(255,255,255,0.06);
+  border-color:rgba(212,168,76,0.2);
+  box-shadow:0 8px 32px rgba(212,168,76,0.08);
+}
+
+/* player.php */
+.tournament-card{
+  background:rgba(255,255,255,0.03);
+  border-color:rgba(212,168,76,0.08);
+}
+.tournament-links{
+  background:rgba(212,168,76,0.06);
+}
+.tournament-link{
+  color:var(--text-sub);
+}
+.tournament-link:first-child{
+  border-right-color:rgba(212,168,76,0.12);
+}
+.tournament-link:hover{
+  background:rgba(212,168,76,0.1);
+  color:var(--gold);
+}
+.tournament-status.status-completed{
+  background:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.06));
+  color:rgba(212,168,76,0.7);
+}
+
+/* player_tournament.php */
+.round-section{
+  background:rgba(255,255,255,0.03);
+  border-color:rgba(212,168,76,0.08);
+}
+.round-header{
+  background:linear-gradient(135deg,rgba(212,168,76,0.08),rgba(212,168,76,0.03));
+  border-bottom-color:rgba(212,168,76,0.1);
+}
+.round-label{
+  background:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
+}
+.member-row{
+  border-bottom-color:rgba(212,168,76,0.06);
+}
+.member-self{
+  background:linear-gradient(135deg,rgba(212,168,76,0.08),rgba(212,168,76,0.03));
+}
+.member-self .member-name{
+  background:linear-gradient(135deg,var(--gold),#ffec80);
+  -webkit-background-clip:text;background-clip:text;
+}
+
+/* player_analysis.php */
+.h2h-table,
+.history-table{
+  background:rgba(255,255,255,0.03);
+  border-color:rgba(212,168,76,0.08);
+}
+.h2h-table th,
+.history-table th{
+  background:linear-gradient(135deg,rgba(212,168,76,0.1),rgba(212,168,76,0.04));
+}
+.h2h-table td,
+.history-table td{
+  border-top-color:rgba(212,168,76,0.06);
+}
+.h2h-sortable:hover{
+  color:var(--gold);
+}
+.summary-card{
+  background:rgba(255,255,255,0.03);
+  border-color:rgba(212,168,76,0.08);
+}
+.summary-value{
+  background:linear-gradient(135deg,var(--gold),#ffec80);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+body .players-back,
+body .back-btn,
+body .btn-primary{
+  background:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
+  box-shadow:0 4px 16px rgba(212,168,76,0.2);
+}
+body .players-back:hover,
+body .back-btn:hover,
+body .btn-primary:hover{
+  box-shadow:0 6px 24px rgba(212,168,76,0.3);
+}
+body .btn-secondary{
+  background:linear-gradient(135deg,rgba(212,168,76,0.5),rgba(180,140,50,0.6));
+  box-shadow:0 4px 16px rgba(212,168,76,0.15);
+}
+body .btn-secondary:hover{
+  box-shadow:0 6px 24px rgba(212,168,76,0.25);
+}

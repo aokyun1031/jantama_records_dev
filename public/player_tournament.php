@@ -1,0 +1,342 @@
+<?php
+require __DIR__ . '/../config/database.php';
+
+// --- バリデーション ---
+$playerId     = filter_input(INPUT_GET, 'player_id', FILTER_VALIDATE_INT);
+$tournamentId = filter_input(INPUT_GET, 'tournament_id', FILTER_VALIDATE_INT);
+if (!$playerId || !$tournamentId) {
+    http_response_code(404);
+    require __DIR__ . '/404.php';
+    exit;
+}
+
+// --- データ取得 ---
+['data' => $player, 'error' => $e1]     = fetchData(fn() => Player::find($playerId));
+['data' => $tournament, 'error' => $e2] = fetchData(fn() => Tournament::find($tournamentId));
+if ($e1 || $e2 || !$player || !$tournament) {
+    http_response_code(404);
+    require __DIR__ . '/404.php';
+    exit;
+}
+
+['data' => $standing, 'error' => $e3] = fetchData(fn() => Standing::findByPlayer($tournamentId, $playerId));
+['data' => $rounds, 'error' => $error] = fetchData(fn() => TableInfo::byPlayerAndTournament($tournamentId, $playerId));
+
+// --- テンプレート変数 ---
+$pageTitle = h($player['name']) . ' - ' . h($tournament['name']) . ' - 最強位戦';
+$pageStyle = <<<'CSS'
+.result-hero {
+  text-align: center;
+  padding: 48px 20px 32px;
+}
+
+.result-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--lavender), var(--pink));
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+  box-shadow: 0 2px 12px rgba(184,160,232,0.3);
+  animation: fadeDown 0.8s ease both;
+}
+
+.result-title {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #9b8ce8, #e88cad, #d4a84c, #5cc8b0);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleGrad 6s ease infinite, fadeUp 1s ease both;
+  margin-bottom: 16px;
+}
+
+.result-outcome {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 900;
+  font-size: 1.8rem;
+  line-height: 1;
+  margin-bottom: 10px;
+  animation: fadeUp 1s ease 0.2s both;
+}
+
+.outcome-champion {
+  font-size: 2rem;
+  background: linear-gradient(135deg, #c49a3c, #e8c84c, #d4a84c, #e8c84c);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleGrad 4s ease infinite, fadeUp 1s ease 0.2s both;
+  filter: drop-shadow(0 1px 2px rgba(212,168,76,0.3));
+}
+
+.outcome-finals {
+  color: var(--mint);
+}
+
+.outcome-eliminated {
+  color: var(--text);
+}
+
+.result-standing {
+  animation: fadeUp 1s ease 0.4s both;
+  text-align: center;
+}
+
+.result-standing-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.result-standing-value {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-sub);
+}
+
+
+
+.round-section {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  transform: translateY(16px);
+  animation: roundFadeIn 0.5s ease forwards;
+}
+
+.round-header {
+  padding: 14px 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: linear-gradient(135deg, rgba(155,140,232,0.08), rgba(232,140,173,0.05));
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.round-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 0.75rem;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+.round-table-name {
+  color: var(--text-sub);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.member-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(155,140,232,0.06);
+  transition: background 0.2s;
+}
+
+.member-row:last-child {
+  border-bottom: none;
+}
+
+.member-self {
+  background: linear-gradient(135deg, rgba(155,140,232,0.08), rgba(232,140,173,0.04));
+}
+
+.member-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.member-self .member-name {
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.member-score {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  min-width: 60px;
+  text-align: right;
+}
+
+.score-plus {
+  color: var(--coral);
+}
+
+.score-minus {
+  color: var(--blue);
+}
+
+.member-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  min-width: 36px;
+  text-align: center;
+}
+
+.tag-cutoff {
+  background: linear-gradient(135deg, rgba(232,112,112,0.12), rgba(232,112,112,0.05));
+  color: var(--coral);
+}
+
+.tag-pass {
+  background: linear-gradient(135deg, rgba(92,200,176,0.12), rgba(92,200,176,0.05));
+  color: var(--mint);
+}
+
+.tag-champion {
+  background: linear-gradient(135deg, rgba(212,168,76,0.2), rgba(212,168,76,0.08));
+  color: var(--gold);
+}
+
+.result-error {
+  text-align: center;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(232,112,112,0.1), rgba(232,112,112,0.05));
+  border: 1px solid rgba(232,112,112,0.3);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: #fff;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 4px 16px rgba(155, 140, 232, 0.3);
+  margin-bottom: 40px;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(155, 140, 232, 0.4);
+}
+
+@keyframes roundFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+CSS;
+
+// --- 表示 ---
+require __DIR__ . '/../templates/header.php';
+?>
+
+<div class="result-hero">
+  <div class="result-badge"><?= h($tournament['name']) ?></div>
+  <h1 class="result-title"><?= h($player['name']) ?></h1>
+  <?php if ($standing):
+    $isChampion = (int)$standing['rank'] === 1 && $tournament['status'] === 'completed';
+    $elimRound  = (int)$standing['eliminated_round'];
+  ?>
+    <?php if ($isChampion): ?>
+      <div class="result-outcome outcome-champion">優勝</div>
+    <?php elseif ($elimRound > 0): ?>
+      <div class="result-outcome outcome-eliminated"><?= $elimRound ?>回戦敗退</div>
+    <?php else: ?>
+      <div class="result-outcome outcome-finals">決勝進出</div>
+    <?php endif; ?>
+    <div class="result-standing">
+      <div class="result-standing-label">総合ポイント</div>
+      <div class="result-standing-value"><?= number_format((float)$standing['total'], 1) ?>pt</div>
+    </div>
+  <?php endif; ?>
+</div>
+
+<?php if ($error): ?>
+  <div class="result-error">
+    データベース接続エラー。しばらくしてから再度お試しください。
+  </div>
+<?php elseif (empty($rounds)): ?>
+  <div class="result-error">
+    この大会の対局記録はありません。
+  </div>
+<?php else: ?>
+  <?php
+    $tournamentFinalRound = (int)TournamentMeta::get($tournamentId, 'current_round', '0');
+    foreach ($rounds as $ri => $round):
+      $isFinal = (int)$round['round_number'] === $tournamentFinalRound && $tournament['status'] === 'completed';
+  ?>
+    <div class="round-section" style="animation-delay: <?= $ri * 0.1 ?>s">
+      <div class="round-header">
+        <span class="round-label"><?= (int)$round['round_number'] ?>回戦</span>
+        <span class="round-table-name"><?= h($round['table_name']) ?></span>
+      </div>
+      <?php
+        $championShown = false;
+        foreach ($round['members'] as $member):
+      ?>
+        <div class="member-row <?= $member['id'] === $playerId ? 'member-self' : '' ?>">
+          <div class="member-name"><?= h($member['name']) ?></div>
+          <?php if ($member['score'] !== null):
+            $aboveCutoff = $member['is_above_cutoff'] !== false && $member['is_above_cutoff'] !== 'f';
+          ?>
+            <div class="member-score <?= (float)$member['score'] >= 0 ? 'score-plus' : 'score-minus' ?>">
+              <?= (float)$member['score'] >= 0 ? '+' : '' ?><?= number_format((float)$member['score'], 1) ?>
+            </div>
+            <?php if ($isFinal && !$championShown): $championShown = true; ?>
+              <div class="member-tag tag-champion">優勝</div>
+            <?php elseif ($isFinal): ?>
+              <div class="member-tag tag-cutoff">敗退</div>
+            <?php elseif ($aboveCutoff): ?>
+              <div class="member-tag tag-pass">通過</div>
+            <?php else: ?>
+              <div class="member-tag tag-cutoff">敗退</div>
+            <?php endif; ?>
+          <?php else: ?>
+            <div class="member-score" style="color: var(--text-light);">-</div>
+            <div></div>
+          <?php endif; ?>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php endforeach; ?>
+<?php endif; ?>
+
+<div style="text-align: center;">
+  <a href="player.php?id=<?= $playerId ?>" class="back-btn">&#x2190; 個人ページに戻る</a>
+</div>
+
+<?php require __DIR__ . '/../templates/footer.php'; ?>

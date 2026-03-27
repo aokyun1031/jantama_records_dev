@@ -56,8 +56,11 @@ php vendor/bin/phinx seed:run
 - テンプレートは `templates/` の header.php / footer.php を使う
 - DB接続は `getDbConnection()` を使用。直接PDOを生成しない
 - SQLにユーザー入力を使う場合はプリペアドステートメント必須
+- GETパラメータは `filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)` で検証する
+- 大会スコープのデータ取得は `$tournamentId` を必ず指定する（`Player` を除く全モデル）
 - モデル追加後は `composer dump-autoload` を実行する
 - `.env` の読み込みは phpdotenv (`Dotenv\Dotenv::createImmutable()`) を使う
+- ダークテーマ対応: ページ固有CSSはCSS変数を使い、必要に応じて `theme-dark.css` に `body` プレフィックス付きで上書きを追加する
 
 ## 作業ルール
 

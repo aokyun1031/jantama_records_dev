@@ -7,10 +7,13 @@ class TournamentMeta
     /**
      * 全メタ情報をキーバリューの連想配列で取得。
      */
-    public static function all(): array
+    public static function all(int $tournamentId): array
     {
         $pdo = getDbConnection();
-        $rows = $pdo->query('SELECT key, value FROM tournament_meta')->fetchAll();
+        $stmt = $pdo->prepare('SELECT key, value FROM tournament_meta WHERE tournament_id = ?');
+        $stmt->execute([$tournamentId]);
+        $rows = $stmt->fetchAll();
+
         $meta = [];
         foreach ($rows as $row) {
             $meta[$row['key']] = $row['value'];
@@ -21,11 +24,11 @@ class TournamentMeta
     /**
      * 特定キーの値を取得。
      */
-    public static function get(string $key, string $default = ''): string
+    public static function get(int $tournamentId, string $key, string $default = ''): string
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('SELECT value FROM tournament_meta WHERE key = ?');
-        $stmt->execute([$key]);
+        $stmt = $pdo->prepare('SELECT value FROM tournament_meta WHERE tournament_id = ? AND key = ?');
+        $stmt->execute([$tournamentId, $key]);
         $row = $stmt->fetch();
         return $row ? $row['value'] : $default;
     }

@@ -30,12 +30,14 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 - `declare(strict_types=1)` を先頭に付ける
 - `up()` と `down()` の両方を必ず実装する（ロールバック可能にする）
 - Phinx のテーブルビルダーAPI を使う（生SQLは避ける）
+- PK変更や制約変更など API で対応できない場合のみ `$this->execute()` を使う
 - 外部キーには `ON DELETE CASCADE` を設定する
 - 文字列カラムには `limit` を指定する
+- 大会スコープのテーブルには `tournament_id` カラム（FK → tournaments）を追加する
 
 ## 既存テーブル構成
 
-参照: `db/migrations/20260317000000_create_initial_schema.php`
+### 初期スキーマ（20260317000000_create_initial_schema）
 
 - `players` - 選手マスタ（id, name）
 - `tables_info` - 卓情報（round_number, table_name, schedule, done）
@@ -43,6 +45,14 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 - `round_results` - ラウンド成績（player_id → players, round_number, score, is_above_cutoff）
 - `standings` - 総合順位（player_id → players, rank, total, pending, eliminated_round）
 - `tournament_meta` - 大会メタ情報（key, value）
+
+### 大会対応（20260327000000_add_tournaments_support）
+
+- `tournaments` テーブル新規作成（id, name, status, created_at）
+- `tables_info`, `round_results` に `tournament_id` カラム + FK追加
+- `standings` のPKを `(tournament_id, player_id)` の複合PKに変更
+- `tournament_meta` のPKを `(tournament_id, key)` の複合PKに変更
+- `round_results` のユニーク制約を `(tournament_id, player_id, round_number)` に変更
 
 ## デプロイ
 
