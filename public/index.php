@@ -60,54 +60,40 @@ foreach ($allStandings ?? [] as $s) {
         'elim' => (int)$s['eliminated_round'],
     ];
 }
+$pageTitle = '最強位戦 - 麻雀トーナメント';
+$pageOgp = [
+    'title' => '最強位戦 - 麻雀トーナメント',
+    'description' => '2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。',
+    'url' => 'https://jantama-records.onrender.com/',
+];
+$pageCss = ['css/finals.css', 'css/mahjong-deco.css', 'css/champion.css'];
+$pageScripts = ['js/render.js', 'js/effects.js'];
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>最強位戦 - 麻雀トーナメント</title>
+var MAX_BAR=130;
+var MEDALS=['\u{1F947}','\u{1F948}','\u{1F949}'];
+var standings=<?= json_encode($jsStandings, JSON_UNESCAPED_UNICODE) ?>;
+var r1Tables=<?= json_encode($roundTables[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r1Above=<?= json_encode($roundAbove[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r1Below=<?= json_encode($roundBelow[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r2Tables=<?= json_encode($roundTables[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r2Above=<?= json_encode($roundAbove[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r2Below=<?= json_encode($roundBelow[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r3Tables=<?= json_encode($roundTables[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r3Above=<?= json_encode($roundAbove[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r3Below=<?= json_encode($roundBelow[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r4Tables=<?= json_encode($roundTables[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r4Above=<?= json_encode($roundAbove[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r4Below=<?= json_encode($roundBelow[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+<?php
+$pageInlineScript = ob_get_clean();
 
-<!-- OGP設定 -->
-<meta property="og:title" content="最強位戦 - 麻雀トーナメント">
-<meta property="og:description" content="2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://jantama-records.onrender.com/">
-<meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
-<meta property="og:site_name" content="最強位戦">
-
-<!-- Twitter（X）カード設定 -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="最強位戦 - 麻雀トーナメント">
-<meta name="twitter:description" content="2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。">
-<meta name="twitter:image" content="https://jantama-records.onrender.com/img/logo.png">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/finals.css">
-<link rel="stylesheet" href="css/mahjong-deco.css">
-<link rel="stylesheet" href="css/champion.css">
-<link rel="stylesheet" href="css/finals-countdown.css">
-<link rel="stylesheet" href="css/theme-dark.css" id="theme-dark">
-<link rel="stylesheet" href="css/theme-toggle.css">
-</head>
-<body>
-
-<!-- Theme Toggle -->
-<div class="theme-toggle" id="theme-toggle">
-  <span class="theme-toggle-icon theme-toggle-sun">&#x2600;</span>
-  <div class="theme-toggle-track" id="theme-track">
-    <div class="theme-toggle-thumb"></div>
-  </div>
-  <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
-</div>
+require __DIR__ . '/../templates/header.php';
+?>
 
 <!-- Floating Tile Scatter (page-level) -->
 <div class="tile-scatter" id="tile-scatter"></div>
-
-<div class="main">
 
 <!-- Hero -->
 <section class="hero">
@@ -126,7 +112,6 @@ foreach ($allStandings ?? [] as $s) {
   <section class="champion-section reveal">
     <div class="champion-container">
       <div class="champion-glow"></div>
-      <div class="champion-sparkles" id="champion-sparkles"></div>
       <!-- <div class="champion-tiles-bg">&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;&#x1F010;&#x1F011;&#x1F012;&#x1F013;&#x1F014;&#x1F015;&#x1F016;&#x1F017;&#x1F018;&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;&#x1F01D;&#x1F01E;&#x1F01F;&#x1F020;&#x1F021;&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;</div> -->
       <div class="champion-header">
         <div class="champion-pretitle">🏆 CHAMPION 🏆</div>
@@ -135,7 +120,7 @@ foreach ($allStandings ?? [] as $s) {
       </div>
       <div class="champion-content">
         <div class="champion-avatar">
-          <img src="img/nino.png" alt="優勝者 <?= $champion ? h($champion['name']) : '' ?>" class="champion-image">
+          <img src="img/chara_deformed/<?= $champion && $champion['character_icon'] ? h($champion['character_icon']) : '' ?>" alt="優勝者 <?= $champion ? h($champion['name']) : '' ?>" class="champion-image" width="200" height="200" loading="lazy">
           <div class="champion-crown">👑</div>
         </div>
         <div class="champion-info">
@@ -208,9 +193,6 @@ foreach ($allStandings ?? [] as $s) {
     <div class="finals-corner tr"></div>
     <div class="finals-corner bl"></div>
     <div class="finals-corner br"></div>
-    <div class="finals-embers" id="finals-embers"></div>
-    <div class="confetti-container" id="confetti-container"></div>
-    <div class="energy-lines" id="energy-lines"></div>
 
     <div class="finals-header">
       <!-- <div class="finals-pretitle">THE FINAL TABLE</div> -->
@@ -308,30 +290,5 @@ foreach ($allStandings ?? [] as $s) {
 </section>
 
 <!-- <div class="footer-tiles">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;</div> -->
-<div class="footer">最強位戦 - 麻雀トーナメント</div>
 
-</div>
-
-<script>
-var MAX_BAR=130;
-var MEDALS=['\u{1F947}','\u{1F948}','\u{1F949}'];
-var standings=<?= json_encode($jsStandings, JSON_UNESCAPED_UNICODE) ?>;
-var r1Tables=<?= json_encode($roundTables[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r1Above=<?= json_encode($roundAbove[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r1Below=<?= json_encode($roundBelow[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r2Tables=<?= json_encode($roundTables[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r2Above=<?= json_encode($roundAbove[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r2Below=<?= json_encode($roundBelow[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r3Tables=<?= json_encode($roundTables[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r3Above=<?= json_encode($roundAbove[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r3Below=<?= json_encode($roundBelow[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r4Tables=<?= json_encode($roundTables[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r4Above=<?= json_encode($roundAbove[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r4Below=<?= json_encode($roundBelow[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-</script>
-<script src="js/render.js"></script>
-<script src="js/effects.js"></script>
-<script src="js/theme-toggle.js"></script>
-<script src="js/countdown.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/../templates/footer.php'; ?>

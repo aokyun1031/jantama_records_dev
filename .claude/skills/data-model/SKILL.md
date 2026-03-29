@@ -12,6 +12,7 @@ tournaments (1) ──→ (N) tables_info (1) ──→ (N) table_players ←─
 tournaments (1) ──→ (N) round_results ←── (N) players
 tournaments (1) ──→ (N) standings ←── (N) players
 tournaments (1) ──→ (N) tournament_meta
+characters (1) ──→ (N) players
 ```
 
 ## モデル一覧（`models/` ディレクトリ）
@@ -23,10 +24,16 @@ Tournament::find($id);          // IDで1件取得（見つからなければnul
 Tournament::byPlayer($playerId); // 特定選手が参加した大会一覧（順位・スコア付き）
 ```
 
+### Character
+```php
+Character::all();        // 全キャラクターを取得（名前昇順）
+Character::find($id);   // IDで1件取得（見つからなければnull）
+```
+
 ### Player
 ```php
-Player::all();           // 全選手を取得（名前昇順）
-Player::find($id);       // IDで1件取得（見つからなければnull）
+Player::all();           // 全選手を取得（名前昇順、キャラアイコン付き）
+Player::find($id);       // IDで1件取得（キャラアイコン付き、見つからなければnull）
 Player::count();         // 選手数を取得
 ```
 

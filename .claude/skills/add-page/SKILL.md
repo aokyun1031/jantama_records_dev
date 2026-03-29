@@ -47,9 +47,10 @@ require __DIR__ . '/../templates/header.php';
 
 | モデル | 主なメソッド |
 |--------|-------------|
+| `Character` | `all()`, `find($id)` |
 | `Player` | `all()`, `find($id)`, `count()` |
 | `Tournament` | `all()`, `find($id)`, `byPlayer($playerId)` |
-| `Standing` | `all($tournamentId)`, `findByPlayer($tournamentId, $playerId)` |
+| `Standing` | `all($tournamentId)`, `finalists($tournamentId)`, `findByPlayer($tournamentId, $playerId)` |
 | `RoundResult` | `byRound($tournamentId, $roundNumber)`, `byPlayer($tournamentId, $playerId)` |
 | `TableInfo` | `byRound($tournamentId, $roundNumber)`, `byPlayerAndTournament($tournamentId, $playerId)` |
 | `TournamentMeta` | `all($tournamentId)`, `get($tournamentId, $key, $default)` |

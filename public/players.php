@@ -54,15 +54,15 @@ $pageStyle = <<<'CSS'
 
 .player-card {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 12px;
   text-decoration: none;
   color: inherit;
   background: var(--card);
   backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  padding: 16px 20px;
+  padding: 12px 16px;
   box-shadow: var(--shadow-sm);
   transition: transform 0.3s, box-shadow 0.3s;
   opacity: 0;
@@ -73,6 +73,32 @@ $pageStyle = <<<'CSS'
 .player-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow);
+}
+
+.player-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--glass-border);
+}
+
+.player-icon-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: var(--text-sub);
+}
+
+.player-info {
+  min-width: 0;
 }
 
 .player-name {
@@ -164,8 +190,15 @@ require __DIR__ . '/../templates/header.php';
   <div class="players-grid">
   <?php foreach ($players as $i => $player): ?>
     <a href="player.php?id=<?= (int)$player['id'] ?>" class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
-      <div class="player-name"><?= h($player['name']) ?></div>
-      <?php if ($player['nickname']): ?><div class="player-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
+      <?php if ($player['character_icon']): ?>
+        <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="" class="player-icon">
+      <?php else: ?>
+        <div class="player-icon-placeholder">NO<br>IMAGE</div>
+      <?php endif; ?>
+      <div class="player-info">
+        <div class="player-name"><?= h($player['name']) ?></div>
+        <?php if ($player['nickname']): ?><div class="player-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
+      </div>
     </a>
   <?php endforeach; ?>
   </div>

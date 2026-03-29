@@ -12,10 +12,14 @@
 <meta property="og:url" content="<?= htmlspecialchars($pageOgp['url'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
 <meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
 <meta property="og:site_name" content="最強位戦">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?= htmlspecialchars($pageOgp['title'] ?? $pageTitle, ENT_QUOTES, 'UTF-8') ?>">
+<meta name="twitter:description" content="<?= htmlspecialchars($pageOgp['description'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+<meta name="twitter:image" content="https://jantama-records.onrender.com/img/logo.png">
 <?php endif; ?>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <?php foreach (($pageCss ?? []) as $css): ?>

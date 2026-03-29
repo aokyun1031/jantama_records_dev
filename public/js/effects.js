@@ -88,63 +88,11 @@ var statObs=new IntersectionObserver(function(entries){
 },{threshold:0.3});
 document.querySelectorAll('[data-count]').forEach(function(el){statObs.observe(el)});
 
-// ===== FINALS EFFECTS =====
 
-// Ember particles
-(function(){
-  var container=document.getElementById('finals-embers');
-  if(!container) return;
-  var isMobile=window.innerWidth<=768;
-  for(var i=0,max=isMobile?0:10;i<max;i++){
-    var e=document.createElement('div');
-    e.className='ember';
-    var drift=(Math.random()-0.5)*80;
-    e.style.cssText='left:'+Math.random()*100+'%;bottom:-10px;'+
-      '--drift:'+drift+'px;'+
-      'animation-delay:'+(Math.random()*6)+'s;'+
-      'animation-duration:'+(3+Math.random()*4)+'s;'+
-      'width:'+(2+Math.random()*3)+'px;height:'+(2+Math.random()*3)+'px';
-    container.appendChild(e);
-  }
-})();
-
-// Energy lines radiating from center
-(function(){
-  var container=document.getElementById('energy-lines');
-  if(!container) return;
-  var isMobile=window.innerWidth<=768;
-  for(var i=0,max=isMobile?0:6;i<max;i++){
-    var l=document.createElement('div');
-    l.className='energy-line';
-    l.style.cssText='transform:rotate('+(i*30)+'deg);animation-delay:'+(i*0.4)+'s';
-    container.appendChild(l);
-  }
-})();
-
-// Confetti burst on scroll into view
+// Reveal finalist cards on scroll into view
 var finalsObserver=new IntersectionObserver(function(entries){
   entries.forEach(function(e){
     if(e.isIntersecting){
-      var container=document.getElementById('confetti-container');
-      var colors=['#ffd700','#ffec80','#e88cad','#9b8ce8','#5cc8b0','#ff6b6b','#4ecdc4','#ffe66d'];
-      var confettiCount=window.innerWidth<=768?0:25;
-      for(var i=0;i<confettiCount;i++){
-        (function(idx){
-          setTimeout(function(){
-            var c=document.createElement('div');
-            c.className='confetti';
-            c.style.cssText='left:'+((Math.random()*80)+10)+'%;top:'+(Math.random()*30)+'%;'+
-              'width:'+(4+Math.random()*6)+'px;height:'+(6+Math.random()*10)+'px;'+
-              'background:'+colors[idx%colors.length]+';'+
-              'border-radius:'+(Math.random()>0.5?'50%':'2px')+';'+
-              'animation-duration:'+(2+Math.random()*2)+'s;'+
-              'animation-delay:0s';
-            container.appendChild(c);
-            setTimeout(function(){c.remove()},4000);
-          },idx*40);
-        })(i);
-      }
-
       // Reveal finalist cards with staggered timing
       var cards=document.querySelectorAll('.finalist-card');
       cards.forEach(function(card){
@@ -226,17 +174,3 @@ if(finalsEl) finalsObserver.observe(finalsEl);
   }
 })();
 
-// Champion sparkles effect
-(function(){
-  var container=document.getElementById('champion-sparkles');
-  if(!container) return;
-  for(var i=0;i<50;i++){
-    var sparkle=document.createElement('div');
-    sparkle.className='champion-sparkle';
-    sparkle.style.cssText='left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;'+
-      'animation-delay:'+(Math.random()*3)+'s;'+
-      'animation-duration:'+(2+Math.random()*2)+'s;'+
-      'width:'+(2+Math.random()*3)+'px;height:'+(2+Math.random()*3)+'px';
-    container.appendChild(sparkle);
-  }
-})();

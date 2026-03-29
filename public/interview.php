@@ -1,26 +1,17 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>優勝インタビュー - 最強位戦</title>
+<?php
+require __DIR__ . '/../config/database.php';
 
-<!-- OGP設定 -->
-<meta property="og:title" content="優勝インタビュー - 最強位戦">
-<meta property="og:description" content="最強位戦 優勝者ホロ・ホロへの優勝インタビューを掲載しています。">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://jantama-records.onrender.com/interview.php">
-<meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
-<meta property="og:site_name" content="最強位戦">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/champion.css">
-<link rel="stylesheet" href="css/theme-dark.css" id="theme-dark">
-<link rel="stylesheet" href="css/theme-toggle.css">
-<style>
+$tournamentId = 1;
+['data' => $finalists] = fetchData(fn() => Standing::finalists($tournamentId));
+$champion = $finalists[0] ?? null;
+$pageTitle = '優勝インタビュー - 最強位戦';
+$pageOgp = [
+    'title' => '優勝インタビュー - 最強位戦',
+    'description' => '最強位戦 優勝者ホロ・ホロへの優勝インタビューを掲載しています。',
+    'url' => 'https://jantama-records.onrender.com/interview.php',
+];
+$pageCss = ['css/champion.css'];
+$pageStyle = <<<'CSS'
 /* Interview Page Styles */
 .interview-section {
   max-width: 680px;
@@ -226,20 +217,10 @@
     padding-left: 0;
   }
 }
-</style>
-</head>
-<body>
+CSS;
 
-<!-- Theme Toggle -->
-<div class="theme-toggle" id="theme-toggle">
-  <span class="theme-toggle-icon theme-toggle-sun">&#x2600;</span>
-  <div class="theme-toggle-track" id="theme-track">
-    <div class="theme-toggle-thumb"></div>
-  </div>
-  <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
-</div>
-
-<div class="main">
+require __DIR__ . '/../templates/header.php';
+?>
 
 <!-- Hero -->
 <div class="interview-hero">
@@ -252,7 +233,7 @@
 <section class="interview-section">
   <div class="interview-profile">
     <div class="interview-avatar">
-      <img src="img/nino.png" alt="ホロ・ホロ">
+      <img src="img/chara_deformed/<?= $champion && $champion['character_icon'] ? h($champion['character_icon']) : '' ?>" alt="<?= $champion ? h($champion['name']) : '' ?>">
       <span class="crown">👑</span>
     </div>
     <div class="interview-profile-info">
@@ -334,10 +315,4 @@
   </div>
 </section>
 
-<div class="footer">最強位戦 - 麻雀トーナメント</div>
-
-</div>
-
-<script src="js/theme-toggle.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/../templates/footer.php'; ?>

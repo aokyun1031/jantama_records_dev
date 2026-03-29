@@ -70,6 +70,11 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 - players テーブルに nickname カラム（VARCHAR(50), NULL可）を追加
 - 全20名の呼称（サイト表示用の通称）を一括セット
 
+### キャラクターマスタ作成（20260329200000_create_characters_table）
+
+- characters テーブル新規作成（id, name, icon_filename）
+- players テーブルに character_id カラム + FK追加（ON DELETE SET NULL）
+
 ## デプロイ
 
 - 本番: Renderデプロイ時に `start.sh` 経由で自動実行される

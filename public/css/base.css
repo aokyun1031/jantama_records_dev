@@ -124,7 +124,9 @@ body{
 .reveal.visible{opacity:1;transform:translateY(0)}
 
 /* Footer */
-.footer{text-align:center;padding:32px 0 16px;color:var(--text-light);font-size:0.65rem}
+.footer{text-align:center;padding:32px 20px 16px;color:var(--text-light);font-size:0.65rem}
+.footer-site{margin-bottom:8px}
+.footer-copyright{font-size:0.55rem;line-height:1.6;opacity:0.7}
 
 /* Responsive */
 @media(max-width:480px){
@@ -140,4 +142,13 @@ body{
   .particle{animation-duration:20s !important}
   .hero-tiles{animation:none}
   .hero-title{animation:fadeUp 1s ease both}
+}
+
+/* Reduced motion preference */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+  }
 }

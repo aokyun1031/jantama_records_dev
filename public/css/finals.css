@@ -16,14 +16,6 @@
   overflow:hidden;
 }
 
-/* Static background grid (no animation for performance) */
-.finals-stage::before{
-  content:'';position:absolute;top:0;left:0;width:100%;height:100%;
-  background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(155,140,232,0.04) 40px,rgba(155,140,232,0.04) 41px),
-             repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(155,140,232,0.04) 40px,rgba(155,140,232,0.04) 41px);
-  pointer-events:none;
-}
-
 /* Corner decorations */
 .finals-corner{
   position:absolute;width:40px;height:40px;
@@ -36,49 +28,23 @@
 
 /* Header */
 .finals-header{text-align:center;position:relative;z-index:2;margin-bottom:28px}
-.finals-pretitle{
-  display:inline-block;
-  font-size:0.65rem;font-weight:700;letter-spacing:6px;color:var(--purple);
-  text-transform:uppercase;margin-bottom:8px;
-  animation:finalsPretitle 1s ease 0.3s both;
-}
-@keyframes finalsPretitle{from{opacity:0;letter-spacing:20px}to{opacity:1;letter-spacing:6px}}
 .finals-title{
   font-family:'Inter','Noto Sans JP',sans-serif;
   font-size:2.8rem;font-weight:900;letter-spacing:8px;
   background:linear-gradient(135deg,#9b8ce8,#e88cad,#d4a84c,#e88cad,#9b8ce8);
   background-size:400% 400%;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:finalsGold 8s ease infinite,finalsReveal 1s ease 0.5s both;
+  animation:finalsGold 8s ease infinite;
   filter:drop-shadow(0 2px 12px rgba(155,140,232,0.25));
   line-height:1.2;
 }
 @keyframes finalsGold{
   0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}
 }
-@keyframes finalsReveal{
-  from{opacity:0;transform:scale(0.8) translateY(20px);filter:drop-shadow(0 0 0px rgba(155,140,232,0))}
-  to{opacity:1;transform:scale(1) translateY(0);filter:drop-shadow(0 2px 12px rgba(155,140,232,0.25))}
-}
 .finals-subtitle{
   font-size:0.8rem;color:var(--text-sub);font-weight:600;margin-top:8px;
-  animation:fadeUp 1s ease 0.8s both;
 }
 .finals-subtitle span{color:var(--purple);font-weight:800}
-
-/* Sparkle line */
-.finals-sparkle-line{
-  width:200px;height:2px;margin:16px auto 0;position:relative;
-  background:linear-gradient(90deg,transparent,rgba(155,140,232,0.5),transparent);
-  animation:fadeUp 1s ease 1s both;
-}
-.finals-sparkle-line::after{
-  content:'';position:absolute;top:-3px;width:8px;height:8px;
-  background:var(--purple);border-radius:50%;
-  box-shadow:0 0 10px rgba(155,140,232,0.5);
-  animation:sparkleSlide 3s ease-in-out infinite;
-}
-@keyframes sparkleSlide{0%{left:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{left:calc(100% - 8px);opacity:0}}
 
 /* Player cards grid */
 .finals-grid{
@@ -96,11 +62,6 @@
   font-family:'Inter',sans-serif;font-weight:900;font-size:0.85rem;
   color:var(--purple);letter-spacing:2px;
   box-shadow:0 4px 20px rgba(155,140,232,0.15),inset 0 0 12px rgba(155,140,232,0.05);
-  animation:vsPulse 2s ease infinite;
-}
-@keyframes vsPulse{
-  0%,100%{transform:translate(-50%,-50%) scale(1);box-shadow:0 4px 20px rgba(155,140,232,0.15)}
-  50%{transform:translate(-50%,-50%) scale(1.1);box-shadow:0 4px 32px rgba(155,140,232,0.25)}
 }
 
 /* Player card */
@@ -120,34 +81,10 @@
   box-shadow:0 8px 32px rgba(155,140,232,0.12);
   transform:scale(1.03) translateY(-4px);
 }
-/* Static shimmer highlight (no animation for performance) */
-.finalist-card::before{
-  content:'';position:absolute;top:0;left:0;width:100%;height:100%;
-  background:linear-gradient(135deg,transparent 40%,rgba(155,140,232,0.04) 50%,transparent 60%);
-  pointer-events:none;
-}
 
 .finalist-seed{
   display:inline-block;font-size:0.6rem;font-weight:700;letter-spacing:3px;
   color:var(--purple);margin-bottom:8px;opacity:0.6;
-}
-.finalist-avatar{
-  width:64px;height:64px;margin:0 auto 12px;border-radius:50%;
-  background:linear-gradient(135deg,rgba(155,140,232,0.15),rgba(232,140,173,0.12));
-  border:2px solid rgba(155,140,232,0.25);
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.6rem;
-  animation:avatarGlow 3s ease infinite;
-  position:relative;
-}
-@keyframes avatarGlow{
-  0%,100%{box-shadow:0 0 12px rgba(155,140,232,0.1)}
-  50%{box-shadow:0 0 24px rgba(155,140,232,0.22)}
-}
-/* Static ring (no rotation for performance) */
-.finalist-avatar::after{
-  content:'';position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;
-  border-radius:50%;border:1px solid rgba(155,140,232,0.2);
 }
 
 .finalist-name{
@@ -161,72 +98,15 @@
   letter-spacing:1px;
 }
 
-@keyframes dotBlink{0%,100%{opacity:1}50%{opacity:0.3}}
-
-/* Embers */
-.finals-embers{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  pointer-events:none;z-index:1;overflow:hidden;border-radius:20px;
-}
-.ember{
-  position:absolute;width:3px;height:3px;border-radius:50%;
-  background:var(--lavender);
-  box-shadow:0 0 6px rgba(155,140,232,0.3);
-  animation:emberFloat linear infinite;
-}
-@keyframes emberFloat{
-  0%{opacity:0;transform:translateY(100%) scale(0)}
-  20%{opacity:1}80%{opacity:0.6}
-  100%{opacity:0;transform:translateY(-300px) translateX(var(--drift)) scale(0)}
-}
-
-/* Confetti */
-.confetti-container{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  pointer-events:none;z-index:3;overflow:hidden;border-radius:20px;
-}
-.confetti{
-  position:absolute;width:6px;height:10px;opacity:0;
-  animation:confettiFall linear forwards;
-}
-@keyframes confettiFall{
-  0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}
-  50%{opacity:1}
-  100%{opacity:0;transform:translateY(400px) rotate(720deg) scale(0.5)}
-}
-
-/* Energy lines */
-.energy-lines{
-  position:absolute;top:50%;left:50%;width:300px;height:300px;
-  transform:translate(-50%,-50%);pointer-events:none;z-index:0;
-}
-.energy-line{
-  position:absolute;top:50%;left:50%;width:150px;height:1px;
-  transform-origin:0 50%;
-  background:linear-gradient(90deg,rgba(155,140,232,0.2),transparent);
-  animation:energyPulse 4s ease infinite;
-}
-@keyframes energyPulse{
-  0%{opacity:0;width:0}30%{opacity:0.6}100%{opacity:0;width:150px}
-}
-
 /* Responsive */
 @media(max-width:480px){
   .finals-title{font-size:2rem;letter-spacing:4px}
   .finals-grid{gap:10px}
   .finalist-card{padding:14px 10px}
-  .finalist-avatar{width:50px;height:50px;font-size:1.3rem}
   .finalist-name{font-size:1rem}
   .finals-vs{width:44px;height:44px;font-size:0.7rem}
 }
 
-/* Mobile performance */
 @media(max-width:768px){
-  .finals-stage::before{display:none}
   .finalist-card{backdrop-filter:none}
-  .finalist-card::before{display:none}
-  .finals-embers,.energy-lines,.confetti-container{display:none}
-  .finals-title{animation:finalsReveal 1s ease 0.5s both}
-  .finals-vs{animation:none;transform:translate(-50%,-50%)}
-  .finalist-avatar{animation:none}
 }

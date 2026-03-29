@@ -28,16 +28,17 @@ class Standing
     {
         $pdo = getDbConnection();
         $stmt = $pdo->prepare("
-            SELECT p.name, s.total,
+            SELECT p.name, s.total, c.icon_filename AS character_icon,
                    string_agg(
                        CASE WHEN r.score >= 0 THEN '+' ELSE '' END || r.score::text,
                        ' → ' ORDER BY r.round_number
                    ) AS trend
             FROM standings s
             JOIN players p ON p.id = s.player_id
+            LEFT JOIN characters c ON c.id = p.character_id
             JOIN round_results r ON r.player_id = s.player_id AND r.tournament_id = s.tournament_id
             WHERE s.tournament_id = ? AND s.eliminated_round = 0
-            GROUP BY p.name, s.total
+            GROUP BY p.name, s.total, c.icon_filename
             ORDER BY s.total DESC
         ");
         $stmt->execute([$tournamentId]);

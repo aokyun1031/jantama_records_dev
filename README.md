@@ -42,20 +42,19 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 │   │   ├── base.css            変数・リセット・レイアウト・Hero・プログレス
 │   │   ├── components.css      順位表・タブ・卓カード・結果・レコード
 │   │   ├── finals.css          決勝卓セクションの演出・アニメーション
-│   │   ├── finals-countdown.css 決勝カウントダウン表示
 │   │   ├── champion.css        優勝おめでとうセクション
 │   │   ├── mahjong-deco.css    麻雀牌の装飾
 │   │   ├── theme-dark.css      ダークテーマ（champion含む全セクション対応）
 │   │   └── theme-toggle.css    テーマ切替トグル
 │   ├── js/
 │   │   ├── render.js           DOM描画・タブ切替
-│   │   ├── effects.js          パーティクル・スクロールアニメ・決勝エフェクト・優勝エフェクト
-│   │   ├── theme-toggle.js     テーマ切替（localStorage永続化）
-│   │   └── countdown.js        決勝カウントダウン表示
+│   │   ├── effects.js          パーティクル・スクロールアニメ・決勝エフェクト
+│   │   └── theme-toggle.js     テーマ切替（localStorage永続化）
 │   └── img/
-│       └── nino.png            優勝者アバター画像
+│       └── chara_deformed/     キャラクターデフォルメアイコン
 ├── models/
-│   ├── Player.php              選手データの取得
+│   ├── Character.php           キャラクターマスタの取得
+│   ├── Player.php              選手データの取得（キャラアイコン付き）
 │   ├── PlayerAnalysis.php      選手の戦績分析（対戦成績・統計）
 │   ├── RoundResult.php         ラウンド成績の取得
 │   ├── Standing.php            総合順位の取得

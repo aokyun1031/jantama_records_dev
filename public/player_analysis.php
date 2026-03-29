@@ -39,10 +39,24 @@ $pageStyle = <<<'CSS'
   font-weight: 700;
   padding: 4px 14px;
   border-radius: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   letter-spacing: 2px;
   box-shadow: 0 2px 12px rgba(184,160,232,0.3);
   animation: fadeDown 0.8s ease both;
+}
+
+.analysis-identity {
+  margin-bottom: 12px;
+  animation: fadeUp 1s ease both;
+}
+
+.analysis-hero-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  margin-bottom: 16px;
 }
 
 .analysis-title {
@@ -54,14 +68,13 @@ $pageStyle = <<<'CSS'
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: titleGrad 6s ease infinite, fadeUp 1s ease both;
-  margin-bottom: 8px;
+  animation: titleGrad 6s ease infinite;
+  margin-bottom: 4px;
 }
 
 .analysis-nickname {
-  font-weight: 400;
-  font-size: 0.6em;
-  -webkit-text-fill-color: var(--text-sub);
+  font-size: 0.85rem;
+  color: var(--text-sub);
 }
 
 /* --- サマリーカード --- */
@@ -427,7 +440,13 @@ if ($scoreHistory) {
 
 <div class="analysis-hero">
   <div class="analysis-badge">ANALYSIS</div>
-  <h1 class="analysis-title"><?= h($player['name']) ?><?php if ($player['nickname']): ?><span class="analysis-nickname">（<?= h($player['nickname']) ?>）</span><?php endif; ?></h1>
+  <div class="analysis-identity">
+    <?php if ($player['character_icon']): ?>
+      <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="" class="analysis-hero-icon">
+    <?php endif; ?>
+    <h1 class="analysis-title"><?= h($player['name']) ?></h1>
+    <?php if ($player['nickname']): ?><div class="analysis-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
+  </div>
 </div>
 
 <?php if ($error): ?>
