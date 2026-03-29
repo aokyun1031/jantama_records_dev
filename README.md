@@ -48,7 +48,6 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 │   │   ├── theme-dark.css      ダークテーマ（champion含む全セクション対応）
 │   │   └── theme-toggle.css    テーマ切替トグル
 │   ├── js/
-│   │   ├── data.js             大会データ（順位・卓・各回戦結果）
 │   │   ├── render.js           DOM描画・タブ切替
 │   │   ├── effects.js          パーティクル・スクロールアニメ・決勝エフェクト・優勝エフェクト
 │   │   ├── theme-toggle.js     テーマ切替（localStorage永続化）
@@ -231,9 +230,7 @@ UptimeRobotによりRender本番環境の死活監視を行っています。ダ
 
 ## データ管理
 
-メインページ（`index.php`）は `public/js/data.js` にハードコードされたデータで動作します。
-
-選手関連ページ（`players.php`, `player.php`, `player_tournament.php`, `player_analysis.php`）はNeonデータベースからリアルタイムにデータを取得します。
+メインページ（`index.php`）を含むすべてのページはNeonデータベースからリアルタイムにデータを取得します���
 
 ### ページ遷移
 

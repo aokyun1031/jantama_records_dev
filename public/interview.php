@@ -7,7 +7,7 @@
 
 <!-- OGP設定 -->
 <meta property="og:title" content="優勝インタビュー - 最強位戦">
-<meta property="og:description" content="最強位戦 優勝者ホロホロへの優勝インタビューを掲載しています。">
+<meta property="og:description" content="最強位戦 優勝者ホロ・ホロへの優勝インタビューを掲載しています。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://jantama-records.onrender.com/interview.php">
 <meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
@@ -252,12 +252,12 @@
 <section class="interview-section">
   <div class="interview-profile">
     <div class="interview-avatar">
-      <img src="img/nino.png" alt="ホロホロ">
+      <img src="img/nino.png" alt="ホロ・ホロ">
       <span class="crown">👑</span>
     </div>
     <div class="interview-profile-info">
       <div class="interview-profile-label">🏆 2026 最強位戦 優勝</div>
-      <div class="interview-profile-name">ホロホロ</div>
+      <div class="interview-profile-name">ホロ・ホロ</div>
     </div>
   </div>
 

@@ -22,6 +22,29 @@ class Standing
     }
 
     /**
+     * 決勝進出者を取得（ラウンドスコア付き）。
+     */
+    public static function finalists(int $tournamentId): array
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare("
+            SELECT p.name, s.total,
+                   string_agg(
+                       CASE WHEN r.score >= 0 THEN '+' ELSE '' END || r.score::text,
+                       ' → ' ORDER BY r.round_number
+                   ) AS trend
+            FROM standings s
+            JOIN players p ON p.id = s.player_id
+            JOIN round_results r ON r.player_id = s.player_id AND r.tournament_id = s.tournament_id
+            WHERE s.tournament_id = ? AND s.eliminated_round = 0
+            GROUP BY p.name, s.total
+            ORDER BY s.total DESC
+        ");
+        $stmt->execute([$tournamentId]);
+        return $stmt->fetchAll();
+    }
+
+    /**
      * 特定選手の順位を取得。
      */
     public static function findByPlayer(int $tournamentId, int $playerId): ?array

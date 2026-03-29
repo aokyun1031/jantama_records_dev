@@ -1,3 +1,66 @@
+<?php
+require __DIR__ . '/../config/database.php';
+
+$tournamentId = 1;
+['data' => $finalists, 'error' => $finalistsError] = fetchData(fn() => Standing::finalists($tournamentId));
+['data' => $meta, 'error' => $metaError] = fetchData(fn() => TournamentMeta::all($tournamentId));
+['data' => $allStandings, 'error' => $standingsError] = fetchData(fn() => Standing::all($tournamentId));
+$champion = $finalists[0] ?? null;
+$seeds = ['1ST', '2ND', '3RD', '4TH'];
+
+// JS用データ構築
+$roundScores = [];
+$roundTables = [];
+$roundAbove = [];
+$roundBelow = [];
+for ($r = 1; $r <= 4; $r++) {
+    ['data' => $results] = fetchData(fn() => RoundResult::byRound($tournamentId, $r));
+    ['data' => $tables] = fetchData(fn() => TableInfo::byRound($tournamentId, $r));
+
+    foreach ($results ?? [] as $res) {
+        $roundScores[$res['name']][] = (float)$res['score'];
+    }
+
+    $above = [];
+    $below = [];
+    foreach ($results ?? [] as $res) {
+        $entry = [$res['name'], (float)$res['score']];
+        if ($res['is_above_cutoff']) {
+            $above[] = $entry;
+        } else {
+            $below[] = $entry;
+        }
+    }
+    $roundAbove[$r] = $above;
+    $roundBelow[$r] = $below;
+
+    $jsTables = [];
+    foreach ($tables ?? [] as $t) {
+        $jsTable = [
+            'name' => $t['table_name'],
+            'sched' => $t['schedule'],
+            'players' => array_map(fn($p) => $p['name'], $t['players']),
+        ];
+        if ($r >= 3) {
+            $jsTable['done'] = (bool)$t['done'];
+        }
+        $jsTables[] = $jsTable;
+    }
+    $roundTables[$r] = $jsTables;
+}
+
+$jsStandings = [];
+foreach ($allStandings ?? [] as $s) {
+    $jsStandings[] = [
+        'rank' => (int)$s['rank'],
+        'name' => $s['name'],
+        'total' => (float)$s['total'],
+        'r' => $roundScores[$s['name']] ?? [],
+        'pending' => (bool)$s['pending'],
+        'elim' => (int)$s['eliminated_round'],
+    ];
+}
+?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -72,12 +135,12 @@
       </div>
       <div class="champion-content">
         <div class="champion-avatar">
-          <img src="img/nino.png" alt="優勝者 ホロホロ" class="champion-image">
+          <img src="img/nino.png" alt="優勝者 <?= $champion ? h($champion['name']) : '' ?>" class="champion-image">
           <div class="champion-crown">👑</div>
         </div>
         <div class="champion-info">
-          <div class="champion-name">ホロホロ</div>
-          <div class="champion-score">総得点: +171.2</div>
+          <div class="champion-name"><?= $champion ? h($champion['name']) : '' ?></div>
+          <div class="champion-score">総得点: <?= $champion ? ($champion['total'] >= 0 ? '+' : '') . h((string)$champion['total']) : '' ?></div>
           <div class="champion-message">見事な戦いぶりで、最強位の座を獲得！<br>おめでとうございます！</div>
         </div>
       </div>
@@ -158,34 +221,16 @@
     </div>
 
     <div class="finals-grid" id="finals-grid">
-      <div class="finalist-card" data-delay="1.2">
-        <div class="finalist-seed">1ST SEED</div>
-        <div class="finalist-avatar">&#x1F47A;</div>
-        <div class="finalist-name">ホロホロ</div>
-        <div class="finalist-score plus">+171.2</div>
-        <div class="finalist-trend">+10.9 → +43.4 → +48.6 → +68.3</div>
-      </div>
-      <div class="finalist-card" data-delay="1.5">
-        <div class="finalist-seed">2ND SEED</div>
-        <div class="finalist-avatar">&#x1F525;</div>
-        <div class="finalist-name">するが</div>
-        <div class="finalist-score plus">+63.3</div>
-        <div class="finalist-trend">-44.4 → +10.0 → +33.2 → +64.5</div>
-      </div>
-      <div class="finalist-card" data-delay="1.8">
-        <div class="finalist-seed">3RD SEED</div>
-        <div class="finalist-avatar">&#x26A1;</div>
-        <div class="finalist-name">がちゃ</div>
-        <div class="finalist-score plus">+55.8</div>
-        <div class="finalist-trend">+51.9 → +24.9 → +37.5 → -58.5</div>
-      </div>
-      <div class="finalist-card" data-delay="2.1">
-        <div class="finalist-seed">4TH SEED</div>
-        <div class="finalist-avatar">&#x1F300;</div>
-        <div class="finalist-name">みか</div>
-        <div class="finalist-score plus">+43.7</div>
-        <div class="finalist-trend">+22.3 → +54.6 → +41.1 → -74.3</div>
-      </div>
+      <?php if ($finalists): ?>
+        <?php foreach ($finalists as $i => $f): ?>
+          <div class="finalist-card" data-delay="<?= 1.2 + $i * 0.3 ?>">
+            <div class="finalist-seed"><?= $seeds[$i] ?? '' ?> SEED</div>
+            <div class="finalist-name"><?= h($f['name']) ?></div>
+            <div class="finalist-score <?= $f['total'] >= 0 ? 'plus' : 'minus' ?>"><?= $f['total'] >= 0 ? '+' : '' ?><?= h((string)$f['total']) ?></div>
+            <div class="finalist-trend"><?= h($f['trend']) ?></div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
       <div class="finals-vs">VS</div>
     </div>
 
@@ -253,7 +298,7 @@
   <div class="record-highlight">
     <span class="record-label">大会最高得点</span>
     <span class="record-score" data-count="71200">0</span>
-    <span class="record-player">するが</span>
+    <span class="record-player"><?= $meta ? h($meta['record_player'] ?? '') : '' ?></span>
   </div>
   <!-- <div class="records-stats">
     <div class="stat"><div class="stat-num" data-count="20">0</div><div class="stat-label">参加者</div></div>
@@ -267,7 +312,23 @@
 
 </div>
 
-<script src="js/data.js"></script>
+<script>
+var MAX_BAR=130;
+var MEDALS=['\u{1F947}','\u{1F948}','\u{1F949}'];
+var standings=<?= json_encode($jsStandings, JSON_UNESCAPED_UNICODE) ?>;
+var r1Tables=<?= json_encode($roundTables[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r1Above=<?= json_encode($roundAbove[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r1Below=<?= json_encode($roundBelow[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r2Tables=<?= json_encode($roundTables[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r2Above=<?= json_encode($roundAbove[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r2Below=<?= json_encode($roundBelow[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r3Tables=<?= json_encode($roundTables[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r3Above=<?= json_encode($roundAbove[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r3Below=<?= json_encode($roundBelow[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r4Tables=<?= json_encode($roundTables[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r4Above=<?= json_encode($roundAbove[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var r4Below=<?= json_encode($roundBelow[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+</script>
 <script src="js/render.js"></script>
 <script src="js/effects.js"></script>
 <script src="js/theme-toggle.js"></script>
