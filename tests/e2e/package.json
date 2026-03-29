@@ -1,0 +1,15 @@
+{
+  "name": "jantama-records-e2e",
+  "private": true,
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:pages": "npx playwright test pages/",
+    "test:features": "npx playwright test features/",
+    "setup": "npx playwright install chromium --with-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50"
+  }
+}

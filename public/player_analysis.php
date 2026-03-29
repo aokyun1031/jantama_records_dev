@@ -1,21 +1,10 @@
 <?php
+declare(strict_types=1);
 require __DIR__ . '/../config/database.php';
 
 // --- バリデーション ---
-$playerId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-if (!$playerId) {
-    http_response_code(404);
-    require __DIR__ . '/404.php';
-    exit;
-}
-
-// --- データ取得 ---
-['data' => $player, 'error' => $e1] = fetchData(fn() => Player::find($playerId));
-if ($e1 || !$player) {
-    http_response_code(404);
-    require __DIR__ . '/404.php';
-    exit;
-}
+$playerId = requirePlayerId();
+$player = requirePlayer($playerId);
 
 ['data' => $summary, 'error' => $e2]      = fetchData(fn() => PlayerAnalysis::summary($playerId));
 ['data' => $avgRank, 'error' => $e3]       = fetchData(fn() => PlayerAnalysis::avgTableRank($playerId));
@@ -25,6 +14,7 @@ $error = $e2 || $e3 || $e4 || $e5;
 
 // --- テンプレート変数 ---
 $pageTitle = h($player['name']) . ' 戦績分析 - 最強位戦';
+$pageDescription = h($player['name']) . ' の戦績分析ページです。';
 $pageStyle = <<<'CSS'
 .analysis-hero {
   text-align: center;
@@ -33,15 +23,15 @@ $pageStyle = <<<'CSS'
 
 .analysis-badge {
   display: inline-block;
-  background: linear-gradient(135deg, var(--lavender), var(--pink));
-  color: #fff;
+  background: var(--badge-bg);
+  color: var(--badge-color);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 4px 14px;
   border-radius: 20px;
   margin-bottom: 20px;
   letter-spacing: 2px;
-  box-shadow: 0 2px 12px rgba(184,160,232,0.3);
+  box-shadow: 0 2px 12px rgba(var(--accent-rgb),0.3);
   animation: fadeDown 0.8s ease both;
 }
 
@@ -63,7 +53,7 @@ $pageStyle = <<<'CSS'
   font-family: 'Noto Sans JP', sans-serif;
   font-size: clamp(1.8rem, 6vw, 2.5rem);
   font-weight: 900;
-  background: linear-gradient(135deg, #9b8ce8, #e88cad, #d4a84c, #5cc8b0);
+  background: var(--title-gradient);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -109,7 +99,7 @@ $pageStyle = <<<'CSS'
   font-family: 'Inter', sans-serif;
   font-weight: 800;
   font-size: 1.4rem;
-  background: linear-gradient(135deg, var(--purple), var(--pink));
+  background: var(--btn-primary-bg);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -155,12 +145,12 @@ $pageStyle = <<<'CSS'
   color: var(--text-sub);
   letter-spacing: 1px;
   padding: 10px 16px;
-  background: linear-gradient(135deg, rgba(155,140,232,0.08), rgba(232,140,173,0.05));
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(var(--accent-rgb),0.05));
 }
 
 .h2h-table td {
   padding: 12px 16px;
-  border-top: 1px solid rgba(155,140,232,0.06);
+  border-top: 1px solid rgba(var(--accent-rgb),0.06);
   font-size: 0.85rem;
 }
 
@@ -182,15 +172,21 @@ $pageStyle = <<<'CSS'
   text-align: right;
 }
 
-/* 相手の平均着順: 数値 → 右寄せ */
+/* 自分の平均着順: 数値 → 右寄せ */
 .h2h-table th:nth-child(4),
 .h2h-table td:nth-child(4) {
   text-align: right;
 }
 
-/* 平均スコア差: 数値 → 右寄せ */
+/* 相手の平均着順: 数値 → 右寄せ */
 .h2h-table th:nth-child(5),
 .h2h-table td:nth-child(5) {
+  text-align: right;
+}
+
+/* 平均スコア差: 数値 → 右寄せ */
+.h2h-table th:nth-child(6),
+.h2h-table td:nth-child(6) {
   text-align: right;
 }
 
@@ -290,12 +286,12 @@ $pageStyle = <<<'CSS'
   color: var(--text-sub);
   letter-spacing: 1px;
   padding: 10px 16px;
-  background: linear-gradient(135deg, rgba(155,140,232,0.08), rgba(232,140,173,0.05));
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(var(--accent-rgb),0.05));
 }
 
 .history-table td {
   padding: 12px 16px;
-  border-top: 1px solid rgba(155,140,232,0.06);
+  border-top: 1px solid rgba(var(--accent-rgb),0.06);
   font-size: 0.85rem;
 }
 
@@ -366,12 +362,12 @@ $pageStyle = <<<'CSS'
 }
 
 .tag-pass {
-  background: linear-gradient(135deg, rgba(92,200,176,0.12), rgba(92,200,176,0.05));
+  background: linear-gradient(135deg, rgba(var(--mint-rgb),0.12), rgba(var(--mint-rgb),0.05));
   color: var(--mint);
 }
 
 .tag-fail {
-  background: linear-gradient(135deg, rgba(232,112,112,0.12), rgba(232,112,112,0.05));
+  background: linear-gradient(135deg, rgba(var(--coral-rgb),0.12), rgba(var(--coral-rgb),0.05));
   color: var(--coral);
 }
 
@@ -379,8 +375,8 @@ $pageStyle = <<<'CSS'
 .analysis-error {
   text-align: center;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(232,112,112,0.1), rgba(232,112,112,0.05));
-  border: 1px solid rgba(232,112,112,0.3);
+  background: linear-gradient(135deg, rgba(var(--coral-rgb),0.1), rgba(var(--coral-rgb),0.05));
+  border: 1px solid rgba(var(--coral-rgb),0.3);
   border-radius: var(--radius);
   color: var(--text);
   font-size: 0.9rem;
@@ -392,20 +388,20 @@ $pageStyle = <<<'CSS'
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--purple), var(--pink));
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-text-color);
   text-decoration: none;
   border-radius: 12px;
   font-weight: 700;
   font-size: 0.85rem;
   transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 4px 16px rgba(155, 140, 232, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
   margin-bottom: 40px;
 }
 
 .back-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(155, 140, 232, 0.4);
+  box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.4);
 }
 
 @keyframes sectionIn {
@@ -442,16 +438,20 @@ if ($scoreHistory) {
   <div class="analysis-badge">ANALYSIS</div>
   <div class="analysis-identity">
     <?php if ($player['character_icon']): ?>
-      <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="" class="analysis-hero-icon">
+      <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="<?= h($player['name']) ?>" class="analysis-hero-icon" width="88" height="88">
     <?php endif; ?>
     <h1 class="analysis-title"><?= h($player['name']) ?></h1>
-    <?php if ($player['nickname']): ?><div class="analysis-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
+    <?php if ($player['nickname'] !== null && $player['nickname'] !== ''): ?><div class="analysis-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
   </div>
 </div>
 
 <?php if ($error): ?>
   <div class="analysis-error">
     データベース接続エラー。しばらくしてから再度お試しください。
+  </div>
+<?php elseif (!$summary || (int)$summary['total_rounds'] === 0): ?>
+  <div class="analysis-error">
+    参加した大会はまだありません。戦績データが登録されると分析結果が表示されます。
   </div>
 <?php else: ?>
 
@@ -503,8 +503,9 @@ if ($scoreHistory) {
           <th class="h2h-sortable" data-col="0">対戦相手 <span class="sort-icon"></span></th>
           <th class="h2h-sortable" data-col="1">戦績 <span class="sort-icon"></span></th>
           <th class="h2h-sortable" data-col="2">同卓数 <span class="sort-icon"></span></th>
-          <th class="h2h-sortable" data-col="3">相手の平均着順 <span class="sort-icon"></span></th>
-          <th class="h2h-sortable" data-col="4">平均スコア差 <span class="sort-icon"></span></th>
+          <th class="h2h-sortable" data-col="3">自分の平均着順 <span class="sort-icon"></span></th>
+          <th class="h2h-sortable" data-col="4">相手の平均着順 <span class="sort-icon"></span></th>
+          <th class="h2h-sortable" data-col="5">平均スコア差 <span class="sort-icon"></span></th>
         </tr>
       </thead>
       <tbody>
@@ -517,6 +518,7 @@ if ($scoreHistory) {
           <td class="<?= $hasPlayed ? 'h2h-name' : '' ?>" data-sort-value="<?= h($h['opponent_name']) ?>"><?= h($h['opponent_name']) ?></td>
           <?php if ($hasPlayed):
             $winRate = $games > 0 ? (int)$h['wins'] / $games : 0;
+            $myRank = (float)$h['avg_my_rank'];
             $oppRank = (float)$h['avg_opp_rank'];
           ?>
             <td class="h2h-record" data-sort-value="<?= number_format($winRate, 4) ?>">
@@ -525,6 +527,7 @@ if ($scoreHistory) {
               <span class="h2h-losses"><?= (int)$h['losses'] ?></span>
             </td>
             <td class="h2h-games" data-sort-value="<?= $games ?>"><?= $games ?>回</td>
+            <td class="h2h-rank" data-sort-value="<?= number_format($myRank, 4) ?>"><?= number_format($myRank, 1) ?>位</td>
             <td class="h2h-rank" data-sort-value="<?= number_format($oppRank, 4) ?>"><?= number_format($oppRank, 1) ?>位</td>
             <td class="h2h-avg <?= $scoreDiff >= 0 ? 'score-plus' : 'score-minus' ?>" data-sort-value="<?= number_format($scoreDiff, 4) ?>">
               <?= $scoreDiff >= 0 ? '+' : '' ?><?= number_format($scoreDiff, 1) ?>
@@ -532,6 +535,7 @@ if ($scoreHistory) {
           <?php else: ?>
             <td data-sort-value="-1">-</td>
             <td data-sort-value="-1">0回</td>
+            <td data-sort-value="99">-</td>
             <td data-sort-value="99">-</td>
             <td data-sort-value="-9999">-</td>
           <?php endif; ?>
@@ -583,7 +587,7 @@ if ($scoreHistory) {
 <?php endif; ?>
 
 <div style="text-align: center;">
-  <a href="player.php?id=<?= $playerId ?>" class="back-btn">&#x2190; 個人ページに戻る</a>
+  <a href="player?id=<?= $playerId ?>" class="back-btn">&#x2190; 個人ページに戻る</a>
 </div>
 
 <script>

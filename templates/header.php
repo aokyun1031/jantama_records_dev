@@ -3,34 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= htmlspecialchars($pageTitle ?? '最強位戦', ENT_QUOTES, 'UTF-8') ?></title>
+<title><?= h($pageTitle ?? '最強位戦') ?></title>
+<?php if (!empty($pageDescription)): ?>
+<meta name="description" content="<?= h($pageDescription) ?>">
+<?php endif; ?>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
 
 <?php if (!empty($pageOgp)): ?>
-<meta property="og:title" content="<?= htmlspecialchars($pageOgp['title'] ?? $pageTitle, ENT_QUOTES, 'UTF-8') ?>">
-<meta property="og:description" content="<?= htmlspecialchars($pageOgp['description'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+<meta property="og:title" content="<?= h($pageOgp['title'] ?? $pageTitle) ?>">
+<meta property="og:description" content="<?= h($pageOgp['description'] ?? '') ?>">
 <meta property="og:type" content="website">
-<meta property="og:url" content="<?= htmlspecialchars($pageOgp['url'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+<meta property="og:url" content="<?= h($pageOgp['url'] ?? '') ?>">
 <meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
 <meta property="og:site_name" content="最強位戦">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="<?= htmlspecialchars($pageOgp['title'] ?? $pageTitle, ENT_QUOTES, 'UTF-8') ?>">
-<meta name="twitter:description" content="<?= htmlspecialchars($pageOgp['description'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+<meta name="twitter:title" content="<?= h($pageOgp['title'] ?? $pageTitle) ?>">
+<meta name="twitter:description" content="<?= h($pageOgp['description'] ?? '') ?>">
 <meta name="twitter:image" content="https://jantama-records.onrender.com/img/logo.png">
 <?php endif; ?>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/components.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400..900&family=Inter:wght@400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="<?= asset('css/base.css') ?>">
+<link rel="stylesheet" href="<?= asset('css/components.css') ?>">
 <?php foreach (($pageCss ?? []) as $css): ?>
-<link rel="stylesheet" href="<?= htmlspecialchars($css, ENT_QUOTES, 'UTF-8') ?>">
+<link rel="stylesheet" href="<?= asset($css) ?>">
 <?php endforeach; ?>
-<link rel="stylesheet" href="css/theme-dark.css" id="theme-dark">
-<link rel="stylesheet" href="css/theme-toggle.css">
+<link rel="stylesheet" href="<?= asset('css/theme-dark.css') ?>" id="theme-dark">
+<script>
+(function(){var s=localStorage.getItem('saikyo-theme');if(s!=='dark'){document.getElementById('theme-dark').disabled=true}})();
+</script>
+<link rel="stylesheet" href="<?= asset('css/theme-toggle.css') ?>">
 
 <?php if (!empty($pageStyle)): ?>
 <style>
-<?= str_replace('</style>', '', $pageStyle) ?>
+<?= str_ireplace('</style>', '', $pageStyle) ?>
 </style>
 <?php endif; ?>
 </head>

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+require_once __DIR__ . '/../config/database.php';
 http_response_code(404);
 $pageTitle = 'ページが見つかりません - 最強位戦';
 $pageStyle = <<<'CSS'
@@ -11,7 +13,7 @@ $pageStyle = <<<'CSS'
   font-family: 'Inter', sans-serif;
   font-size: clamp(4rem, 15vw, 8rem);
   font-weight: 900;
-  background: linear-gradient(135deg, #9b8ce8, #e88cad, #d4a84c);
+  background: var(--title-gradient);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -39,19 +41,19 @@ $pageStyle = <<<'CSS'
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--purple), var(--pink));
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-text-color);
   text-decoration: none;
   border-radius: 12px;
   font-weight: 700;
   font-size: 0.85rem;
   transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 4px 16px rgba(155, 140, 232, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
 }
 
 .error-back:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(155, 140, 232, 0.4);
+  box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.4);
 }
 CSS;
 

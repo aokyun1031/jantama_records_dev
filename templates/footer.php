@@ -6,14 +6,15 @@
 
 </div><!-- /.main -->
 
+<?php // $pageInlineScript はエスケープなしで出力される。json_encode には必ず JSON_HEX_TAG を使用すること。 ?>
 <?php if (!empty($pageInlineScript)): ?>
 <script>
 <?= $pageInlineScript ?>
 </script>
 <?php endif; ?>
 <?php foreach (($pageScripts ?? []) as $script): ?>
-<script src="<?= htmlspecialchars($script, ENT_QUOTES, 'UTF-8') ?>"></script>
+<script src="<?= asset($script) ?>" defer></script>
 <?php endforeach; ?>
-<script src="js/theme-toggle.js"></script>
+<script src="<?= asset('js/theme-toggle.js') ?>" defer></script>
 </body>
 </html>

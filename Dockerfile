@@ -5,8 +5,11 @@ RUN apt-get update && apt-get install -y libpq-dev unzip \
     && docker-php-ext-install pdo pdo_pgsql pgsql \
     && rm -rf /var/lib/apt/lists/*
 
-# mod_rewrite を有効化し、.htaccess を許可
-RUN a2enmod rewrite
+# mod_rewrite と mod_headers を有効化し、.htaccess を許可
+RUN a2enmod rewrite headers deflate expires
+
+# 本番用PHP設定: エラー表示を無効化
+RUN echo "display_errors = Off\nlog_errors = On\nexpose_php = Off" > /usr/local/etc/php/conf.d/production.ini
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
 # DocumentRootを public/ に変更

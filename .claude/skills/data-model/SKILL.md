@@ -17,13 +17,6 @@ characters (1) ──→ (N) players
 
 ## モデル一覧（`models/` ディレクトリ）
 
-### Tournament
-```php
-Tournament::all();              // 全大会を取得（作成日降順）
-Tournament::find($id);          // IDで1件取得（見つからなければnull）
-Tournament::byPlayer($playerId); // 特定選手が参加した大会一覧（順位・スコア付き）
-```
-
 ### Character
 ```php
 Character::all();        // 全キャラクターを取得（名前昇順）
@@ -32,42 +25,54 @@ Character::find($id);   // IDで1件取得（見つからなければnull）
 
 ### Player
 ```php
-Player::all();           // 全選手を取得（名前昇順、キャラアイコン付き）
-Player::find($id);       // IDで1件取得（キャラアイコン付き、見つからなければnull）
-Player::count();         // 選手数を取得
+Player::all();                                     // 全選手（キャラアイコン付き、名前昇順）
+Player::find($id);                                 // 1件取得（character_id, character_icon付き）
+Player::create($name, $nickname, $characterId);    // 新規登録（IDを返す）
+Player::existsByName($name);                       // 名前の重複チェック（bool）
+Player::update($id, $nickname, $characterId);      // 呼称・キャラクター更新
+Player::hasTournaments($id);                       // 大会参加の有無（bool）
+Player::delete($id);                               // 削除（大会未参加の場合のみ使用）
+Player::count();                                   // 選手数
 ```
 
-### PlayerAnalysis
+### Tournament
 ```php
-PlayerAnalysis::summary($playerId);      // 通算成績サマリー（参加回数・平均スコア・最高/最低・通過率）
-PlayerAnalysis::avgTableRank($playerId); // 卓内平均着順（全大会合算）
-PlayerAnalysis::headToHead($playerId);   // 同卓対戦成績（対戦相手ごとの勝敗・スコア差）
-PlayerAnalysis::scoreHistory($playerId); // スコア推移（全大会・時系列順）
+Tournament::all();              // 全大会（作成日降順）
+Tournament::find($id);          // IDで1件取得
+Tournament::byPlayer($playerId); // 特定選手が参加した大会一覧（順位・スコア付き）
 ```
 
 ### Standing
 ```php
-Standing::all($tournamentId);                          // 大会の総合順位を取得（選手名付き）
-Standing::finalists($tournamentId);                    // 決勝進出者を取得（ラウンドスコアのトレンド付き）
-Standing::findByPlayer($tournamentId, $playerId);      // 大会での特定選手の順位を取得
+Standing::all($tournamentId);                          // 総合順位（選手名付き）
+Standing::finalists($tournamentId);                    // 決勝進出者（トレンド・キャラアイコン付き）
+Standing::findByPlayer($tournamentId, $playerId);      // 特定選手の順位
 ```
 
 ### RoundResult
 ```php
-RoundResult::byRound($tournamentId, $roundNumber); // 大会の特定ラウンド成績（選手名付き、スコア降順）
-RoundResult::byPlayer($tournamentId, $playerId);   // 大会での特定選手の全ラウンド成績
+RoundResult::byRound($tournamentId, $roundNumber); // 特定ラウンド成績（スコア降順）
+RoundResult::byPlayer($tournamentId, $playerId);   // 特定選手の全ラウンド成績
 ```
 
 ### TableInfo
 ```php
-TableInfo::byRound($tournamentId, $roundNumber);                // 大会の特定ラウンド卓情報（メンバー付き、卓ごとにグループ化済み）
-TableInfo::byPlayerAndTournament($tournamentId, $playerId);     // 大会で特定選手が参加した卓情報（同卓メンバーのスコア付き、ラウンドごと）
+TableInfo::byRound($tournamentId, $roundNumber);                // ラウンドの卓情報（メンバー付き）
+TableInfo::byPlayerAndTournament($tournamentId, $playerId);     // 選手の参加卓情報（スコア付き）
 ```
 
 ### TournamentMeta
 ```php
-TournamentMeta::all($tournamentId);                        // 大会の全メタ情報を連想配列で取得
-TournamentMeta::get($tournamentId, $key, $default);        // 大会の特定キーの値を取得
+TournamentMeta::all($tournamentId);                        // 全メタ情報を連想配列で取得
+TournamentMeta::get($tournamentId, $key, $default);        // 特定キーの値を取得
+```
+
+### PlayerAnalysis
+```php
+PlayerAnalysis::summary($playerId);      // 通算成績サマリー
+PlayerAnalysis::avgTableRank($playerId); // 卓内平均着順
+PlayerAnalysis::headToHead($playerId);   // 同卓対戦成績
+PlayerAnalysis::scoreHistory($playerId); // スコア推移
 ```
 
 ## 新しいモデルの追加手順
@@ -75,17 +80,33 @@ TournamentMeta::get($tournamentId, $key, $default);        // 大会の特定キ
 1. `models/` にクラスファイルを作成
 2. `declare(strict_types=1)` を付ける
 3. `getDbConnection()` でPDOを取得
-4. ユーザー入力がある場合は必ずプリペアドステートメントを使う
+4. ユーザー入力は必ずプリペアドステートメント
 5. `composer dump-autoload` を実行
+6. `data-model/SKILL.md` のモデル一覧を更新
 
 ## ページからの呼び出しパターン
 
 ```php
-// fetchData() でエラーハンドリングを共通化
-['data' => $players, 'error' => $error] = fetchData(fn() => Player::all());
+// 読み取り
+['data' => $players] = fetchData(fn() => Player::all());
+
+// プレイヤー取得（見つからなければ404）
+$player = requirePlayer($playerId);
+
+// 書き込み（try/catch で囲む）
+try {
+    Player::update($id, $nickname, $characterId);
+    regenerateCsrfToken();
+    header('Location: ...');
+    exit;
+} catch (PDOException $e) {
+    error_log('[DB] ' . $e->getMessage());
+    $validationError = '保存に失敗しました。';
+}
 ```
 
 ## DB接続
 
 - `getDbConnection()` はNeonスリープ対応（リトライ3回、指数バックオフ）
 - 同一リクエスト内でPDOインスタンスを再利用（staticキャッシュ）
+- キャッシュ済みPDOは接続切れを自動検出して再接続

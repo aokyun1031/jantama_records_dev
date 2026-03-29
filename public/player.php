@@ -1,26 +1,20 @@
 <?php
+declare(strict_types=1);
 require __DIR__ . '/../config/database.php';
 
-// --- バリデーション ---
-$playerId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-if (!$playerId) {
-    http_response_code(404);
-    require __DIR__ . '/404.php';
-    exit;
-}
+startSecureSession();
+$flash = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
 
-// --- データ取得 ---
-['data' => $player, 'error' => $playerError] = fetchData(fn() => Player::find($playerId));
-if ($playerError || !$player) {
-    http_response_code(404);
-    require __DIR__ . '/404.php';
-    exit;
-}
+// --- バリデーション ---
+$playerId = requirePlayerId();
+$player = requirePlayer($playerId);
 
 ['data' => $tournaments, 'error' => $error] = fetchData(fn() => Tournament::byPlayer($playerId));
 
 // --- テンプレート変数 ---
 $pageTitle = h($player['name']) . ' - 最強位戦';
+$pageDescription = h($player['name']) . ' の大会戦績ページです。';
 $pageStyle = <<<'CSS'
 .player-hero {
   text-align: center;
@@ -29,15 +23,15 @@ $pageStyle = <<<'CSS'
 
 .player-badge {
   display: inline-block;
-  background: linear-gradient(135deg, var(--lavender), var(--pink));
-  color: #fff;
+  background: var(--badge-bg);
+  color: var(--badge-color);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 4px 14px;
   border-radius: 20px;
   margin-bottom: 20px;
   letter-spacing: 2px;
-  box-shadow: 0 2px 12px rgba(184,160,232,0.3);
+  box-shadow: 0 2px 12px rgba(var(--accent-rgb),0.3);
   animation: fadeDown 0.8s ease both;
 }
 
@@ -55,11 +49,42 @@ $pageStyle = <<<'CSS'
   margin-bottom: 16px;
 }
 
+.player-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.player-edit-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
+  color: var(--text-sub);
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+.player-edit-link:hover {
+  background: rgba(var(--accent-rgb), 0.2);
+  border-color: rgba(var(--accent-rgb), 0.4);
+  transform: scale(1.1);
+}
+.player-edit-icon {
+  width: 14px;
+  height: 14px;
+}
+
 .player-title {
   font-family: 'Noto Sans JP', sans-serif;
   font-size: clamp(1.8rem, 6vw, 2.5rem);
   font-weight: 900;
-  background: linear-gradient(135deg, #9b8ce8, #e88cad, #d4a84c, #5cc8b0);
+  background: var(--title-gradient);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -122,12 +147,12 @@ $pageStyle = <<<'CSS'
 }
 
 .status-completed {
-  background: linear-gradient(135deg, rgba(92,200,176,0.15), rgba(92,200,176,0.05));
+  background: linear-gradient(135deg, rgba(var(--mint-rgb),0.15), rgba(var(--mint-rgb),0.05));
   color: var(--mint);
 }
 
 .status-in-progress {
-  background: linear-gradient(135deg, rgba(232,140,173,0.15), rgba(232,140,173,0.05));
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),0.15), rgba(var(--accent-rgb),0.05));
   color: var(--pink);
 }
 
@@ -150,13 +175,13 @@ $pageStyle = <<<'CSS'
 
 .progress-champion {
   font-size: 2rem;
-  background: linear-gradient(135deg, #c49a3c, #e8c84c, #d4a84c, #e8c84c);
+  background: var(--champion-progress-gradient);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: titleGrad 4s ease infinite;
-  filter: drop-shadow(0 1px 2px rgba(212,168,76,0.3));
+  filter: drop-shadow(0 1px 2px rgba(var(--gold-rgb),0.3));
 }
 
 .progress-finals {
@@ -171,7 +196,7 @@ $pageStyle = <<<'CSS'
 .tournament-links {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: rgba(155,140,232,0.05);
+  background: rgba(var(--accent-rgb),0.05);
 }
 
 .tournament-link {
@@ -189,11 +214,11 @@ $pageStyle = <<<'CSS'
 }
 
 .tournament-link:first-child {
-  border-right: 1px solid rgba(155,140,232,0.1);
+  border-right: 1px solid rgba(var(--accent-rgb),0.1);
 }
 
 .tournament-link:hover {
-  background: rgba(155,140,232,0.08);
+  background: rgba(var(--accent-rgb),0.08);
   color: var(--purple);
 }
 
@@ -211,8 +236,8 @@ $pageStyle = <<<'CSS'
 .player-error {
   text-align: center;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(232,112,112,0.1), rgba(232,112,112,0.05));
-  border: 1px solid rgba(232,112,112,0.3);
+  background: linear-gradient(135deg, rgba(var(--coral-rgb),0.1), rgba(var(--coral-rgb),0.05));
+  border: 1px solid rgba(var(--coral-rgb),0.3);
   border-radius: var(--radius);
   color: var(--text);
   font-size: 0.9rem;
@@ -224,26 +249,26 @@ $pageStyle = <<<'CSS'
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  color: #fff;
+  color: var(--btn-text-color);
   text-decoration: none;
   border-radius: 12px;
   font-weight: 700;
   font-size: 0.85rem;
   transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 4px 16px rgba(155, 140, 232, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
 }
 
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(155, 140, 232, 0.4);
+  box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.4);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--purple), var(--pink));
+  background: var(--btn-primary-bg);
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, var(--mint), var(--blue));
+  background: var(--btn-secondary-bg);
 }
 
 @keyframes cardFadeIn {
@@ -252,22 +277,63 @@ $pageStyle = <<<'CSS'
     transform: translateY(0);
   }
 }
+
+.player-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto 20px;
+  padding: 16px 24px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(var(--mint-rgb),0.12), rgba(var(--mint-rgb),0.04));
+  color: var(--success);
+  border: 1px solid rgba(var(--mint-rgb),0.3);
+  box-shadow: 0 2px 12px rgba(var(--mint-rgb),0.1);
+  animation: playerMsgIn 0.4s ease, playerMsgOut 0.6s ease 3s forwards;
+}
+.player-message::before {
+  content: '\2714';
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+@keyframes playerMsgIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes playerMsgOut {
+  from { opacity: 1; max-height: 60px; margin-bottom: 20px; padding: 16px 24px; }
+  80% { opacity: 0; }
+  to { opacity: 0; max-height: 0; margin-bottom: 0; padding: 0 24px; overflow: hidden; }
+}
 CSS;
 
 // --- 表示 ---
 require __DIR__ . '/../templates/header.php';
 ?>
 
+<?php if ($flash): ?>
+  <div class="player-message"><?= h($flash) ?></div>
+<?php endif; ?>
+
 <div class="player-hero">
   <div class="player-badge">PLAYER</div>
   <div class="player-identity">
     <?php if ($player['character_icon']): ?>
-      <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="" class="player-hero-icon">
+      <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="<?= h($player['name']) ?>" class="player-hero-icon" width="88" height="88">
     <?php endif; ?>
-    <h1 class="player-title"><?= h($player['name']) ?></h1>
-    <?php if ($player['nickname']): ?><div class="player-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
+    <div class="player-name-row">
+      <h1 class="player-title"><?= h($player['name']) ?></h1>
+      <a href="player_edit?id=<?= $playerId ?>" class="player-edit-link" title="プロフィール編集">
+        <svg class="player-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+      </a>
+    </div>
+    <?php if ($player['nickname'] !== null && $player['nickname'] !== ''): ?><div class="player-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
   </div>
-  <a href="player_analysis.php?id=<?= $playerId ?>" class="btn btn-secondary" style="margin-top: 20px;">個人戦績分析</a>
+  <a href="player_analysis?id=<?= $playerId ?>" class="btn btn-secondary" style="margin-top: 20px;">個人戦績分析</a>
 </div>
 
 <?php if ($error): ?>
@@ -304,8 +370,8 @@ require __DIR__ . '/../templates/header.php';
         <span class="tournament-total"><?= number_format((float)$t['total'], 1) ?>pt</span>
       </div>
       <div class="tournament-links">
-        <a href="player_tournament.php?player_id=<?= $playerId ?>&amp;tournament_id=<?= (int)$t['id'] ?>" class="tournament-link">個人戦績 <span class="link-arrow">&#x203A;</span></a>
-        <a href="index.php" class="tournament-link">全体戦績 <span class="link-arrow">&#x203A;</span></a>
+        <a href="player_tournament?player_id=<?= $playerId ?>&amp;tournament_id=<?= (int)$t['id'] ?>" class="tournament-link">個人戦績 <span class="link-arrow">&#x203A;</span></a>
+        <a href="/" class="tournament-link">全体戦績 <span class="link-arrow">&#x203A;</span></a>
       </div>
     </div>
   <?php endforeach; ?>
@@ -313,7 +379,7 @@ require __DIR__ . '/../templates/header.php';
 <?php endif; ?>
 
 <div style="text-align: center;">
-  <a href="players.php" class="btn btn-primary" style="margin-bottom: 40px;">&#x2190; 選手一覧に戻る</a>
+  <a href="players" class="btn btn-primary" style="margin-bottom: 40px;">&#x2190; 選手一覧に戻る</a>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

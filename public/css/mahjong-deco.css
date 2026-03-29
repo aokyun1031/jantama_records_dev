@@ -12,10 +12,10 @@
 }
 .tile-divider-line{
   flex:1;height:2px;
-  background:linear-gradient(90deg,transparent,rgba(155,140,232,0.35),transparent);
+  background:linear-gradient(90deg,transparent,var(--divider-line-color),transparent);
 }
 .tile-divider-tiles{
-  display:flex;gap:6px;font-size:1.6rem;opacity:0.45;
+  display:flex;gap:6px;font-size:1.6rem;opacity:var(--tile-divider-opacity);
   animation:tileFloat 4s ease-in-out infinite;
 }
 @keyframes tileFloat{
@@ -26,7 +26,7 @@
 .section-tiles{
   position:absolute;top:0;left:0;width:100%;height:100%;
   pointer-events:none;overflow:hidden;
-  font-size:2.2rem;opacity:0.10;
+  font-size:2.2rem;opacity:var(--tile-deco-opacity);
   z-index:0;
 }
 .section-tiles span{
@@ -48,7 +48,7 @@
   z-index:0;
 }
 .records-tile-frame span{
-  position:absolute;font-size:2rem;opacity:0.12;
+  position:absolute;font-size:2rem;opacity:var(--tile-frame-opacity);
 }
 .records>.records-title,
 .records>.record-highlight,
@@ -57,14 +57,14 @@
 /* ---------- Footer tile row ---------- */
 .footer-tiles{
   display:flex;justify-content:center;gap:6px;
-  font-size:1.3rem;opacity:0.3;margin-bottom:8px;
+  font-size:1.3rem;opacity:var(--tile-footer-opacity);margin-bottom:8px;
   user-select:none;letter-spacing:3px;
 }
 
 /* ---------- Hero tile enhancement ---------- */
 .hero{position:relative}
 .hero-tile-accent{
-  position:absolute;font-size:3.5rem;opacity:0.14;
+  position:absolute;font-size:3.5rem;opacity:var(--tile-accent-opacity);
   pointer-events:none;z-index:0;
 }
 .hero-tile-accent.top-left{top:6px;left:6px;transform:rotate(-15deg)}
@@ -78,7 +78,7 @@
   position:absolute;top:0;left:0;width:100%;height:100%;
   pointer-events:none;overflow:hidden;border-radius:var(--radius);
   display:flex;align-items:center;justify-content:center;
-  gap:24px;font-size:2.2rem;opacity:0.09;
+  gap:24px;font-size:2.2rem;opacity:var(--tile-progress-opacity);
   letter-spacing:16px;
 }
 
@@ -88,7 +88,7 @@
   pointer-events:none;z-index:0;overflow:hidden;
 }
 .tile-scatter span{
-  position:absolute;opacity:0.07;
+  position:absolute;opacity:var(--tile-scatter-opacity);
   font-size:2.4rem;
   animation:scatterDrift linear infinite;
 }

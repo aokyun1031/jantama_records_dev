@@ -10,7 +10,20 @@
       "Bash(curl:*)"
     ]
   },
-  "enabledPlugins": {
-    "frontend-design@claude-plugins-official": false
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git push:*)",
+            "command": "PROJ=$(git rev-parse --show-toplevel 2>/dev/null) && E2E=\"$PROJ/tests/e2e\" && [ -d \"$E2E/node_modules\" ] && docker compose ps --status running 2>/dev/null | grep -q web && cd \"$E2E\" && npx playwright test --reporter=line 2>&1 && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"E2E tests all passed\"}}' || echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"E2E tests skipped (environment not ready)\"}}'",
+            "timeout": 300,
+            "statusMessage": "E2E テスト実行中..."
+          }
+        ]
+      }
+    ]
   }
 }

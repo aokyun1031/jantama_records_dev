@@ -29,8 +29,8 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 
 - `declare(strict_types=1)` を先頭に付ける
 - `up()` と `down()` の両方を必ず実装する（ロールバック可能にする）
-- Phinx のテーブルビルダーAPI を使う（生SQLは避ける）
-- PK変更や制約変更など API で対応できない場合のみ `$this->execute()` を使う
+- Neon（サーバーレスPG）との相性問題により、Phinxテーブルビルダーが失敗する場合がある。その場合は `$this->execute()` で直接SQLを実行する
+- カラム追加・テーブル作成も `$this->execute()` で問題ない（`ALTER TABLE`, `CREATE TABLE`）
 - 外部キーには `ON DELETE CASCADE` を設定する
 - 文字列カラムには `limit` を指定する
 - 大会スコープのテーブルには `tournament_id` カラム（FK → tournaments）を追加する
@@ -39,7 +39,7 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 
 ### 初期スキーマ（20260317000000_create_initial_schema）
 
-- `players` - 選手マスタ（id, name, nickname）
+- `players` - 選手マスタ（id, name, nickname, character_id）
 - `tables_info` - 卓情報（round_number, table_name, schedule, done）
 - `table_players` - 卓メンバー（table_id → tables_info, player_id → players, seat_order）
 - `round_results` - ラウンド成績（player_id → players, round_number, score, is_above_cutoff）

@@ -1,10 +1,12 @@
 <?php
+declare(strict_types=1);
 require __DIR__ . '/../config/database.php';
 
 $tournamentId = 1;
 ['data' => $finalists] = fetchData(fn() => Standing::finalists($tournamentId));
 $champion = $finalists[0] ?? null;
 $pageTitle = '優勝インタビュー - 最強位戦';
+$pageDescription = '最強位戦 優勝者への優勝インタビューを掲載しています。';
 $pageOgp = [
     'title' => '優勝インタビュー - 最強位戦',
     'description' => '最強位戦 優勝者ホロ・ホロへの優勝インタビューを掲載しています。',
@@ -27,15 +29,15 @@ $pageStyle = <<<'CSS'
 
 .interview-badge {
   display: inline-block;
-  background: linear-gradient(135deg, var(--lavender), var(--pink));
-  color: #fff;
+  background: var(--badge-bg);
+  color: var(--badge-color);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 4px 14px;
   border-radius: 20px;
   margin-bottom: 16px;
   letter-spacing: 2px;
-  box-shadow: 0 2px 12px rgba(184,160,232,0.3);
+  box-shadow: 0 2px 12px rgba(var(--accent-rgb),0.3);
   animation: fadeDown 0.8s ease both;
 }
 
@@ -43,7 +45,7 @@ $pageStyle = <<<'CSS'
   font-family: 'Noto Sans JP', sans-serif;
   font-size: clamp(1.8rem, 6vw, 2.5rem);
   font-weight: 900;
-  background: linear-gradient(135deg, #9b8ce8, #e88cad, #d4a84c, #5cc8b0);
+  background: var(--title-gradient);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -84,7 +86,7 @@ $pageStyle = <<<'CSS'
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--gold);
-  box-shadow: 0 0 20px rgba(212, 168, 76, 0.2);
+  box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.2);
 }
 
 .interview-avatar .crown {
@@ -143,7 +145,7 @@ $pageStyle = <<<'CSS'
   color: var(--gold);
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(212, 168, 76, 0.15);
+  border-bottom: 2px solid rgba(var(--gold-rgb), 0.15);
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -156,8 +158,8 @@ $pageStyle = <<<'CSS'
   justify-content: center;
   min-width: 28px;
   height: 28px;
-  background: linear-gradient(135deg, var(--gold), rgba(212, 168, 76, 0.8));
-  color: #fff;
+  background: linear-gradient(135deg, var(--gold), rgba(var(--gold-rgb), 0.8));
+  color: var(--btn-text-color);
   font-size: 0.7rem;
   font-weight: 800;
   border-radius: 50%;
@@ -177,20 +179,20 @@ $pageStyle = <<<'CSS'
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--purple), var(--pink));
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-text-color);
   text-decoration: none;
   border-radius: 12px;
   font-weight: 700;
   font-size: 0.85rem;
   transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 4px 16px rgba(155, 140, 232, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
   margin-bottom: 40px;
 }
 
 .interview-back:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(155, 140, 232, 0.4);
+  box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.4);
 }
 
 @keyframes interviewFadeIn {
@@ -233,12 +235,12 @@ require __DIR__ . '/../templates/header.php';
 <section class="interview-section">
   <div class="interview-profile">
     <div class="interview-avatar">
-      <img src="img/chara_deformed/<?= $champion && $champion['character_icon'] ? h($champion['character_icon']) : '' ?>" alt="<?= $champion ? h($champion['name']) : '' ?>">
+      <img src="img/chara_deformed/<?= $champion && $champion['character_icon'] ? h($champion['character_icon']) : '' ?>" alt="<?= $champion ? h($champion['name']) : '' ?>" width="80" height="80">
       <span class="crown">👑</span>
     </div>
     <div class="interview-profile-info">
       <div class="interview-profile-label">🏆 2026 最強位戦 優勝</div>
-      <div class="interview-profile-name">ホロ・ホロ</div>
+      <div class="interview-profile-name"><?= $champion ? h($champion['name']) : '' ?></div>
     </div>
   </div>
 
@@ -311,7 +313,7 @@ require __DIR__ . '/../templates/header.php';
 
   <!-- Back Link -->
   <div style="text-align: center;">
-    <a href="index.php" class="interview-back">&#x2190; トップページに戻る</a>
+    <a href="/" class="interview-back">&#x2190; トップページに戻る</a>
   </div>
 </section>
 

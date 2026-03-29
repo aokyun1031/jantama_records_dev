@@ -1,11 +1,20 @@
 <?php
+declare(strict_types=1);
+
 require __DIR__ . '/../config/database.php';
+
+startSecureSession();
+
+// --- フラッシュメッセージ ---
+$flash = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
 
 // --- データ取得 ---
 ['data' => $players, 'error' => $error] = fetchData(fn() => Player::all());
 
 // --- テンプレート変数 ---
 $pageTitle = '選手一覧 - 最強位戦';
+$pageDescription = '最強位戦に参加する選手の一覧です。';
 $pageStyle = <<<'CSS'
 .players-hero {
   text-align: center;
@@ -14,15 +23,15 @@ $pageStyle = <<<'CSS'
 
 .players-badge {
   display: inline-block;
-  background: linear-gradient(135deg, var(--lavender), var(--pink));
-  color: #fff;
+  background: var(--badge-bg);
+  color: var(--badge-color);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 4px 14px;
   border-radius: 20px;
   margin-bottom: 16px;
   letter-spacing: 2px;
-  box-shadow: 0 2px 12px rgba(184,160,232,0.3);
+  box-shadow: 0 2px 12px rgba(var(--accent-rgb),0.3);
   animation: fadeDown 0.8s ease both;
 }
 
@@ -30,7 +39,7 @@ $pageStyle = <<<'CSS'
   font-family: 'Noto Sans JP', sans-serif;
   font-size: clamp(1.8rem, 6vw, 2.5rem);
   font-weight: 900;
-  background: linear-gradient(135deg, #9b8ce8, #e88cad, #d4a84c, #5cc8b0);
+  background: var(--title-gradient);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -118,27 +127,35 @@ $pageStyle = <<<'CSS'
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--purple), var(--pink));
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-text-color);
   text-decoration: none;
   border-radius: 12px;
   font-weight: 700;
   font-size: 0.85rem;
   transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 4px 16px rgba(155, 140, 232, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
   margin-bottom: 40px;
 }
 
 .players-back:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(155, 140, 232, 0.4);
+  box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.4);
+}
+
+.players-new {
+  background: var(--btn-secondary-bg);
+  box-shadow: 0 4px 16px rgba(var(--mint-rgb), 0.3);
+}
+.players-new:hover {
+  box-shadow: 0 6px 24px rgba(var(--mint-rgb), 0.4);
 }
 
 .players-error {
   text-align: center;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(232,112,112,0.1), rgba(232,112,112,0.05));
-  border: 1px solid rgba(232,112,112,0.3);
+  background: linear-gradient(135deg, rgba(var(--coral-rgb),0.1), rgba(var(--coral-rgb),0.05));
+  border: 1px solid rgba(var(--coral-rgb),0.3);
   border-radius: var(--radius);
   color: var(--text);
   font-size: 0.9rem;
@@ -169,6 +186,38 @@ $pageStyle = <<<'CSS'
     grid-template-columns: 1fr;
   }
 }
+
+.players-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto 20px;
+  padding: 16px 24px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(var(--mint-rgb),0.12), rgba(var(--mint-rgb),0.04));
+  color: var(--success);
+  border: 1px solid rgba(var(--mint-rgb),0.3);
+  box-shadow: 0 2px 12px rgba(var(--mint-rgb),0.1);
+  animation: msgIn 0.4s ease, msgOut 0.6s ease 3s forwards;
+}
+.players-message::before {
+  content: '\2714';
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes msgOut {
+  from { opacity: 1; max-height: 60px; margin-bottom: 20px; padding: 16px 24px; }
+  80% { opacity: 0; }
+  to { opacity: 0; max-height: 0; margin-bottom: 0; padding: 0 24px; overflow: hidden; }
+}
 CSS;
 
 // --- 表示 ---
@@ -181,6 +230,10 @@ require __DIR__ . '/../templates/header.php';
   <div class="players-count"><?= count($players ?? []) ?> 名の選手が登録されています</div>
 </div>
 
+<?php if ($flash): ?>
+  <div class="players-message"><?= h($flash) ?></div>
+<?php endif; ?>
+
 <?php if ($error): ?>
   <div class="players-error">
     <div class="players-error-label">データベース接続エラー</div>
@@ -189,23 +242,24 @@ require __DIR__ . '/../templates/header.php';
 <?php else: ?>
   <div class="players-grid">
   <?php foreach ($players as $i => $player): ?>
-    <a href="player.php?id=<?= (int)$player['id'] ?>" class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
+    <a href="player?id=<?= (int)$player['id'] ?>" class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
       <?php if ($player['character_icon']): ?>
-        <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="" class="player-icon">
+        <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="<?= h($player['name']) ?>" class="player-icon" width="44" height="44" loading="lazy">
       <?php else: ?>
         <div class="player-icon-placeholder">NO<br>IMAGE</div>
       <?php endif; ?>
       <div class="player-info">
         <div class="player-name"><?= h($player['name']) ?></div>
-        <?php if ($player['nickname']): ?><div class="player-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
+        <?php if ($player['nickname'] !== null && $player['nickname'] !== ''): ?><div class="player-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
       </div>
     </a>
   <?php endforeach; ?>
   </div>
 <?php endif; ?>
 
-<div style="text-align: center;">
-  <a href="index.php" class="players-back">&#x2190; トップページに戻る</a>
+<div style="text-align: center; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+  <a href="/" class="players-back">&#x2190; トップページに戻る</a>
+  <a href="player_new" class="players-back players-new">+ 選手を追加</a>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

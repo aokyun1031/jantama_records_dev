@@ -3,9 +3,6 @@
    Particles, scroll animations, counters, finals effects
    ====================== */
 
-// Background particles — initial build handled by theme-toggle.js
-// (particles are rebuilt on every theme switch with matching colors)
-
 // Scroll reveal
 var revealObs=new IntersectionObserver(function(entries){
   entries.forEach(function(e){

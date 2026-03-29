@@ -2,7 +2,7 @@
 .champion-section {
   position: relative;
   padding: 60px 20px;
-  background: linear-gradient(135deg, #f5f0ff 0%, #fff5f8 50%, #fef9ec 100%);
+  background: var(--champion-section-bg);
   overflow: hidden;
   margin: 40px 0;
 }
@@ -22,7 +22,7 @@
   transform: translate(-50%, -50%);
   width: 120%;
   height: 120%;
-  background: radial-gradient(circle, rgba(212, 168, 76, 0.15) 0%, rgba(212, 168, 76, 0.05) 50%, transparent 70%);
+  background: var(--champion-glow);
   border-radius: 50%;
   animation: champion-glow-pulse 3s ease-in-out infinite alternate;
   z-index: 1;
@@ -35,29 +35,29 @@
 
 .champion-pretitle {
   font-size: 1.5rem;
-  color: var(--gold);
+  color: var(--champion-pretitle-color);
   font-weight: 700;
   letter-spacing: 2px;
-  text-shadow: 0 0 12px rgba(212, 168, 76, 0.3);
+  text-shadow: var(--champion-pretitle-shadow);
   animation: text-glow 2s ease-in-out infinite alternate;
   margin-bottom: 10px;
 }
 
 .champion-title {
   font-size: clamp(1.8rem, 7vw, 3rem);
-  color: var(--text);
+  color: var(--champion-title-color);
   font-weight: 900;
-  text-shadow: 0 0 16px rgba(212, 168, 76, 0.2);
+  text-shadow: var(--champion-title-shadow);
   margin: 0;
   font-family: 'Noto Sans JP', sans-serif;
 }
 
 .champion-subtitle {
   font-size: 1.2rem;
-  color: var(--gold);
+  color: var(--champion-subtitle-color);
   font-weight: 600;
   margin-top: 10px;
-  text-shadow: 0 0 8px rgba(212, 168, 76, 0.2);
+  text-shadow: var(--champion-subtitle-shadow);
 }
 
 .champion-content {
@@ -73,7 +73,7 @@
   position: relative;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 0 30px rgba(212, 168, 76, 0.25);
+  box-shadow: var(--champion-avatar-shadow);
   animation: avatar-float 3s ease-in-out infinite;
 }
 
@@ -81,7 +81,7 @@
   width: 200px;
   height: 200px;
   object-fit: cover;
-  border: 5px solid var(--gold);
+  border: 5px solid var(--champion-image-border);
   border-radius: 50%;
 }
 
@@ -101,25 +101,26 @@
 
 .champion-name {
   font-size: 2.5rem;
-  color: var(--text);
+  color: var(--champion-name-color);
   font-weight: 900;
-  text-shadow: 0 0 12px rgba(212, 168, 76, 0.2);
+  text-shadow: var(--champion-name-shadow);
   margin-bottom: 10px;
   font-family: 'Noto Sans JP', sans-serif;
 }
 
 .champion-score {
   font-size: 1.5rem;
-  color: var(--gold);
+  color: var(--champion-score-color);
   font-weight: 700;
   margin-bottom: 20px;
-  text-shadow: 0 0 8px rgba(212, 168, 76, 0.2);
+  text-shadow: var(--champion-score-shadow);
 }
 
 .champion-message {
   font-size: 1.1rem;
-  color: var(--text);
+  color: var(--champion-message-color);
   line-height: 1.6;
+  text-shadow: var(--champion-message-shadow);
 }
 
 .champion-footer {
@@ -128,10 +129,10 @@
   justify-content: center;
   gap: 20px;
   padding: 20px;
-  background: linear-gradient(135deg, rgba(212, 168, 76, 0.12), rgba(212, 168, 76, 0.05));
+  background: var(--champion-footer-bg);
   border-radius: 20px;
-  border: 2px solid rgba(212, 168, 76, 0.3);
-  box-shadow: 0 4px 20px rgba(212, 168, 76, 0.1);
+  border: 2px solid var(--champion-footer-border);
+  box-shadow: var(--champion-footer-shadow);
 }
 
 .champion-trophy {
@@ -140,9 +141,9 @@
 
 .champion-text {
   font-size: clamp(0.75rem, 3.2vw, 1.2rem);
-  color: var(--gold);
+  color: var(--champion-text-color);
   font-weight: 700;
-  text-shadow: 0 0 8px rgba(212, 168, 76, 0.2);
+  text-shadow: var(--champion-text-shadow);
 }
 
 @keyframes champion-glow-pulse {
@@ -151,8 +152,8 @@
 }
 
 @keyframes text-glow {
-  0% { text-shadow: 0 0 12px rgba(212, 168, 76, 0.3); }
-  100% { text-shadow: 0 0 20px rgba(212, 168, 76, 0.5); }
+  0% { text-shadow: var(--text-glow-from); }
+  100% { text-shadow: var(--text-glow-to); }
 }
 
 @keyframes avatar-float {
@@ -177,24 +178,24 @@
 .interview-link-btn {
   display: inline-block;
   padding: 14px 32px;
-  background: linear-gradient(135deg, rgba(212, 168, 76, 0.2), rgba(212, 168, 76, 0.08));
+  background: linear-gradient(135deg, rgba(var(--gold-rgb), 0.2), rgba(var(--gold-rgb), 0.08));
   color: var(--gold);
   text-decoration: none;
   border-radius: 16px;
   font-weight: 700;
   font-size: 0.95rem;
   font-family: 'Noto Sans JP', sans-serif;
-  border: 2px solid rgba(212, 168, 76, 0.35);
+  border: 2px solid rgba(var(--gold-rgb), 0.35);
   transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
-  box-shadow: 0 4px 16px rgba(212, 168, 76, 0.12);
+  box-shadow: 0 4px 16px rgba(var(--gold-rgb), 0.12);
   letter-spacing: 1px;
 }
 
 .interview-link-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(212, 168, 76, 0.25);
-  background: linear-gradient(135deg, rgba(212, 168, 76, 0.3), rgba(212, 168, 76, 0.12));
-  border-color: rgba(212, 168, 76, 0.5);
+  box-shadow: 0 8px 28px rgba(var(--gold-rgb), 0.25);
+  background: linear-gradient(135deg, rgba(var(--gold-rgb), 0.3), rgba(var(--gold-rgb), 0.12));
+  border-color: rgba(var(--gold-rgb), 0.5);
 }
 
 /* Responsive */

@@ -32,6 +32,8 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 │   ├── interview.php           優勝インタビュー
 │   ├── player.php              選手詳細ページ（大会一覧）
 │   ├── player_analysis.php     選手の戦績分析ページ
+│   ├── player_edit.php         選手情報編集ページ
+│   ├── player_new.php          選手新規登録ページ
 │   ├── player_tournament.php   選手の大会別戦績ページ
 │   ├── players.php             選手一覧ページ
 │   ├── 404.php                 404エラーページ
@@ -79,6 +81,8 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 ├── composer.json               PHP依存・autoload設定
 ├── phinx.php.example           Phinx設定テンプレート
 ├── .env.example                環境変数テンプレート
+├── tests/
+│   └── e2e/                     E2Eテスト（Playwright）
 ├── docs/
 │   └── database.md              データベース設計書
 ├── .gitignore
@@ -202,13 +206,7 @@ Neon dev                  ← 開発環境が接続
 
 ### モバイル最適化
 
-768px以下の画面幅では以下のパフォーマンス最適化が適用されます:
-
-- backdrop-filter（blur）の無効化
-- 決勝セクションのエフェクト（ember・energy-line・confetti）の非表示
-- 背景アニメーション・装飾アニメーションの簡略化
-- パーティクル数の削減
-- フォントサイズの`clamp()`によるレスポンシブ対応
+768px以下の画面幅では backdrop-filter 無効化やアニメーション簡略化が適用されます。`prefers-reduced-motion: reduce` でアニメーション一括停止にも対応。
 
 ### OGP対応
 
@@ -229,18 +227,52 @@ UptimeRobotによりRender本番環境の死活監視を行っています。ダ
 
 ## データ管理
 
-メインページ（`index.php`）を含むすべてのページはNeonデータベースからリアルタイムにデータを取得します���
+すべてのページはNeonデータベースからリアルタイムにデータを取得します。
 
 ### ページ遷移
 
 ```
-index.php（メインページ - 総合ポイント下部に「参加者一覧を見る」リンク）
-  └→ players.php（選手一覧）
-       └→ player.php（選手詳細 - 大会一覧・戦績分析リンク）
-            ├→ player_tournament.php（大会別戦績 - 卓・スコア・通過/敗退）
-            └→ player_analysis.php（戦績分析 - 対戦成績・スコア推移・統計）
+index.php（トップ）
+  ├→ players.php（選手一覧）
+  │    ├→ player_new.php（選手登録）
+  │    └→ player.php（選手詳細）
+  │         ├→ player_edit.php（選手編集・削除）
+  │         ├→ player_tournament.php（大会別戦績）
+  │         └→ player_analysis.php（戦績分析）
+  └→ interview.php（優勝インタビュー）
 ```
+
+### 選手管理（CRUD）
+
+- **登録**: players.php → 「選手を追加」ボタン → player_new.php
+- **編集**: player.php → 鉛筆アイコン → player_edit.php（呼称・キャラクター変更）
+- **削除**: player_edit.php 下部（大会参加済みの選手は削除不可）
 
 ### 大会管理
 
-`tournaments` テーブルで複数大会を管理します。各大会のデータ（卓情報・成績・順位・メタ情報）は `tournament_id` で分離されます。詳細は `docs/database.md` を参照してください。
+`tournaments` テーブルで複数大会を管理します。詳細は `docs/database.md` を参照。
+
+## E2Eテスト
+
+Playwright による自動テスト。Docker 起動中に実行する。
+
+```bash
+# 初回セットアップ
+cd tests/e2e && npm install && npx playwright install chromium --with-deps
+
+# テスト実行
+npx playwright test              # 全テスト（約2分）
+npx playwright test --headed     # ブラウザ表示あり
+npx playwright test pages/       # ページテストのみ
+npx playwright test features/    # 機能テストのみ
+```
+
+`git push` 時に Claude Code の hook で自動実行される（Docker 未起動時はスキップ）。
+
+### テスト構成
+
+| ディレクトリ | 内容 |
+|---|---|
+| `tests/e2e/pages/` | ページ別テスト（表示・CRUD・バリデーション・404） |
+| `tests/e2e/features/` | 機能テスト（テーマ切替・クリーンURL・セキュリティ・ナビゲーション） |
+| `tests/e2e/helpers/` | 共通ユーティリティ（テストプレイヤー作成・削除） |

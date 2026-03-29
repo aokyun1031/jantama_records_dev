@@ -1,29 +1,27 @@
 <?php
+declare(strict_types=1);
 require __DIR__ . '/../config/database.php';
 
 // --- バリデーション ---
-$playerId     = filter_input(INPUT_GET, 'player_id', FILTER_VALIDATE_INT);
+$playerId = filter_input(INPUT_GET, 'player_id', FILTER_VALIDATE_INT);
 $tournamentId = filter_input(INPUT_GET, 'tournament_id', FILTER_VALIDATE_INT);
 if (!$playerId || !$tournamentId) {
-    http_response_code(404);
-    require __DIR__ . '/404.php';
-    exit;
+    abort404();
 }
 
 // --- データ取得 ---
-['data' => $player, 'error' => $e1]     = fetchData(fn() => Player::find($playerId));
-['data' => $tournament, 'error' => $e2] = fetchData(fn() => Tournament::find($tournamentId));
-if ($e1 || $e2 || !$player || !$tournament) {
-    http_response_code(404);
-    require __DIR__ . '/404.php';
-    exit;
+$player = requirePlayer($playerId);
+['data' => $tournament] = fetchData(fn() => Tournament::find($tournamentId));
+if (!$tournament) {
+    abort404();
 }
 
-['data' => $standing, 'error' => $e3] = fetchData(fn() => Standing::findByPlayer($tournamentId, $playerId));
+['data' => $standing] = fetchData(fn() => Standing::findByPlayer($tournamentId, $playerId));
 ['data' => $rounds, 'error' => $error] = fetchData(fn() => TableInfo::byPlayerAndTournament($tournamentId, $playerId));
 
 // --- テンプレート変数 ---
 $pageTitle = h($player['name']) . ' - ' . h($tournament['name']) . ' - 最強位戦';
+$pageDescription = h($player['name']) . ' の ' . h($tournament['name']) . ' 戦績です。';
 $pageStyle = <<<'CSS'
 .result-hero {
   text-align: center;
@@ -32,35 +30,50 @@ $pageStyle = <<<'CSS'
 
 .result-badge {
   display: inline-block;
-  background: linear-gradient(135deg, var(--lavender), var(--pink));
-  color: #fff;
+  background: var(--badge-bg);
+  color: var(--badge-color);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 4px 14px;
   border-radius: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   letter-spacing: 2px;
-  box-shadow: 0 2px 12px rgba(184,160,232,0.3);
+  box-shadow: 0 2px 12px rgba(var(--accent-rgb),0.3);
   animation: fadeDown 0.8s ease both;
+}
+
+.result-identity {
+  margin-bottom: 12px;
+  animation: fadeUp 1s ease both;
+}
+
+.result-hero-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  margin-bottom: 16px;
+  animation: fadeUp 0.8s ease 0.2s both;
 }
 
 .result-title {
   font-family: 'Noto Sans JP', sans-serif;
   font-size: clamp(1.8rem, 6vw, 2.5rem);
   font-weight: 900;
-  background: linear-gradient(135deg, #9b8ce8, #e88cad, #d4a84c, #5cc8b0);
+  background: var(--title-gradient);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: titleGrad 6s ease infinite, fadeUp 1s ease both;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
 .result-nickname {
-  font-weight: 400;
-  font-size: 0.6em;
-  -webkit-text-fill-color: var(--text-sub);
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  margin-bottom: 12px;
 }
 
 .result-outcome {
@@ -74,13 +87,13 @@ $pageStyle = <<<'CSS'
 
 .outcome-champion {
   font-size: 2rem;
-  background: linear-gradient(135deg, #c49a3c, #e8c84c, #d4a84c, #e8c84c);
+  background: var(--champion-progress-gradient);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: titleGrad 4s ease infinite, fadeUp 1s ease 0.2s both;
-  filter: drop-shadow(0 1px 2px rgba(212,168,76,0.3));
+  filter: drop-shadow(0 1px 2px rgba(var(--gold-rgb),0.3));
 }
 
 .outcome-finals {
@@ -131,7 +144,7 @@ $pageStyle = <<<'CSS'
   font-weight: 700;
   font-size: 0.9rem;
   color: var(--text);
-  background: linear-gradient(135deg, rgba(155,140,232,0.08), rgba(232,140,173,0.05));
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(var(--accent-rgb),0.05));
   border-bottom: 1px solid var(--glass-border);
   display: flex;
   align-items: center;
@@ -142,8 +155,8 @@ $pageStyle = <<<'CSS'
   font-family: 'Inter', sans-serif;
   font-weight: 800;
   font-size: 0.75rem;
-  background: linear-gradient(135deg, var(--purple), var(--pink));
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-text-color);
   padding: 2px 10px;
   border-radius: 10px;
 }
@@ -160,7 +173,7 @@ $pageStyle = <<<'CSS'
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
-  border-bottom: 1px solid rgba(155,140,232,0.06);
+  border-bottom: 1px solid rgba(var(--accent-rgb),0.06);
   transition: background 0.2s;
 }
 
@@ -169,7 +182,7 @@ $pageStyle = <<<'CSS'
 }
 
 .member-self {
-  background: linear-gradient(135deg, rgba(155,140,232,0.08), rgba(232,140,173,0.04));
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(var(--accent-rgb),0.04));
 }
 
 .member-name {
@@ -180,7 +193,7 @@ $pageStyle = <<<'CSS'
 
 .member-self .member-name {
   font-weight: 800;
-  background: linear-gradient(135deg, var(--purple), var(--pink));
+  background: var(--btn-primary-bg);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -212,25 +225,25 @@ $pageStyle = <<<'CSS'
 }
 
 .tag-cutoff {
-  background: linear-gradient(135deg, rgba(232,112,112,0.12), rgba(232,112,112,0.05));
+  background: linear-gradient(135deg, rgba(var(--coral-rgb),0.12), rgba(var(--coral-rgb),0.05));
   color: var(--coral);
 }
 
 .tag-pass {
-  background: linear-gradient(135deg, rgba(92,200,176,0.12), rgba(92,200,176,0.05));
+  background: linear-gradient(135deg, rgba(var(--mint-rgb),0.12), rgba(var(--mint-rgb),0.05));
   color: var(--mint);
 }
 
 .tag-champion {
-  background: linear-gradient(135deg, rgba(212,168,76,0.2), rgba(212,168,76,0.08));
+  background: linear-gradient(135deg, rgba(var(--gold-rgb),0.2), rgba(var(--gold-rgb),0.08));
   color: var(--gold);
 }
 
 .result-error {
   text-align: center;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(232,112,112,0.1), rgba(232,112,112,0.05));
-  border: 1px solid rgba(232,112,112,0.3);
+  background: linear-gradient(135deg, rgba(var(--coral-rgb),0.1), rgba(var(--coral-rgb),0.05));
+  border: 1px solid rgba(var(--coral-rgb),0.3);
   border-radius: var(--radius);
   color: var(--text);
   font-size: 0.9rem;
@@ -242,20 +255,20 @@ $pageStyle = <<<'CSS'
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--purple), var(--pink));
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-text-color);
   text-decoration: none;
   border-radius: 12px;
   font-weight: 700;
   font-size: 0.85rem;
   transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 4px 16px rgba(155, 140, 232, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
   margin-bottom: 40px;
 }
 
 .back-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(155, 140, 232, 0.4);
+  box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.4);
 }
 
 @keyframes roundFadeIn {
@@ -272,7 +285,13 @@ require __DIR__ . '/../templates/header.php';
 
 <div class="result-hero">
   <div class="result-badge"><?= h($tournament['name']) ?></div>
-  <h1 class="result-title"><?= h($player['name']) ?><?php if ($player['nickname']): ?><span class="result-nickname">（<?= h($player['nickname']) ?>）</span><?php endif; ?></h1>
+  <div class="result-identity">
+    <?php if ($player['character_icon']): ?>
+      <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="<?= h($player['name']) ?>" class="result-hero-icon" width="88" height="88">
+    <?php endif; ?>
+    <h1 class="result-title"><?= h($player['name']) ?></h1>
+    <?php if ($player['nickname'] !== null && $player['nickname'] !== ''): ?><div class="result-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
+  </div>
   <?php if ($standing):
     $isChampion = (int)$standing['rank'] === 1 && $tournament['status'] === 'completed';
     $elimRound  = (int)$standing['eliminated_round'];
@@ -301,7 +320,8 @@ require __DIR__ . '/../templates/header.php';
   </div>
 <?php else: ?>
   <?php
-    $tournamentFinalRound = (int)TournamentMeta::get($tournamentId, 'current_round', '0');
+    ['data' => $finalRoundStr] = fetchData(fn() => TournamentMeta::get($tournamentId, 'current_round', '0'));
+    $tournamentFinalRound = (int)($finalRoundStr ?? '0');
     foreach ($rounds as $ri => $round):
       $isFinal = (int)$round['round_number'] === $tournamentFinalRound && $tournament['status'] === 'completed';
   ?>
@@ -342,7 +362,7 @@ require __DIR__ . '/../templates/header.php';
 <?php endif; ?>
 
 <div style="text-align: center;">
-  <a href="player.php?id=<?= $playerId ?>" class="back-btn">&#x2190; 個人ページに戻る</a>
+  <a href="player?id=<?= $playerId ?>" class="back-btn">&#x2190; 個人ページに戻る</a>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

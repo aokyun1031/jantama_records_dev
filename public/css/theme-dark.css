@@ -1,11 +1,12 @@
 /* ======================
    theme-dark.css
-   Dark × Gold premium theme — overrides base.css & components.css
+   Dark × Gold premium theme — CSS variable overrides
    Load AFTER base.css and components.css
    ====================== */
 
-/* ---------- Variables ---------- */
+/* ---------- Variable overrides ---------- */
 :root {
+  /* Core palette */
   --bg1:#0d0b1a;--bg2:#140f28;--bg3:#0f0e1e;--bg4:#1a1430;
   --card:rgba(255,255,255,0.04);--card-hover:rgba(255,255,255,0.08);
   --glass-border:rgba(212,168,76,0.12);
@@ -17,504 +18,224 @@
   --plus-text:#e8c06a;--minus-text:#7ca8e8;
   --shadow:0 8px 32px rgba(0,0,0,0.40);
   --shadow-sm:0 2px 12px rgba(0,0,0,0.25);
+
+  /* Accent */
+  --accent-rgb:212,168,76;
+  --gold-rgb:212,168,76;
+  --mint-rgb:92,200,176;
+  --coral-rgb:232,140,140;
+  --danger:#e05555;
+  --danger-rgb:224,85,85;
+  --success:#5cc8b0;
+
+  /* Hero badge */
+  --badge-bg:linear-gradient(135deg,rgba(212,168,76,0.25),rgba(212,168,76,0.12));
+  --badge-color:var(--gold);
+  --badge-shadow:0 2px 16px rgba(212,168,76,0.15);
+
+  /* Hero title */
+  --title-gradient:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
+  --title-filter:drop-shadow(0 2px 12px rgba(212,168,76,0.25));
+
+  /* Hero rules */
+  --hero-rules-bg:rgba(255,255,255,0.04);
+  --hero-rules-border:1px solid rgba(212,168,76,0.15);
+  --hero-rules-hover-shadow:0 3px 12px rgba(212,168,76,0.12);
+
+  /* Hero record */
+  --hero-record-bg:linear-gradient(135deg,rgba(212,168,76,0.1),rgba(212,168,76,0.03));
+  --hero-record-border:1px solid rgba(212,168,76,0.2);
+  --hero-record-hover-shadow:0 6px 24px rgba(212,168,76,0.12);
+
+  /* Progress */
+  --progress-bg:rgba(255,255,255,0.03);
+  --progress-border:1px solid rgba(212,168,76,0.1);
+  --step-done-bg:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
+  --step-done-shadow:0 4px 16px rgba(212,168,76,0.2);
+  --step-active-bg:linear-gradient(135deg,#ffd700,#d4a84c);
+  --step-active-color:#1a1430;
+  --step-active-shadow:0 4px 20px rgba(212,168,76,0.35),0 0 0 4px rgba(212,168,76,0.12);
+  --step-upcoming-bg:rgba(255,255,255,0.03);
+  --step-upcoming-border:2px dashed rgba(212,168,76,0.15);
+  --step-done-line:linear-gradient(90deg,rgba(212,168,76,0.5),rgba(212,168,76,0.15));
+  --step-active-line:linear-gradient(90deg,rgba(212,168,76,0.35),rgba(212,168,76,0.05));
+  --step-upcoming-line:rgba(255,255,255,0.04);
+
+  /* Section headers */
+  --section-header-border:rgba(212,168,76,0.1);
+  --section-title-color:var(--gold);
+
+  /* Button primary (tabs active) */
+  --btn-primary-bg:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
+  --btn-primary-shadow:0 4px 20px rgba(212,168,76,0.2);
+  --btn-secondary-bg:linear-gradient(135deg,rgba(212,168,76,0.5),rgba(180,140,50,0.6));
+  --btn-secondary-shadow:0 4px 16px rgba(212,168,76,0.15);
+  --btn-text-color:#1a1430;
+  --champion-progress-gradient:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80);
+  --tab-active-color:#1a1430;
+
+  /* Badge variants */
+  --badge-live-bg:linear-gradient(135deg,rgba(212,168,76,0.2),rgba(212,168,76,0.1));
+  --badge-live-color:var(--gold);
+  --badge-done-bg:linear-gradient(135deg,rgba(212,168,76,0.12),rgba(212,168,76,0.06));
+  --badge-done-color:rgba(212,168,76,0.7);
+  --badge-pending-bg:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.08));
+  --badge-pending-color:var(--gold);
+  --badge-elim-bg:rgba(255,255,255,0.04);
+  --badge-elim-color:var(--text-light);
+
+  /* Standings */
+  --standing-bg:rgba(255,255,255,0.03);
+  --standing-border:1px solid rgba(212,168,76,0.08);
+  --standing-hover-bg:rgba(255,255,255,0.06);
+  --standing-hover-shadow:0 8px 32px rgba(212,168,76,0.08);
+  --standing-top2-border:rgba(192,192,210,0.5);
+  --standing-top3-border:rgba(180,130,80,0.5);
+  --standing-bar-opacity:0.15;
+  --standing-divider-line:linear-gradient(90deg,transparent,rgba(212,168,76,0.15),transparent);
+  --standing-divider-opacity:1;
+  --standing-elim-line:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
+
+  /* Tabs */
+  --tab-bg:rgba(255,255,255,0.03);
+  --tab-border:1px solid rgba(212,168,76,0.08);
+  --tab-hover-bg:rgba(212,168,76,0.06);
+
+  /* Table cards */
+  --table-card-bg:rgba(255,255,255,0.03);
+  --table-card-border:1px solid rgba(212,168,76,0.08);
+  --table-card-hover-shadow:0 8px 24px rgba(212,168,76,0.08);
+  --table-head-border:rgba(212,168,76,0.1);
+  --table-card-name-color:var(--gold);
+  --table-card-bullet:rgba(212,168,76,0.4);
+  --table-done-border:rgba(212,168,76,0.2);
+  --table-pending-border:rgba(212,168,76,0.2);
+  --table-pending-bg:linear-gradient(135deg,rgba(212,168,76,0.04),rgba(255,255,255,0.02));
+  --table-pending-name:rgba(212,168,76,0.7);
+
+  /* Results */
+  --result-hover-bg:rgba(212,168,76,0.04);
+  --result-divider:linear-gradient(90deg,transparent,rgba(212,168,76,0.3),transparent);
+  --elim-bg:rgba(255,255,255,0.02);
+
+  /* Table detail */
+  --detail-bg:rgba(255,255,255,0.03);
+  --detail-border:1px solid rgba(212,168,76,0.08);
+  --detail-hover-shadow:0 8px 24px rgba(212,168,76,0.08);
+  --detail-name-color:var(--gold);
+  --detail-row1-bg:linear-gradient(90deg,rgba(212,168,76,0.06),transparent);
+  --detail-pending-bg:linear-gradient(135deg,rgba(212,168,76,0.06),rgba(212,168,76,0.02));
+  --detail-pending-border:1px dashed rgba(212,168,76,0.15);
+  --detail-pending-color:var(--text-light);
+
+  /* Pending note */
+  --pending-bg:linear-gradient(135deg,rgba(212,168,76,0.06),rgba(212,168,76,0.02));
+  --pending-border:1px dashed rgba(212,168,76,0.15);
+  --pending-color:var(--text-light);
+
+  /* Records */
+  --records-bg:rgba(255,255,255,0.03);
+  --records-border:1px solid rgba(212,168,76,0.12);
+  --record-hl-bg:linear-gradient(135deg,rgba(212,168,76,0.1),rgba(212,168,76,0.03));
+  --record-hl-border:1px solid rgba(212,168,76,0.2);
+  --record-hl-hover-shadow:0 8px 32px rgba(212,168,76,0.12);
+  --stat-num-color:var(--gold);
+
+  /* Footer */
+  --footer-color:var(--text-light);
+
+  /* Players link */
+  --players-link-bg:rgba(255,255,255,0.03);
+  --players-link-border:1px solid rgba(212,168,76,0.12);
+  --players-link-hover-color:var(--gold);
+  --players-link-hover-shadow:0 8px 24px rgba(212,168,76,0.08);
+
+  /* Tile & deco opacities */
+  --tile-opacity:0.08;
+  --tile-deco-opacity:0.06;
+  --tile-accent-opacity:0.08;
+  --tile-frame-opacity:0.07;
+  --tile-footer-opacity:0.2;
+  --tile-scatter-opacity:0.04;
+  --tile-progress-opacity:0.06;
+  --tile-divider-opacity:0.3;
+  --divider-line-color:rgba(212,168,76,0.3);
+
+  /* Finals */
+  --finals-stage-bg:linear-gradient(135deg,rgba(20,15,40,0.95),rgba(40,20,60,0.92),rgba(20,15,50,0.95));
+  --finals-border-color:rgba(212,168,76,0.4);
+  --finals-stage-shadow:0 0 60px rgba(212,168,76,0.15),0 0 120px rgba(155,140,232,0.08),0 20px 60px rgba(0,0,0,0.3);
+  --finals-corner-color:rgba(212,168,76,0.6);
+  --finals-title-gradient:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
+  --finals-title-filter:drop-shadow(0 0 20px rgba(212,168,76,0.4));
+  --finals-pretitle-color:rgba(212,168,76,0.7);
+  --finals-subtitle-color:rgba(255,255,255,0.5);
+  --finals-subtitle-span:rgba(212,168,76,0.9);
+  --finals-sparkle-line:linear-gradient(90deg,transparent,rgba(212,168,76,0.6),transparent);
+  --finals-sparkle-dot-bg:rgba(212,168,76,0.9);
+  --finals-sparkle-dot-shadow:0 0 10px rgba(212,168,76,0.6);
+  --finals-vs-bg:linear-gradient(135deg,#1a1030,#2a1540);
+  --finals-vs-color:rgba(212,168,76,0.9);
+  --finals-vs-border:rgba(212,168,76,0.6);
+  --finals-vs-shadow:0 0 30px rgba(212,168,76,0.2),inset 0 0 20px rgba(212,168,76,0.05);
+  --finalist-card-bg:linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+  --finalist-card-border:rgba(212,168,76,0.25);
+  --finalist-card-hover-border:rgba(212,168,76,0.5);
+  --finalist-card-hover-shadow:0 0 40px rgba(212,168,76,0.15);
+  --finalist-card-before:linear-gradient(45deg,transparent 30%,rgba(212,168,76,0.08) 50%,transparent 70%);
+  --finalist-seed-color:rgba(212,168,76,0.6);
+  --finalist-avatar-bg:linear-gradient(135deg,rgba(212,168,76,0.2),rgba(155,140,232,0.2));
+  --finalist-avatar-border:rgba(212,168,76,0.3);
+  --finalist-avatar-after:rgba(212,168,76,0.5);
+  --finalist-name-color:#fff;
+  --finalist-name-shadow:0 0 20px rgba(212,168,76,0.3);
+  --finalist-trend-color:rgba(255,255,255,0.35);
+  --finals-status-bg:linear-gradient(135deg,rgba(212,168,76,0.12),rgba(212,168,76,0.05));
+  --finals-status-border:rgba(212,168,76,0.25);
+  --finals-status-color:rgba(212,168,76,0.8);
+  --finals-dot-bg:rgba(212,168,76,0.8);
+  --ember-bg:rgba(212,168,76,0.7);
+  --ember-shadow:0 0 6px rgba(212,168,76,0.4);
+  --energy-line-bg:linear-gradient(90deg,rgba(212,168,76,0.3),transparent);
+
+  /* Champion */
+  --champion-section-bg:linear-gradient(135deg,#0d0b1a 0%,#140f28 50%,#1a1430 100%);
+  --champion-glow:radial-gradient(circle,rgba(212,168,76,0.25) 0%,rgba(212,168,76,0.08) 50%,transparent 70%);
+  --champion-sparkle-bg:#e8c06a;
+  --champion-sparkle-shadow:0 0 10px rgba(212,168,76,0.7);
+  --champion-pretitle-color:#e8c06a;
+  --champion-pretitle-shadow:0 0 20px rgba(212,168,76,0.6);
+  --champion-title-color:#fff;
+  --champion-title-shadow:0 0 30px rgba(212,168,76,0.5);
+  --champion-subtitle-color:#e8c06a;
+  --champion-subtitle-shadow:0 0 10px rgba(212,168,76,0.4);
+  --champion-avatar-shadow:0 0 50px rgba(212,168,76,0.4);
+  --champion-image-border:#e8c06a;
+  --champion-name-color:#fff;
+  --champion-name-shadow:0 0 20px rgba(212,168,76,0.5);
+  --champion-score-color:#e8c06a;
+  --champion-score-shadow:0 0 10px rgba(212,168,76,0.4);
+  --champion-message-color:#e8e4f0;
+  --champion-message-shadow:0 0 5px rgba(255,255,255,0.15);
+  --champion-footer-bg:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.06));
+  --champion-footer-border:rgba(212,168,76,0.4);
+  --champion-footer-shadow:0 0 30px rgba(212,168,76,0.2);
+  --champion-text-color:#e8c06a;
+  --champion-text-shadow:0 0 10px rgba(212,168,76,0.4);
+  --text-glow-from:0 0 20px rgba(212,168,76,0.6);
+  --text-glow-to:0 0 30px rgba(212,168,76,0.8);
+
+  /* Ended container */
+  --ended-bg:linear-gradient(135deg,#0d0b1a 0%,#140f28 50%,#1a1430 100%);
+  --ended-border:rgba(212,168,76,0.4);
+  --ended-shadow:0 4px 15px rgba(212,168,76,0.2),0 0 20px rgba(13,11,26,0.5);
+  --ended-before-bg:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+  --ended-text-color:#fff;
+  --ended-text-shadow:0 2px 4px rgba(0,0,0,0.5),0 0 10px rgba(212,168,76,0.2);
 }
 
 /* ---------- Body ---------- */
 body{
   background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 33%,var(--bg3) 66%,var(--bg4) 100%);
   background-size:400% 400%;
-}
-
-/* ---------- Hero ---------- */
-.hero-tiles{opacity:0.08}
-.hero-badge{
-  background:linear-gradient(135deg,rgba(212,168,76,0.25),rgba(212,168,76,0.12));
-  color:var(--gold);
-  box-shadow:0 2px 16px rgba(212,168,76,0.15);
-  border:1px solid rgba(212,168,76,0.2);
-}
-.hero-title{
-  background:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
-  background-size:300% 300%;
-  -webkit-background-clip:text;background-clip:text;
-  filter:drop-shadow(0 2px 12px rgba(212,168,76,0.25));
-}
-.hero-rules span{
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(212,168,76,0.15);
-  color:var(--text-sub);
-  backdrop-filter:blur(12px);
-}
-.hero-rules span:hover{
-  box-shadow:0 3px 12px rgba(212,168,76,0.12);
-  border-color:rgba(212,168,76,0.3);
-}
-.hero-record-inner{
-  background:linear-gradient(135deg,rgba(212,168,76,0.1),rgba(212,168,76,0.03));
-  border:1px solid rgba(212,168,76,0.2);
-}
-.hero-record-inner:hover{box-shadow:0 6px 24px rgba(212,168,76,0.12)}
-.hero-record-inner .player{color:var(--text-sub)}
-
-/* ---------- Progress ---------- */
-.progress-track{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(212,168,76,0.1);
-  backdrop-filter:blur(16px);
-}
-.step-circle.done{
-  background:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
-  color:#fff;box-shadow:0 4px 16px rgba(212,168,76,0.2);
-}
-.step-circle.active{
-  background:linear-gradient(135deg,#ffd700,#d4a84c);color:#1a1430;
-  box-shadow:0 4px 20px rgba(212,168,76,0.35),0 0 0 4px rgba(212,168,76,0.12);
-}
-.step-circle.upcoming{
-  background:rgba(255,255,255,0.03);
-  color:var(--text-light);
-  border:2px dashed rgba(212,168,76,0.15);
-}
-.step-line.done{background:linear-gradient(90deg,rgba(212,168,76,0.5),rgba(212,168,76,0.15))}
-.step-line.active{background:linear-gradient(90deg,rgba(212,168,76,0.35),rgba(212,168,76,0.05));background-size:200% 100%}
-.step-line.upcoming{background:rgba(255,255,255,0.04)}
-
-/* ---------- Section headers ---------- */
-.section-header{border-bottom:2px solid rgba(212,168,76,0.1)}
-.section-title{color:var(--gold)}
-
-/* ---------- Badges ---------- */
-.badge-live{
-  background:linear-gradient(135deg,rgba(212,168,76,0.2),rgba(212,168,76,0.1));
-  color:var(--gold);
-}
-.badge-done{
-  background:linear-gradient(135deg,rgba(212,168,76,0.12),rgba(212,168,76,0.06));
-  color:rgba(212,168,76,0.7);
-}
-.badge-pending{
-  background:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.08));
-  color:var(--gold);
-}
-.badge-elim{
-  background:rgba(255,255,255,0.04);
-  color:var(--text-light);
-}
-
-/* ---------- Standings ---------- */
-.standing-item{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(212,168,76,0.08);
-  backdrop-filter:blur(16px);
-}
-.standing-item:hover{
-  background:rgba(255,255,255,0.06);
-  border-color:rgba(212,168,76,0.2);
-  box-shadow:0 8px 32px rgba(212,168,76,0.08);
-}
-.standing-item.top-1{border-left:3px solid var(--gold)}
-.standing-item.top-2{border-left:3px solid rgba(192,192,210,0.5)}
-.standing-item.top-3{border-left:3px solid rgba(180,130,80,0.5)}
-.standing-bar{opacity:0.15}
-.standing-divider{color:var(--text-light)}
-.standing-divider::before,.standing-divider::after{
-  background:linear-gradient(90deg,transparent,rgba(212,168,76,0.15),transparent);opacity:1;
-}
-.standing-elim-divider{color:var(--text-light)}
-.standing-elim-divider::before,.standing-elim-divider::after{
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
-}
-
-/* ---------- Tabs ---------- */
-.tab-btn{
-  background:rgba(255,255,255,0.03);
-  color:var(--text-sub);
-  border:1px solid rgba(212,168,76,0.08);
-}
-.tab-btn:hover{
-  background:rgba(212,168,76,0.06);
-  border-color:rgba(212,168,76,0.2);
-}
-.tab-btn.active{
-  background:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
-  color:#1a1430;
-  border-color:transparent;
-  box-shadow:0 4px 20px rgba(212,168,76,0.2);
-}
-
-/* ---------- Table Cards ---------- */
-.table-card{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(212,168,76,0.08);
-  backdrop-filter:blur(8px);
-}
-.table-card:hover{
-  box-shadow:0 8px 24px rgba(212,168,76,0.08);
-  border-color:rgba(212,168,76,0.2);
-}
-.table-card-head{border-bottom:2px solid rgba(212,168,76,0.1)}
-.table-card-name{color:var(--gold)}
-.table-card-players li::before{background:rgba(212,168,76,0.4)}
-.table-done{border-color:rgba(212,168,76,0.2)}
-.table-pending{
-  border-color:rgba(212,168,76,0.2);
-  background:linear-gradient(135deg,rgba(212,168,76,0.04),rgba(255,255,255,0.02));
-}
-.table-pending .table-card-name{color:rgba(212,168,76,0.7)}
-
-/* ---------- Results ---------- */
-.result-row:hover{background:rgba(212,168,76,0.04)}
-.elim-section{background:rgba(255,255,255,0.02)}
-
-/* ---------- Table Detail Results ---------- */
-.table-detail-block{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(212,168,76,0.08);
-  backdrop-filter:blur(12px);
-}
-.table-detail-block:hover{box-shadow:0 8px 24px rgba(212,168,76,0.08)}
-.table-detail-head{border-bottom:2px solid rgba(212,168,76,0.1)}
-.table-detail-name{color:var(--gold)}
-.table-detail-row:nth-child(1){background:linear-gradient(90deg,rgba(212,168,76,0.06),transparent)}
-.table-detail-pending{
-  background:linear-gradient(135deg,rgba(212,168,76,0.06),rgba(212,168,76,0.02));
-  border:1px dashed rgba(212,168,76,0.15);
-  color:var(--text-light);
-}
-
-/* ---------- Pending note ---------- */
-.pending-note{
-  background:linear-gradient(135deg,rgba(212,168,76,0.06),rgba(212,168,76,0.02));
-  border:1px dashed rgba(212,168,76,0.15);
-  color:var(--text-light);
-}
-
-/* ---------- Records ---------- */
-.records{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(212,168,76,0.12);
-  backdrop-filter:blur(16px);
-}
-.record-highlight{
-  background:linear-gradient(135deg,rgba(212,168,76,0.1),rgba(212,168,76,0.03));
-  border:1px solid rgba(212,168,76,0.2);
-}
-.record-highlight:hover{box-shadow:0 8px 32px rgba(212,168,76,0.12)}
-.stat-num{color:var(--gold)}
-
-/* ---------- Footer ---------- */
-.footer{color:var(--text-light)}
-
-/* ---------- Finals section (dark overrides) ---------- */
-.finals-stage{
-  background:linear-gradient(135deg,rgba(20,15,40,0.95),rgba(40,20,60,0.92),rgba(20,15,50,0.95));
-  border-color:rgba(212,168,76,0.4);
-  box-shadow:0 0 60px rgba(212,168,76,0.15),0 0 120px rgba(155,140,232,0.08),0 20px 60px rgba(0,0,0,0.3);
-}
-.finals-stage::before{
-  background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(212,168,76,0.03) 40px,rgba(212,168,76,0.03) 41px),
-             repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(212,168,76,0.03) 40px,rgba(212,168,76,0.03) 41px);
-}
-.finals-stage::after{
-  background:conic-gradient(from 0deg,transparent 0%,rgba(212,168,76,0.06) 5%,transparent 10%);
-}
-.finals-corner{border-color:rgba(212,168,76,0.6)}
-.finals-pretitle{color:rgba(212,168,76,0.7)}
-.finals-title{
-  background:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
-  background-size:400% 400%;
-  -webkit-background-clip:text;background-clip:text;
-  filter:drop-shadow(0 0 20px rgba(212,168,76,0.4));
-}
-.finals-subtitle{color:rgba(255,255,255,0.5)}
-.finals-subtitle span{color:rgba(212,168,76,0.9)}
-.finals-sparkle-line{background:linear-gradient(90deg,transparent,rgba(212,168,76,0.6),transparent)}
-.finals-sparkle-line::after{background:rgba(212,168,76,0.9);box-shadow:0 0 10px rgba(212,168,76,0.6)}
-.finals-vs{
-  background:linear-gradient(135deg,#1a1030,#2a1540);
-  border-color:rgba(212,168,76,0.6);
-  color:rgba(212,168,76,0.9);
-  box-shadow:0 0 30px rgba(212,168,76,0.2),inset 0 0 20px rgba(212,168,76,0.05);
-}
-.finalist-card{
-  background:linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
-  border-color:rgba(212,168,76,0.25);
-}
-.finalist-card:hover{
-  border-color:rgba(212,168,76,0.5);
-  box-shadow:0 0 40px rgba(212,168,76,0.15);
-}
-.finalist-card::before{
-  background:linear-gradient(45deg,transparent 30%,rgba(212,168,76,0.08) 50%,transparent 70%);
-}
-.finalist-seed{color:rgba(212,168,76,0.6)}
-.finalist-avatar{
-  background:linear-gradient(135deg,rgba(212,168,76,0.2),rgba(155,140,232,0.2));
-  border-color:rgba(212,168,76,0.3);
-}
-.finalist-avatar::after{border-top-color:rgba(212,168,76,0.5)}
-.finalist-name{color:#fff;text-shadow:0 0 20px rgba(212,168,76,0.3)}
-.finalist-score.plus{color:#e88cad}
-.finalist-score.minus{color:#7ca8e8}
-.finalist-trend{color:rgba(255,255,255,0.35)}
-.finals-status{
-  background:linear-gradient(135deg,rgba(212,168,76,0.12),rgba(212,168,76,0.05));
-  border-color:rgba(212,168,76,0.25);
-  color:rgba(212,168,76,0.8);
-}
-.finals-dot{background:rgba(212,168,76,0.8)}
-.ember{background:rgba(212,168,76,0.7);box-shadow:0 0 6px rgba(212,168,76,0.4)}
-.energy-line{background:linear-gradient(90deg,rgba(212,168,76,0.3),transparent)}
-
-/* ---------- Champion section (dark overrides) ---------- */
-.champion-section{
-  background:linear-gradient(135deg,#0d0b1a 0%,#140f28 50%,#1a1430 100%);
-}
-.champion-glow{
-  background:radial-gradient(circle,rgba(212,168,76,0.25) 0%,rgba(212,168,76,0.08) 50%,transparent 70%);
-}
-.champion-sparkle{
-  background:#e8c06a;
-  box-shadow:0 0 10px rgba(212,168,76,0.7);
-}
-.champion-pretitle{
-  color:#e8c06a;
-  text-shadow:0 0 20px rgba(212,168,76,0.6);
-}
-.champion-title{
-  color:#fff;
-  text-shadow:0 0 30px rgba(212,168,76,0.5);
-}
-.champion-subtitle{
-  color:#e8c06a;
-  text-shadow:0 0 10px rgba(212,168,76,0.4);
-}
-.champion-avatar{
-  box-shadow:0 0 50px rgba(212,168,76,0.4);
-}
-.champion-image{
-  border-color:#e8c06a;
-}
-.champion-name{
-  color:#fff;
-  text-shadow:0 0 20px rgba(212,168,76,0.5);
-}
-.champion-score{
-  color:#e8c06a;
-  text-shadow:0 0 10px rgba(212,168,76,0.4);
-}
-.champion-message{
-  color:#e8e4f0;
-  text-shadow:0 0 5px rgba(255,255,255,0.15);
-}
-.champion-footer{
-  background:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.06));
-  border-color:rgba(212,168,76,0.4);
-  box-shadow:0 0 30px rgba(212,168,76,0.2);
-}
-.champion-text{
-  color:#e8c06a;
-  text-shadow:0 0 10px rgba(212,168,76,0.4);
-}
-.ended-container{
-  background:linear-gradient(135deg,#0d0b1a 0%,#140f28 50%,#1a1430 100%);
-  border-color:rgba(212,168,76,0.4);
-  box-shadow:0 4px 15px rgba(212,168,76,0.2),0 0 20px rgba(13,11,26,0.5);
-}
-.ended-container::before{
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
-}
-.ended-text{
-  color:#fff;
-  text-shadow:0 2px 4px rgba(0,0,0,0.5),0 0 10px rgba(212,168,76,0.2);
-}
-
-/* ---------- Mahjong decorations (dark overrides) ---------- */
-.tile-divider-line{background:linear-gradient(90deg,transparent,rgba(212,168,76,0.3),transparent)}
-.tile-divider-tiles{opacity:0.3}
-.section-tiles{opacity:0.06}
-.records-tile-frame span{opacity:0.07}
-.hero-tile-accent{opacity:0.08}
-.footer-tiles{opacity:0.2}
-.tile-scatter span{opacity:0.04}
-.progress-tile-bg{opacity:0.06}
-
-/* ---------- Interview ---------- */
-body .interview-badge{
-  background:linear-gradient(135deg,rgba(212,168,76,0.25),rgba(212,168,76,0.12));
-  color:var(--gold);
-  box-shadow:0 2px 12px rgba(212,168,76,0.15);
-  border:1px solid rgba(212,168,76,0.2);
-}
-body .interview-title{
-  background:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
-  background-size:300% 300%;
-  -webkit-background-clip:text;background-clip:text;
-  filter:drop-shadow(0 2px 12px rgba(212,168,76,0.25));
-}
-body .interview-item{
-  background:rgba(255,255,255,0.03);
-  border-color:rgba(212,168,76,0.08);
-}
-body .interview-item:hover{
-  border-color:rgba(212,168,76,0.2);
-  box-shadow:0 8px 24px rgba(212,168,76,0.08);
-}
-body .interview-profile{
-  background:rgba(255,255,255,0.03);
-  border-color:rgba(212,168,76,0.12);
-}
-body .interview-question{
-  border-bottom-color:rgba(212,168,76,0.2);
-}
-body .interview-back{
-  background:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
-  box-shadow:0 4px 16px rgba(212,168,76,0.2);
-}
-body .interview-back:hover{
-  box-shadow:0 6px 24px rgba(212,168,76,0.3);
-}
-body .interview-link-btn{
-  background:linear-gradient(135deg,rgba(212,168,76,0.2),rgba(212,168,76,0.08));
-  border-color:rgba(212,168,76,0.3);
-  color:var(--gold);
-}
-body .interview-link-btn:hover{
-  box-shadow:0 6px 24px rgba(212,168,76,0.15);
-}
-
-/* ---------- Players link ---------- */
-.players-link-btn{
-  background:rgba(255,255,255,0.03);
-  border-color:rgba(212,168,76,0.12);
-  color:var(--text-sub);
-}
-.players-link-btn:hover{
-  border-color:rgba(212,168,76,0.3);
-  color:var(--gold);
-  box-shadow:0 8px 24px rgba(212,168,76,0.08);
-}
-
-/* ---------- Player pages ---------- */
-
-/* badges & hero titles */
-body .players-badge,
-body .player-badge,
-body .result-badge,
-body .analysis-badge{
-  background:linear-gradient(135deg,rgba(212,168,76,0.25),rgba(212,168,76,0.12));
-  color:var(--gold);
-  box-shadow:0 2px 12px rgba(212,168,76,0.15);
-  border:1px solid rgba(212,168,76,0.2);
-}
-body .players-title,
-body .player-title,
-body .result-title,
-body .analysis-title{
-  background:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
-  background-size:300% 300%;
-  -webkit-background-clip:text;background-clip:text;
-  filter:drop-shadow(0 2px 12px rgba(212,168,76,0.25));
-}
-
-/* players.php */
-.player-card{
-  background:rgba(255,255,255,0.03);
-  border-color:rgba(212,168,76,0.08);
-}
-.player-card:hover{
-  background:rgba(255,255,255,0.06);
-  border-color:rgba(212,168,76,0.2);
-  box-shadow:0 8px 32px rgba(212,168,76,0.08);
-}
-
-/* player.php */
-.tournament-card{
-  background:rgba(255,255,255,0.03);
-  border-color:rgba(212,168,76,0.08);
-}
-.tournament-links{
-  background:rgba(212,168,76,0.06);
-}
-.tournament-link{
-  color:var(--text-sub);
-}
-.tournament-link:first-child{
-  border-right-color:rgba(212,168,76,0.12);
-}
-.tournament-link:hover{
-  background:rgba(212,168,76,0.1);
-  color:var(--gold);
-}
-.tournament-status.status-completed{
-  background:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.06));
-  color:rgba(212,168,76,0.7);
-}
-
-/* player_tournament.php */
-.round-section{
-  background:rgba(255,255,255,0.03);
-  border-color:rgba(212,168,76,0.08);
-}
-.round-header{
-  background:linear-gradient(135deg,rgba(212,168,76,0.08),rgba(212,168,76,0.03));
-  border-bottom-color:rgba(212,168,76,0.1);
-}
-.round-label{
-  background:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
-}
-.member-row{
-  border-bottom-color:rgba(212,168,76,0.06);
-}
-.member-self{
-  background:linear-gradient(135deg,rgba(212,168,76,0.08),rgba(212,168,76,0.03));
-}
-.member-self .member-name{
-  background:linear-gradient(135deg,var(--gold),#ffec80);
-  -webkit-background-clip:text;background-clip:text;
-}
-
-/* player_analysis.php */
-.h2h-table,
-.history-table{
-  background:rgba(255,255,255,0.03);
-  border-color:rgba(212,168,76,0.08);
-}
-.h2h-table th,
-.history-table th{
-  background:linear-gradient(135deg,rgba(212,168,76,0.1),rgba(212,168,76,0.04));
-}
-.h2h-table td,
-.history-table td{
-  border-top-color:rgba(212,168,76,0.06);
-}
-.h2h-sortable:hover{
-  color:var(--gold);
-}
-.summary-card{
-  background:rgba(255,255,255,0.03);
-  border-color:rgba(212,168,76,0.08);
-}
-.summary-value{
-  background:linear-gradient(135deg,var(--gold),#ffec80);
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-body .players-back,
-body .back-btn,
-body .btn-primary{
-  background:linear-gradient(135deg,rgba(212,168,76,0.7),rgba(180,140,50,0.8));
-  box-shadow:0 4px 16px rgba(212,168,76,0.2);
-}
-body .players-back:hover,
-body .back-btn:hover,
-body .btn-primary:hover{
-  box-shadow:0 6px 24px rgba(212,168,76,0.3);
-}
-body .btn-secondary{
-  background:linear-gradient(135deg,rgba(212,168,76,0.5),rgba(180,140,50,0.6));
-  box-shadow:0 4px 16px rgba(212,168,76,0.15);
-}
-body .btn-secondary:hover{
-  box-shadow:0 6px 24px rgba(212,168,76,0.25);
 }

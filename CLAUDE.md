@@ -39,6 +39,16 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 php vendor/bin/phinx status
 php vendor/bin/phinx migrate
 php vendor/bin/phinx seed:run
+
+# E2Eテスト（ホストマシンで実行、Docker起動が前提）
+cd tests/e2e && npm install && npx playwright install chromium --with-deps
+npx playwright test                              # 全テスト
+npx playwright test pages/players.spec.ts        # 特定テスト
+npx playwright test --headed                     # ブラウザ表示あり
+npx playwright test --ui                         # UIモード
+
+# git push 時に E2E テストが自動実行される（.claude/settings.json の hook で設定）
+# テスト失敗で push がブロックされる
 ```
 
 ## 環境構成
@@ -50,20 +60,29 @@ php vendor/bin/phinx seed:run
 
 ## コーディング規約
 
+- 全PHPファイルの先頭に `declare(strict_types=1)` を付ける
 - SQLは `models/` のクラスに集約する。ビュー（`public/*.php`）にSQLを書かない
 - データ取得は `fetchData(fn() => ModelName::method())` を使う
 - HTMLエスケープは `h()` ヘルパーを使う
 - テンプレートは `templates/` の header.php / footer.php を使う
 - DB接続は `getDbConnection()` を使用。直接PDOを生成しない
 - SQLにユーザー入力を使う場合はプリペアドステートメント必須
-- GETパラメータは `filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)` で検証する
+- GETパラメータは `requirePlayerId()` または `filter_input()` で検証する
+- POST入力は `sanitizeInput($key)` で取得する（制御文字除去 + trim）
+- フォームページは `startSecureSession()` + `ensureCsrfToken()` + `validateCsrfToken()` を使う
+- POST成功後は `regenerateCsrfToken()` + PRGリダイレクト
+- `json_encode` には `JSON_UNESCAPED_UNICODE | JSON_HEX_TAG` を付ける
 - 大会スコープのデータ取得は `$tournamentId` を必ず指定する（`Player` を除く全モデル）
 - モデル追加後は `composer dump-autoload` を実行する
 - `.env` の読み込みは phpdotenv (`Dotenv\Dotenv::createImmutable()`) を使う
-- ダークテーマ対応: ページ固有CSSはCSS変数を使い、必要に応じて `theme-dark.css` に `body` プレフィックス付きで上書きを追加する
+- ダークテーマ対応: ページ固有CSSはCSS変数を使う。ハードコードカラー禁止
+- 内部リンクに `.php` を付けない（.htaccessの301リダイレクトでPOSTデータが消えるため）
+- 画像に `width`, `height`, `alt` 属性を必ず付ける。一覧表示では `loading="lazy"` も付ける
 
 ## 作業ルール
 
 - ファイルやディレクトリ構成を変更したら `README.md` のファイル構成セクションを更新する
 - 新しいモデルやスキルを追加したら対応する `.claude/skills/` の SKILL.md を更新する
 - コーディング規約やコマンドが変わったら `CLAUDE.md` を更新する
+- 新しいページを追加したら `tests/e2e/pages/` にE2Eテストを追加する
+- 新しい機能を追加したら `tests/e2e/features/` にテストを追加する

@@ -1,10 +1,11 @@
 <?php
+declare(strict_types=1);
 require __DIR__ . '/../config/database.php';
 
 $tournamentId = 1;
-['data' => $finalists, 'error' => $finalistsError] = fetchData(fn() => Standing::finalists($tournamentId));
-['data' => $meta, 'error' => $metaError] = fetchData(fn() => TournamentMeta::all($tournamentId));
-['data' => $allStandings, 'error' => $standingsError] = fetchData(fn() => Standing::all($tournamentId));
+['data' => $finalists] = fetchData(fn() => Standing::finalists($tournamentId));
+['data' => $meta] = fetchData(fn() => TournamentMeta::all($tournamentId));
+['data' => $allStandings] = fetchData(fn() => Standing::all($tournamentId));
 $champion = $finalists[0] ?? null;
 $seeds = ['1ST', '2ND', '3RD', '4TH'];
 
@@ -61,6 +62,7 @@ foreach ($allStandings ?? [] as $s) {
     ];
 }
 $pageTitle = '最強位戦 - 麻雀トーナメント';
+$pageDescription = '2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。';
 $pageOgp = [
     'title' => '最強位戦 - 麻雀トーナメント',
     'description' => '2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。',
@@ -73,19 +75,19 @@ ob_start();
 ?>
 var MAX_BAR=130;
 var MEDALS=['\u{1F947}','\u{1F948}','\u{1F949}'];
-var standings=<?= json_encode($jsStandings, JSON_UNESCAPED_UNICODE) ?>;
-var r1Tables=<?= json_encode($roundTables[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r1Above=<?= json_encode($roundAbove[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r1Below=<?= json_encode($roundBelow[1] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r2Tables=<?= json_encode($roundTables[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r2Above=<?= json_encode($roundAbove[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r2Below=<?= json_encode($roundBelow[2] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r3Tables=<?= json_encode($roundTables[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r3Above=<?= json_encode($roundAbove[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r3Below=<?= json_encode($roundBelow[3] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r4Tables=<?= json_encode($roundTables[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r4Above=<?= json_encode($roundAbove[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
-var r4Below=<?= json_encode($roundBelow[4] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+var standings=<?= json_encode($jsStandings, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r1Tables=<?= json_encode($roundTables[1] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r1Above=<?= json_encode($roundAbove[1] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r1Below=<?= json_encode($roundBelow[1] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r2Tables=<?= json_encode($roundTables[2] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r2Above=<?= json_encode($roundAbove[2] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r2Below=<?= json_encode($roundBelow[2] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r3Tables=<?= json_encode($roundTables[3] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r3Above=<?= json_encode($roundAbove[3] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r3Below=<?= json_encode($roundBelow[3] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r4Tables=<?= json_encode($roundTables[4] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r4Above=<?= json_encode($roundAbove[4] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+var r4Below=<?= json_encode($roundBelow[4] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
 <?php
 $pageInlineScript = ob_get_clean();
 
@@ -134,7 +136,7 @@ require __DIR__ . '/../templates/header.php';
         <div class="champion-text">2026 麻雀トーナメント 最強位戦 優勝</div>
       </div>
       <div class="champion-interview-link">
-        <a href="interview.php" class="interview-link-btn">🎤 優勝インタビューを読む</a>
+        <a href="interview" class="interview-link-btn">🎤 優勝インタビューを読む</a>
       </div>
     </div>
   </section>
@@ -261,7 +263,7 @@ require __DIR__ . '/../templates/header.php';
   </div>
   <div id="standings"></div>
   <div style="text-align:center; margin-top:24px;">
-    <a href="players.php" class="players-link-btn">参加者一覧を見る &#x203A;</a>
+    <a href="players" class="players-link-btn">参加者一覧を見る &#x203A;</a>
   </div>
 </section>
 

@@ -77,6 +77,7 @@ class PlayerAnalysis
                    COALESCE(h.losses, 0) AS losses,
                    h.avg_my_score,
                    h.avg_opp_score,
+                   h.avg_my_rank,
                    h.avg_opp_rank
             FROM players p
             LEFT JOIN (
@@ -86,6 +87,7 @@ class PlayerAnalysis
                        SUM(CASE WHEN rr1.score < rr2.score THEN 1 ELSE 0 END) AS losses,
                        AVG(rr1.score) AS avg_my_score,
                        AVG(rr2.score) AS avg_opp_score,
+                       AVG(tr_me.tbl_rank) AS avg_my_rank,
                        AVG(tr.tbl_rank) AS avg_opp_rank
                 FROM table_players tp1
                 JOIN table_players tp2 ON tp2.table_id = tp1.table_id AND tp2.player_id != tp1.player_id
@@ -95,6 +97,7 @@ class PlayerAnalysis
                 JOIN round_results rr2 ON rr2.player_id = tp2.player_id
                      AND rr2.round_number = ti.round_number AND rr2.tournament_id = ti.tournament_id
                 JOIN table_ranks tr ON tr.table_id = tp2.table_id AND tr.player_id = tp2.player_id
+                JOIN table_ranks tr_me ON tr_me.table_id = tp1.table_id AND tr_me.player_id = tp1.player_id
                 WHERE tp1.player_id = ?
                 GROUP BY tp2.player_id
             ) h ON h.opp_id = p.id
