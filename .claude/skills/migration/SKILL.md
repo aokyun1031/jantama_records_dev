@@ -39,7 +39,7 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 
 ### 初期スキーマ（20260317000000_create_initial_schema）
 
-- `players` - 選手マスタ（id, name）
+- `players` - 選手マスタ（id, name, nickname）
 - `tables_info` - 卓情報（round_number, table_name, schedule, done）
 - `table_players` - 卓メンバー（table_id → tables_info, player_id → players, seat_order）
 - `round_results` - ラウンド成績（player_id → players, round_number, score, is_above_cutoff）
@@ -59,6 +59,16 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 - 決勝（4回戦）の卓情報・成績データを投入（冪等: 既存データがあればスキップ）
 - スタンディングを決勝結果反映済みの正しい順位・スコアに更新
 - tournament_meta の current_round, remaining_players を更新
+
+### 選手名を正式名称に変更（20260329000000_rename_players_to_official_names）
+
+- players.name をアプリ内の正式名称に一括更新
+- tournament_meta の record_player も合わせて更新
+
+### 選手に呼称を追加（20260329100000_add_nickname_to_players）
+
+- players テーブルに nickname カラム（VARCHAR(50), NULL可）を追加
+- 全20名の呼称（サイト表示用の通称）を一括セット
 
 ## デプロイ
 

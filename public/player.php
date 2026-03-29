@@ -54,6 +54,12 @@ $pageStyle = <<<'CSS'
   margin-bottom: 8px;
 }
 
+.player-nickname {
+  font-weight: 400;
+  font-size: 0.6em;
+  -webkit-text-fill-color: var(--text-sub);
+}
+
 .player-subtitle {
   font-size: 0.85rem;
   color: var(--text-sub);
@@ -246,7 +252,7 @@ require __DIR__ . '/../templates/header.php';
 
 <div class="player-hero">
   <div class="player-badge">PLAYER</div>
-  <h1 class="player-title"><?= h($player['name']) ?></h1>
+  <h1 class="player-title"><?= h($player['name']) ?><?php if ($player['nickname']): ?><span class="player-nickname">（<?= h($player['nickname']) ?>）</span><?php endif; ?></h1>
   <div class="player-subtitle"><?= count($tournaments ?? []) ?> 大会に参加</div>
   <a href="player_analysis.php?id=<?= $playerId ?>" class="btn btn-secondary" style="margin-top: 20px;">個人戦績分析</a>
 </div>

@@ -8,7 +8,7 @@ class Player
     {
         $pdo = getDbConnection();
         return $pdo->query(
-            "SELECT id, regexp_replace(name, '^[0-9]+', '') AS name
+            "SELECT id, regexp_replace(name, '^[0-9]+', '') AS name, nickname
                FROM players
               ORDER BY regexp_replace(name, '^[0-9]+', '')"
         )->fetchAll();
@@ -17,7 +17,7 @@ class Player
     public static function find(int $id): ?array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('SELECT id, name FROM players WHERE id = ?');
+        $stmt = $pdo->prepare('SELECT id, name, nickname FROM players WHERE id = ?');
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }

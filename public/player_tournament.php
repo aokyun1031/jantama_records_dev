@@ -57,6 +57,12 @@ $pageStyle = <<<'CSS'
   margin-bottom: 16px;
 }
 
+.result-nickname {
+  font-weight: 400;
+  font-size: 0.6em;
+  -webkit-text-fill-color: var(--text-sub);
+}
+
 .result-outcome {
   font-family: 'Noto Sans JP', sans-serif;
   font-weight: 900;
@@ -266,7 +272,7 @@ require __DIR__ . '/../templates/header.php';
 
 <div class="result-hero">
   <div class="result-badge"><?= h($tournament['name']) ?></div>
-  <h1 class="result-title"><?= h($player['name']) ?></h1>
+  <h1 class="result-title"><?= h($player['name']) ?><?php if ($player['nickname']): ?><span class="result-nickname">（<?= h($player['nickname']) ?>）</span><?php endif; ?></h1>
   <?php if ($standing):
     $isChampion = (int)$standing['rank'] === 1 && $tournament['status'] === 'completed';
     $elimRound  = (int)$standing['eliminated_round'];

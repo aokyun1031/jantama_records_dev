@@ -54,8 +54,8 @@ $pageStyle = <<<'CSS'
 
 .player-card {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  justify-content: center;
   text-decoration: none;
   color: inherit;
   background: var(--card);
@@ -79,6 +79,12 @@ $pageStyle = <<<'CSS'
   font-weight: 700;
   font-size: 1rem;
   color: var(--text);
+}
+
+.player-nickname {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  margin-top: 2px;
 }
 
 .players-back {
@@ -159,6 +165,7 @@ require __DIR__ . '/../templates/header.php';
   <?php foreach ($players as $i => $player): ?>
     <a href="player.php?id=<?= (int)$player['id'] ?>" class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
       <div class="player-name"><?= h($player['name']) ?></div>
+      <?php if ($player['nickname']): ?><div class="player-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
     </a>
   <?php endforeach; ?>
   </div>

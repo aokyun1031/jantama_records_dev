@@ -58,6 +58,12 @@ $pageStyle = <<<'CSS'
   margin-bottom: 8px;
 }
 
+.analysis-nickname {
+  font-weight: 400;
+  font-size: 0.6em;
+  -webkit-text-fill-color: var(--text-sub);
+}
+
 /* --- サマリーカード --- */
 .summary-grid {
   display: grid;
@@ -421,7 +427,7 @@ if ($scoreHistory) {
 
 <div class="analysis-hero">
   <div class="analysis-badge">ANALYSIS</div>
-  <h1 class="analysis-title"><?= h($player['name']) ?></h1>
+  <h1 class="analysis-title"><?= h($player['name']) ?><?php if ($player['nickname']): ?><span class="analysis-nickname">（<?= h($player['nickname']) ?>）</span><?php endif; ?></h1>
 </div>
 
 <?php if ($error): ?>

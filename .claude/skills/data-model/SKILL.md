@@ -41,6 +41,7 @@ PlayerAnalysis::scoreHistory($playerId); // スコア推移（全大会・時系
 ### Standing
 ```php
 Standing::all($tournamentId);                          // 大会の総合順位を取得（選手名付き）
+Standing::finalists($tournamentId);                    // 決勝進出者を取得（ラウンドスコアのトレンド付き）
 Standing::findByPlayer($tournamentId, $playerId);      // 大会での特定選手の順位を取得
 ```
 
