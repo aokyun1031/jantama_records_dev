@@ -146,6 +146,9 @@ $pageStyle = <<<'CSS'
 .result-name img { flex-shrink: 0; }
 .table-detail-player img { flex-shrink: 0; }
 
+/* 勝ち抜けバッジ */
+.result-advance-badge { display: inline-block; font-size: 0.6rem; font-weight: 700; color: var(--success); background: rgba(var(--mint-rgb), 0.12); padding: 1px 8px; border-radius: 8px; margin-left: 8px; vertical-align: middle; }
+
 /* 決勝卓のカード改善 */
 .finalist-card { text-align: center; }
 .finalist-card img { display: block; margin: 0 auto 8px; }
@@ -233,9 +236,9 @@ function renderResults(results,startRank){
   var html='';
   for(var i=0;i<results.length;i++){
     var r=results[i];
-    html+='<div class="result-row">'
+    html+='<div class="result-row result-advance">'
       +'<div class="result-rank">'+(startRank+i)+'</div>'
-      +'<div class="result-name">'+icon(r.icon)+esc(r.name)+'</div>'
+      +'<div class="result-name">'+icon(r.icon)+esc(r.name)+'<span class="result-advance-badge">\u2714 勝ち抜け</span></div>'
       +'<div class="result-score '+cls(r.score)+'">'+fmt(r.score)+'</div>'
     +'</div>';
   }
@@ -334,6 +337,13 @@ if(box){
 
 // --- Populate tabs ---
 var roundKeys=[<?= implode(',', $roundNumbers) ?>];
+var finalRounds={<?php
+  $finals = [];
+  foreach ($roundNumbers as $rn) {
+      if (($roundSettings[$rn]['is_final'] ?? false)) $finals[] = $rn . ':true';
+  }
+  echo implode(',', $finals);
+?>};
 for(var ri=0;ri<roundKeys.length;ri++){
   var rn=roundKeys[ri];
   var rd=rounds[rn];
@@ -341,11 +351,19 @@ for(var ri=0;ri<roundKeys.length;ri++){
   if(!tabEl||!rd) continue;
   var scoreMap=buildScoreMap(rd.above,rd.below);
   var showDone=<?= $lastRound > 0 ? 'rn>=' . ($lastRound - 1) : 'true' ?>;
-  tabEl.innerHTML=
-    renderTables(rd.tables,showDone?{showDone:true}:null)
-    +renderTableDetails(rd.tables,scoreMap,showDone?{showDone:true}:null)
-    +'<div class="results-list"><div class="results-sub">全体順位</div>'+renderResults(rd.above,1)+'</div>'
-    +(rd.below.length>0?renderElim(rd.below,rd.above.length+1):'');
+  var isFinal=!!finalRounds[rn] || (ri===roundKeys.length-1 && <?= $isCompleted ? 'true' : 'false' ?>);
+  if(isFinal){
+    // 決勝: 卓別結果のみ表示（全体順位は不要）
+    tabEl.innerHTML=
+      renderTables(rd.tables,{showDone:true})
+      +renderTableDetails(rd.tables,scoreMap,{showDone:true});
+  } else {
+    tabEl.innerHTML=
+      renderTables(rd.tables,showDone?{showDone:true}:null)
+      +renderTableDetails(rd.tables,scoreMap,showDone?{showDone:true}:null)
+      +'<div class="results-list"><div class="results-sub">全体順位</div>'+renderResults(rd.above,1)+'</div>'
+      +(rd.below.length>0?renderElim(rd.below,rd.above.length+1):'');
+  }
 }
 })();
 <?php
