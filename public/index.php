@@ -2,295 +2,412 @@
 declare(strict_types=1);
 require __DIR__ . '/../config/database.php';
 
-$tournamentId = 1;
-['data' => $finalists] = fetchData(fn() => Standing::finalists($tournamentId));
-['data' => $meta] = fetchData(fn() => TournamentMeta::all($tournamentId));
-['data' => $allStandings] = fetchData(fn() => Standing::all($tournamentId));
-$champion = $finalists[0] ?? null;
-$seeds = ['1ST', '2ND', '3RD', '4TH'];
+// --- データ取得 ---
+['data' => $tournaments] = fetchData(fn() => Tournament::allWithDetails());
+['data' => $allPlayers] = fetchData(fn() => Player::all());
 
-// JS用データ構築
-$roundScores = [];
-$roundTables = [];
-$roundAbove = [];
-$roundBelow = [];
-for ($r = 1; $r <= 4; $r++) {
-    ['data' => $results] = fetchData(fn() => RoundResult::byRound($tournamentId, $r));
-    ['data' => $tables] = fetchData(fn() => TableInfo::byRound($tournamentId, $r));
+$playerCount = count($allPlayers ?? []);
+$tournamentCount = count($tournaments ?? []);
+$completedTournaments = array_filter($tournaments ?? [], fn($t) => $t['status'] === TournamentStatus::Completed->value);
+$activeTournaments = array_filter($tournaments ?? [], fn($t) => $t['status'] === TournamentStatus::InProgress->value);
 
-    foreach ($results ?? [] as $res) {
-        $roundScores[$res['name']][] = (float)$res['score'];
-    }
+// 最新の完了大会
+$latestCompleted = !empty($completedTournaments) ? reset($completedTournaments) : null;
+$latestChampion = $latestCompleted ? Standing::champion((int) $latestCompleted['id']) : null;
 
-    $above = [];
-    $below = [];
-    foreach ($results ?? [] as $res) {
-        $entry = [$res['name'], (float)$res['score']];
-        if ($res['is_above_cutoff']) {
-            $above[] = $entry;
-        } else {
-            $below[] = $entry;
-        }
-    }
-    $roundAbove[$r] = $above;
-    $roundBelow[$r] = $below;
-
-    $jsTables = [];
-    foreach ($tables ?? [] as $t) {
-        $jsTable = [
-            'name' => $t['table_name'],
-            'sched' => $t['day_of_week'],
-            'players' => array_map(fn($p) => $p['name'], $t['players']),
-        ];
-        if ($r >= 3) {
-            $jsTable['done'] = (bool)$t['done'];
-        }
-        $jsTables[] = $jsTable;
-    }
-    $roundTables[$r] = $jsTables;
-}
-
-$jsStandings = [];
-foreach ($allStandings ?? [] as $s) {
-    $jsStandings[] = [
-        'rank' => (int)$s['rank'],
-        'name' => $s['name'],
-        'total' => (float)$s['total'],
-        'r' => $roundScores[$s['name']] ?? [],
-        'pending' => (bool)$s['pending'],
-        'elim' => (int)$s['eliminated_round'],
-    ];
-}
-$pageTitle = '最強位戦 - 麻雀トーナメント';
-$pageDescription = '2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。';
+// --- テンプレート変数 ---
+$pageTitle = '最強位戦 - 麻雀トーナメント戦績サイト';
+$pageDescription = '雀魂で開催する麻雀トーナメント「最強位戦」の戦績・対局結果・選手情報を掲載しています。';
 $pageOgp = [
-    'title' => '最強位戦 - 麻雀トーナメント',
-    'description' => '2026年 麻雀トーナメント「最強位戦」の全対局結果と最終順位を掲載しています。',
+    'title' => '最強位戦 - 麻雀トーナメント戦績サイト',
+    'description' => '雀魂で開催する麻雀トーナメント「最強位戦」の戦績・対局結果・選手情報を掲載しています。',
     'url' => 'https://jantama-records.onrender.com/',
 ];
-$pageCss = ['css/finals.css', 'css/mahjong-deco.css', 'css/champion.css'];
-$pageScripts = ['js/render.js', 'js/effects.js'];
+$pageStyle = <<<'CSS'
+/* Hero */
+.lp-hero {
+  text-align: center;
+  padding: 80px 20px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.lp-hero-badge {
+  display: inline-block;
+  background: var(--badge-bg);
+  color: var(--badge-color);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 16px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  letter-spacing: 3px;
+  box-shadow: 0 2px 12px rgba(var(--accent-rgb), 0.3);
+  animation: fadeDown 0.8s ease both;
+}
+.lp-hero-title {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: clamp(2rem, 7vw, 3.2rem);
+  font-weight: 900;
+  background: var(--title-gradient);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleGrad 6s ease infinite, fadeUp 1s ease both;
+  margin-bottom: 12px;
+}
+.lp-hero-sub {
+  font-size: 1rem;
+  color: var(--text-sub);
+  max-width: 480px;
+  margin: 0 auto 32px;
+  line-height: 1.8;
+  animation: fadeUp 1s ease 0.2s both;
+}
+.lp-hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  animation: fadeUp 1s ease 0.4s both;
+}
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: 'Noto Sans JP', sans-serif;
+  text-decoration: none;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.lp-btn:hover { transform: translateY(-2px); }
+.lp-btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-text-color);
+  box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.3);
+}
+.lp-btn-primary:hover { box-shadow: 0 6px 28px rgba(var(--accent-rgb), 0.4); }
+.lp-btn-secondary {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+}
+.lp-btn-secondary:hover { box-shadow: var(--shadow); }
 
-ob_start();
-?>
-var MAX_BAR=130;
-var MEDALS=['\u{1F947}','\u{1F948}','\u{1F949}'];
-var standings=<?= json_encode($jsStandings, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r1Tables=<?= json_encode($roundTables[1] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r1Above=<?= json_encode($roundAbove[1] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r1Below=<?= json_encode($roundBelow[1] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r2Tables=<?= json_encode($roundTables[2] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r2Above=<?= json_encode($roundAbove[2] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r2Below=<?= json_encode($roundBelow[2] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r3Tables=<?= json_encode($roundTables[3] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r3Above=<?= json_encode($roundAbove[3] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r3Below=<?= json_encode($roundBelow[3] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r4Tables=<?= json_encode($roundTables[4] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r4Above=<?= json_encode($roundAbove[4] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-var r4Below=<?= json_encode($roundBelow[4] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
-<?php
-$pageInlineScript = ob_get_clean();
+/* Stats */
+.lp-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+  padding: 40px 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.lp-stat {
+  text-align: center;
+}
+.lp-stat-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--purple);
+  line-height: 1;
+}
+.lp-stat-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+/* Section */
+.lp-section {
+  max-width: 900px;
+  margin: 0 auto 48px;
+  padding: 0 16px;
+}
+.lp-section-title {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* Champion card */
+.lp-champion {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(var(--gold-rgb), 0.08), rgba(var(--accent-rgb), 0.04));
+  border: 1px solid rgba(var(--gold-rgb), 0.25);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+.lp-champion-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(var(--gold-rgb), 0.3);
+  flex-shrink: 0;
+}
+.lp-champion-info { flex: 1; }
+.lp-champion-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.lp-champion-name {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.lp-champion-tournament {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+.lp-champion-link {
+  flex-shrink: 0;
+}
+@media (max-width: 560px) {
+  .lp-champion { flex-direction: column; text-align: center; }
+  .lp-champion-link { width: 100%; }
+  .lp-champion-link .lp-btn { width: 100%; justify-content: center; }
+}
+
+/* Tournament list */
+.lp-tournaments {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lp-tournament-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.lp-tournament-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.lp-tournament-body { flex: 1; min-width: 0; }
+.lp-tournament-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.lp-tournament-meta {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+}
+.lp-tournament-status {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.lp-tournament-status.preparing { background: rgba(var(--gold-rgb), 0.15); color: var(--gold); }
+.lp-tournament-status.active { background: rgba(var(--mint-rgb), 0.15); color: var(--success); }
+.lp-tournament-status.completed { background: rgba(var(--accent-rgb), 0.1); color: var(--text-sub); }
+.lp-tournament-chevron {
+  color: var(--text-light);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+/* Features */
+.lp-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.lp-feature {
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+.lp-feature-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 1.2rem;
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--purple);
+}
+.lp-feature-title {
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.lp-feature-desc {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+
+/* CTA */
+.lp-cta {
+  text-align: center;
+  padding: 48px 20px;
+}
+.lp-cta-title {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.lp-cta-desc {
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  margin-bottom: 20px;
+}
+CSS;
 
 require __DIR__ . '/../templates/header.php';
 ?>
 
-<!-- Floating Tile Scatter (page-level) -->
-<div class="tile-scatter" id="tile-scatter"></div>
-
 <!-- Hero -->
-<section class="hero">
-  <!-- <div class="hero-tiles">&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;&#x1F010;&#x1F011;&#x1F012;&#x1F013;&#x1F014;&#x1F015;&#x1F016;&#x1F017;&#x1F018;&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;&#x1F01D;&#x1F01E;&#x1F01F;&#x1F020;&#x1F021;&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;</div> -->
-  <span class="hero-tile-accent top-left">&#x1F004;</span>
-  <span class="hero-tile-accent top-right">&#x1F005;</span>
-  <span class="hero-tile-accent bot-left">&#x1F000;</span>
-  <span class="hero-tile-accent bot-right">&#x1F006;</span>
-  <div class="hero-badge">麻雀トーナメント</div>
-  <h1 class="hero-title">最強位戦</h1>
-  <div class="hero-rules">
-    <span>赤4</span><span>60秒</span><span>トビ無</span>
+<section class="lp-hero">
+  <div class="lp-hero-badge">MAHJONG TOURNAMENT</div>
+  <h1 class="lp-hero-title">雀魂部屋主催</h1>
+  <p class="lp-hero-sub">雀魂で開催する麻雀トーナメントの<br>対局結果・戦績・選手情報を掲載しています。</p>
+  <div class="lp-hero-actions">
+    <a href="tournaments" class="lp-btn lp-btn-primary">大会一覧を見る</a>
+    <a href="players" class="lp-btn lp-btn-secondary">選手一覧を見る</a>
   </div>
+</section>
 
-  <!-- Champion Celebration -->
-  <section class="champion-section reveal">
-    <div class="champion-container">
-      <div class="champion-glow"></div>
-      <!-- <div class="champion-tiles-bg">&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;&#x1F010;&#x1F011;&#x1F012;&#x1F013;&#x1F014;&#x1F015;&#x1F016;&#x1F017;&#x1F018;&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;&#x1F01D;&#x1F01E;&#x1F01F;&#x1F020;&#x1F021;&#x1F000;&#x1F001;&#x1F002;&#x1F003;&#x1F004;&#x1F005;&#x1F006;&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;</div> -->
-      <div class="champion-header">
-        <div class="champion-pretitle">🏆 CHAMPION 🏆</div>
-        <h2 class="champion-title">優勝おめでとう！</h2>
-        <div class="champion-subtitle">最強位戦 優勝者</div>
-      </div>
-      <div class="champion-content">
-        <div class="champion-avatar">
-          <img src="img/chara_deformed/<?= $champion && $champion['character_icon'] ? h($champion['character_icon']) : '' ?>" alt="優勝者 <?= $champion ? h($champion['name']) : '' ?>" class="champion-image" width="200" height="200" loading="lazy">
-          <div class="champion-crown">👑</div>
+<!-- Stats -->
+<div class="lp-stats">
+  <div class="lp-stat">
+    <div class="lp-stat-num"><?= $tournamentCount ?></div>
+    <div class="lp-stat-label">大会</div>
+  </div>
+  <div class="lp-stat">
+    <div class="lp-stat-num"><?= $playerCount ?></div>
+    <div class="lp-stat-label">登録選手</div>
+  </div>
+  <div class="lp-stat">
+    <div class="lp-stat-num"><?= count($completedTournaments) ?></div>
+    <div class="lp-stat-label">完了大会</div>
+  </div>
+</div>
+
+<?php if ($latestChampion && $latestCompleted): ?>
+<!-- Latest Champion -->
+<section class="lp-section">
+  <h2 class="lp-section-title">最新の優勝者</h2>
+  <div class="lp-champion">
+    <?php if (!empty($latestChampion['character_icon'])): ?>
+      <img src="img/chara_deformed/<?= h($latestChampion['character_icon']) ?>" alt="" class="lp-champion-icon" width="72" height="72" loading="lazy">
+    <?php endif; ?>
+    <div class="lp-champion-info">
+      <div class="lp-champion-label">CHAMPION</div>
+      <div class="lp-champion-name"><?= h($latestChampion['nickname'] ?? $latestChampion['name']) ?></div>
+      <div class="lp-champion-tournament"><?= h($latestCompleted['name']) ?></div>
+    </div>
+    <div class="lp-champion-link">
+      <a href="tournament_view?id=<?= (int) $latestCompleted['id'] ?>" class="lp-btn lp-btn-secondary">大会結果を見る &#x203A;</a>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- Tournaments -->
+<?php if (!empty($tournaments)): ?>
+<section class="lp-section">
+  <h2 class="lp-section-title">大会一覧</h2>
+  <div class="lp-tournaments">
+    <?php foreach (array_slice($tournaments, 0, 5) as $t):
+      $tsEnum = TournamentStatus::tryFrom($t['status']);
+      $isViewable = $t['status'] !== TournamentStatus::Preparing->value;
+      $href = $isViewable ? "tournament_view?id=" . (int) $t['id'] : "tournament?id=" . (int) $t['id'];
+    ?>
+      <a href="<?= $href ?>" class="lp-tournament-card">
+        <div class="lp-tournament-body">
+          <div class="lp-tournament-name"><?= h($t['name']) ?></div>
+          <div class="lp-tournament-meta"><?= (int) $t['player_count'] ?>名参加<?= !empty($t['winner_name']) ? ' ・ 優勝: ' . h($t['winner_name']) : '' ?></div>
         </div>
-        <div class="champion-info">
-          <div class="champion-name"><?= $champion ? h($champion['name']) : '' ?></div>
-          <div class="champion-score">総得点: <?= $champion ? ($champion['total'] >= 0 ? '+' : '') . h((string)$champion['total']) : '' ?></div>
-          <div class="champion-message">見事な戦いぶりで、最強位の座を獲得！<br>おめでとうございます！</div>
-        </div>
-      </div>
-      <div class="champion-footer">
-        <div class="champion-trophy">🏆</div>
-        <div class="champion-text">2026 麻雀トーナメント 最強位戦 優勝</div>
-      </div>
-      <div class="champion-interview-link">
-        <a href="interview" class="interview-link-btn">🎤 優勝インタビューを読む</a>
-      </div>
+        <span class="lp-tournament-status <?= $tsEnum?->cssClass() ?? '' ?>"><?= h($tsEnum?->label() ?? '') ?></span>
+        <span class="lp-tournament-chevron">&#x203A;</span>
+      </a>
+    <?php endforeach; ?>
+  </div>
+  <?php if ($tournamentCount > 5): ?>
+    <div style="text-align: center; margin-top: 16px;">
+      <a href="tournaments" class="lp-btn lp-btn-secondary">すべての大会を見る</a>
     </div>
-  </section>
-
-  <!-- Tournament Ended Message -->
-  <!-- <div class="tournament-ended-message">
-    <div class="ended-container">
-      <div class="ended-icon">🏁</div>
-      <div class="ended-text">大会は終了しました</div>
-    </div>
-  </div> -->
-
+  <?php endif; ?>
 </section>
+<?php endif; ?>
 
-<!-- Divider -->
-<div class="tile-divider">
-  <div class="tile-divider-line"></div>
-  <div class="tile-divider-tiles">&#x1F000;&#x1F001;&#x1F002;&#x1F003;</div>
-  <div class="tile-divider-line"></div>
-</div>
-
-<!-- Progress Tracker -->
-<section class="progress-section">
-  <div class="progress-track">
-    <!-- <div class="progress-tile-bg">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;</div> -->
-    <div class="progress-step">
-      <div class="step-circle done">&#10003;</div>
-      <div class="step-label">1回戦</div>
-      <div class="step-count">20名</div>
+<!-- Features -->
+<section class="lp-section">
+  <h2 class="lp-section-title">機能紹介</h2>
+  <div class="lp-features">
+    <div class="lp-feature">
+      <div class="lp-feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+      <div class="lp-feature-title">卓の自動振り分け</div>
+      <div class="lp-feature-desc">ランダム・スイスドロー・ポット分けから選べる卓組み。同卓回避オプション付き。</div>
     </div>
-    <div class="step-line done"></div>
-    <div class="progress-step">
-      <div class="step-circle done">&#10003;</div>
-      <div class="step-label">2回戦</div>
-      <div class="step-count">16名</div>
+    <div class="lp-feature">
+      <div class="lp-feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="lp-feature-title">リアルタイム戦績</div>
+      <div class="lp-feature-desc">ラウンドごとのスコア・勝ち抜き状況をリアルタイムに追跡。総合ポイント自動集計。</div>
     </div>
-    <div class="step-line done"></div>
-    <div class="progress-step">
-      <div class="step-circle done">&#10003;</div>
-      <div class="step-label">3回戦</div>
-      <div class="step-count">12名</div>
+    <div class="lp-feature">
+      <div class="lp-feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="lp-feature-title">選手プロフィール</div>
+      <div class="lp-feature-desc">選手ごとの通算成績・対戦履歴・スコア推移を詳細に分析。</div>
     </div>
-    <div class="step-line done"></div>
-    <div class="progress-step">
-      <div class="step-circle done">&#10003;</div>
-      <div class="step-label">決勝</div>
-      <div class="step-count">4名</div>
+    <div class="lp-feature">
+      <div class="lp-feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
+      <div class="lp-feature-title">優勝インタビュー</div>
+      <div class="lp-feature-desc">大会優勝者への自由形式のインタビューを掲載。Q&Aの数や内容は毎回カスタマイズ可能。</div>
     </div>
   </div>
 </section>
 
-<!-- Finals Showdown -->
-<section class="finals-section reveal" id="finals-section">
-  <div class="finals-stage">
-    <div class="finals-corner tl"></div>
-    <div class="finals-corner tr"></div>
-    <div class="finals-corner bl"></div>
-    <div class="finals-corner br"></div>
-
-    <div class="finals-header">
-      <!-- <div class="finals-pretitle">THE FINAL TABLE</div> -->
-      <h2 class="finals-title">決勝卓</h2>
-      
-      <div class="finals-subtitle">予選を勝ち抜いた<span>4名</span>が最強位の座を賭けて激突</div>
-      <!-- <div class="finals-sparkle-line"></div> -->
-    </div>
-
-    <div class="finals-grid" id="finals-grid">
-      <?php if ($finalists): ?>
-        <?php foreach ($finalists as $i => $f): ?>
-          <div class="finalist-card" data-delay="<?= 1.2 + $i * 0.3 ?>">
-            <div class="finalist-seed"><?= $seeds[$i] ?? '' ?> SEED</div>
-            <div class="finalist-name"><?= h($f['name']) ?></div>
-            <div class="finalist-score <?= $f['total'] >= 0 ? 'plus' : 'minus' ?>"><?= $f['total'] >= 0 ? '+' : '' ?><?= h((string)$f['total']) ?></div>
-            <div class="finalist-trend"><?= h($f['trend']) ?></div>
-          </div>
-        <?php endforeach; ?>
-      <?php endif; ?>
-      <div class="finals-vs">VS</div>
-    </div>
-
+<!-- CTA -->
+<section class="lp-cta">
+  <div class="lp-cta-title">大会の詳細を見てみよう</div>
+  <div class="lp-cta-desc">過去の対局結果や選手情報をチェックできます。</div>
+  <div class="lp-hero-actions">
+    <a href="tournaments" class="lp-btn lp-btn-primary">大会一覧へ</a>
+    <a href="players" class="lp-btn lp-btn-secondary">選手一覧へ</a>
   </div>
 </section>
-
-<!-- Divider -->
-<div class="tile-divider">
-  <div class="tile-divider-line"></div>
-  <div class="tile-divider-tiles">&#x1F010;&#x1F011;&#x1F012;&#x1F013;</div>
-  <div class="tile-divider-line"></div>
-</div>
-
-<!-- Round Details -->
-<section class="section section--decorated reveal">
-  <div class="section-tiles" id="section-tiles-rounds"></div>
-  <div class="section-header">
-    <div class="section-title">&#x1F004; 対戦結果</div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab-btn" onclick="switchTab(0)">1回戦<br><small>5卓 20名</small></button>
-    <button class="tab-btn" onclick="switchTab(1)">2回戦<br><small>4卓 16名</small></button>
-    <button class="tab-btn" onclick="switchTab(2)">3回戦<br><small>3卓 12名</small></button>
-    <button class="tab-btn active" onclick="switchTab(3)">決勝<br><small>1卓 4名</small></button>
-  </div>
-
-  <div class="tab-content" id="tab0"></div>
-  <div class="tab-content" id="tab1"></div>
-  <div class="tab-content" id="tab2"></div>
-  <div class="tab-content active" id="tab3"></div>
-</section>
-
-<!-- Divider -->
-<div class="tile-divider">
-  <div class="tile-divider-line"></div>
-  <div class="tile-divider-tiles">&#x1F019;&#x1F01A;&#x1F01B;&#x1F01C;</div>
-  <div class="tile-divider-line"></div>
-</div>
-
-<!-- Cumulative Standings -->
-<section class="section section--decorated reveal" id="standings-section">
-  <div class="section-tiles" id="section-tiles-standings"></div>
-  <div class="section-header">
-    <div class="section-title">&#x1F005; 総合ポイント</div>
-  </div>
-  <div id="standings"></div>
-  <div style="text-align:center; margin-top:24px;">
-    <a href="players" class="players-link-btn">参加者一覧を見る &#x203A;</a>
-  </div>
-</section>
-
-<!-- Divider -->
-<div class="tile-divider">
-  <div class="tile-divider-line"></div>
-  <div class="tile-divider-tiles">&#x1F006;&#x1F004;&#x1F005;&#x1F006;</div>
-  <div class="tile-divider-line"></div>
-</div>
-
-<!-- Records -->
-<section class="records reveal">
-  <div class="records-tile-frame" id="records-tile-frame"></div>
-  <div class="records-title">&#x1F000; トーナメントレコード &#x1F000;</div>
-
-  <div class="record-highlight">
-    <span class="record-label">大会最高得点</span>
-    <span class="record-score" data-count="71200">0</span>
-    <span class="record-player"><?= $meta ? h($meta['record_player'] ?? '') : '' ?></span>
-  </div>
-  <!-- <div class="records-stats">
-    <div class="stat"><div class="stat-num" data-count="20">0</div><div class="stat-label">参加者</div></div>
-    <div class="stat"><div class="stat-num" data-count="0">0</div><div class="stat-label">残り</div></div>
-    <div class="stat"><div class="stat-num" data-count="4">0</div><div class="stat-label">回戦目</div></div>
-  </div> -->
-</section>
-
-<!-- <div class="footer-tiles">&#x1F007;&#x1F008;&#x1F009;&#x1F00A;&#x1F00B;&#x1F00C;&#x1F00D;&#x1F00E;&#x1F00F;</div> -->
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>
