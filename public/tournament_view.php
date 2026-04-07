@@ -554,6 +554,33 @@ foreach ($roundSettings as $rn => $rs) {
 </section>
 <?php endif; ?>
 
+<?php
+  $recordScore = $meta['record_score'] ?? '';
+  $recordPlayer = $meta['record_player'] ?? '';
+  if ($recordScore !== '' || $recordPlayer !== ''):
+?>
+<div class="tile-divider">
+  <div class="tile-divider-line"></div>
+  <div class="tile-divider-tiles">&#x1F006;&#x1F004;&#x1F005;&#x1F006;</div>
+  <div class="tile-divider-line"></div>
+</div>
+
+<!-- Records -->
+<section class="records reveal">
+  <div class="records-tile-frame" id="records-tile-frame"></div>
+  <div class="records-title">&#x1F000; トーナメントレコード &#x1F000;</div>
+  <div class="record-highlight">
+    <?php if ($recordScore !== ''): ?>
+      <span class="record-label">大会最高得点</span>
+      <span class="record-score" data-count="<?= h($recordScore) ?>">0</span>
+    <?php endif; ?>
+    <?php if ($recordPlayer !== ''): ?>
+      <span class="record-player"><?= h($recordPlayer) ?></span>
+    <?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
+
 <div style="text-align:center;padding:32px 0 16px;">
   <a href="tournaments" class="btn-cancel">&#x2190; 大会一覧に戻る</a>
 </div>
