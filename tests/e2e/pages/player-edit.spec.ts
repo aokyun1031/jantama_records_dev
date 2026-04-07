@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
-import { TEST_PREFIX, createTestPlayer, deleteTestPlayer, cleanupTestPlayers } from '../helpers/test-helpers';
+import { test, expect } from '../helpers/fixtures';
+import { TEST_PREFIX, createTestPlayer, cleanupTestPlayers } from '../helpers/test-helpers';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('選手編集・削除', () => {
   let testPlayerId: number;
   const testName = `${TEST_PREFIX}edit_${Date.now()}`;
@@ -38,7 +39,7 @@ test.describe('選手編集・削除', () => {
     await page.fill('input[name="nickname"]', '編集後');
     await page.click('button.btn-save');
 
-    await page.waitForURL(/saved=1/);
+    await expect(page).toHaveURL(/saved=1/);
     await expect(page.locator('.edit-message.success')).toBeVisible();
 
     // 値が更新されている
@@ -58,13 +59,10 @@ test.describe('選手編集・削除', () => {
   test('キャラクターを変更できる', async ({ page }) => {
     await page.goto(`/player_edit?id=${testPlayerId}`);
     // 2番目のキャラクターを選択
-    const options = page.locator('.chara-option');
-    if (await options.count() > 1) {
-      await options.nth(1).click();
-      await page.click('button.btn-save');
-      await page.waitForURL(/saved=1/);
-      await expect(page.locator('.edit-message.success')).toBeVisible();
-    }
+    await page.locator('.chara-option').nth(1).click();
+    await page.click('button.btn-save');
+    await expect(page).toHaveURL(/saved=1/);
+    await expect(page.locator('.edit-message.success')).toBeVisible();
   });
 
   test('削除セクションが表示される', async ({ page }) => {
@@ -75,19 +73,25 @@ test.describe('選手編集・削除', () => {
 
   test('選手を削除できる', async ({ page }) => {
     await page.goto(`/player_edit?id=${testPlayerId}`);
-    const deleteBtn = page.locator('button.btn-delete');
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.locator('button.btn-delete').click();
+    await expect(page).toHaveURL(/\/players/);
 
-    if (await deleteBtn.isVisible()) {
-      page.on('dialog', (dialog) => dialog.accept());
-      await deleteBtn.click();
-      await page.waitForURL(/\/players/);
+    // フラッシュメッセージ
+    await expect(page.locator('.players-message')).toContainText('削除しました');
 
-      // フラッシュメッセージ
-      await expect(page.locator('.players-message')).toContainText('削除しました');
+    // 削除後は404
+    const response = await page.goto(`/player?id=${testPlayerId}`);
+    expect(response?.status()).toBe(404);
+  });
 
-      // 削除後は404
-      const response = await page.goto(`/player?id=${testPlayerId}`);
-      expect(response?.status()).toBe(404);
-    }
+  test('存在しないIDで404', async ({ page }) => {
+    const response = await page.goto('/player_edit?id=999999');
+    expect(response?.status()).toBe(404);
+  });
+
+  test('IDなしで404', async ({ page }) => {
+    const response = await page.goto('/player_edit');
+    expect(response?.status()).toBe(404);
   });
 });

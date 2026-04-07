@@ -14,6 +14,7 @@
 
 - `public/` - Webサーバー公開ディレクトリ（DocumentRoot）
 - `models/` - データアクセス層（SQLはここに集約）
+- `enums/` - PHP enum（定数定義・値オブジェクト）
 - `config/` - DB接続・ヘルパー関数
 - `templates/` - 共通ヘッダー・フッター
 - `db/migrations/` - Phinxマイグレーション
@@ -60,22 +61,45 @@ npx playwright test --ui                         # UIモード
 
 ## コーディング規約
 
+### PHP
 - 全PHPファイルの先頭に `declare(strict_types=1)` を付ける
+- PSR-12 準拠: 型キャストの後にスペース `(int) $var`（`(int)$var` は不可）
 - SQLは `models/` のクラスに集約する。ビュー（`public/*.php`）にSQLを書かない
 - データ取得は `fetchData(fn() => ModelName::method())` を使う
 - HTMLエスケープは `h()` ヘルパーを使う
 - テンプレートは `templates/` の header.php / footer.php を使う
 - DB接続は `getDbConnection()` を使用。直接PDOを生成しない
 - SQLにユーザー入力を使う場合はプリペアドステートメント必須
-- GETパラメータは `requirePlayerId()` または `filter_input()` で検証する
+- GETパラメータは `requirePlayerId()` / `requireTournamentId()` / `filter_input()` で検証する
 - POST入力は `sanitizeInput($key)` で取得する（制御文字除去 + trim）
+- 配列形式のPOST入力は `preg_replace('/[\x00-\x1F\x7F]/u', '', trim(...))` で同等処理する
 - フォームページは `startSecureSession()` + `ensureCsrfToken()` + `validateCsrfToken()` を使う
-- POST成功後は `regenerateCsrfToken()` + PRGリダイレクト
+- POST成功後は `$_SESSION['flash']` にメッセージを設定 → `regenerateCsrfToken()` → PRGリダイレクト
+- フラッシュメッセージの読み取りは `consumeFlash()` を使う
 - `json_encode` には `JSON_UNESCAPED_UNICODE | JSON_HEX_TAG` を付ける
 - 大会スコープのデータ取得は `$tournamentId` を必ず指定する（`Player` を除く全モデル）
-- モデル追加後は `composer dump-autoload` を実行する
+- モデルやenum追加後は `composer dump-autoload` を実行する
 - `.env` の読み込みは phpdotenv (`Dotenv\Dotenv::createImmutable()`) を使う
+- ハードコード文字列は enum に定義する。ラベル表示用に `label()` メソッドを持たせる
+
+### Enum（`enums/` ディレクトリ）
+- `EventType`: 大会イベント種別（最強位戦/鳳凰位戦/マスターズ/百段位戦/プチイベント）
+- `TournamentStatus`: 大会ステータス（preparing/in_progress/completed）。`label()` + `cssClass()`
+- `PlayerMode`: 対局人数（3/4）。`label()`（三麻/四麻） + `fullLabel()`（三人麻雀/四人麻雀）
+- `RoundType`: 局数（hanchan/tonpu/ikkyoku）
+- `HanRestriction`: 翻縛り（1/2/4）
+- `ToggleRule`: ON/OFF設定（1/0）。`label('喰いタン')` → 喰いタン有/無
+- `DayOfWeek`: 曜日（0-6）。`fromDate('2026-04-07')` で日付から曜日ラベルを取得
+
+### CSS
 - ダークテーマ対応: ページ固有CSSはCSS変数を使う。ハードコードカラー禁止
+- フォーム共通CSS: `css/forms.css` を `$pageCss` で読み込む（edit-*, btn-save, player-select-* 等）
+- フォーム入力欄: `--input-bg`, `--input-border`, `--input-border-hover`, `--input-border-focus`, `--input-focus-ring`, `--input-placeholder`, `--input-disabled-bg`, `--input-disabled-border` を使う。`--glass-border` や `--card` を input に使わない
+- 戻るボタン: `btn-cancel` クラスを使用（`components.css` で定義済み）
+- ページ固有CSSの `$pageStyle` には、forms.css / components.css に無いスタイルのみ書く
+- 大会ルール表示は `buildRuleTags($meta)` ヘルパーで生成してループ出力する
+
+### HTML
 - 内部リンクに `.php` を付けない（.htaccessの301リダイレクトでPOSTデータが消えるため）
 - 画像に `width`, `height`, `alt` 属性を必ず付ける。一覧表示では `loading="lazy"` も付ける
 

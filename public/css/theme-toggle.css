@@ -4,7 +4,6 @@
    ====================== */
 
 .theme-toggle{
-  position:fixed;top:16px;right:16px;z-index:100;
   display:flex;align-items:center;gap:6px;
   background:rgba(0,0,0,0.15);
   backdrop-filter:blur(12px);

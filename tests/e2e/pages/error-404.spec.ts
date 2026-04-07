@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('404エラーページ', () => {
   test('存在しないURLで404が表示される', async ({ page }) => {

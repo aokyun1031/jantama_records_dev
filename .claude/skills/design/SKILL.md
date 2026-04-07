@@ -83,6 +83,21 @@ border-radius: 12px; font-weight: 700;
 box-shadow: var(--btn-primary-shadow);
 ```
 
+### フォーム入力（input / select / textarea）
+```css
+border: 1.5px solid var(--input-border);
+border-radius: var(--radius-sm);
+background: var(--input-bg);
+color: var(--text);
+transition: border-color 0.2s, box-shadow 0.2s;
+/* NG: --glass-border や --card を input に使わない（背景と区別がつかない） */
+```
+状態:
+- `::placeholder` → `var(--input-placeholder)`
+- `:hover:not(:disabled):not(:focus)` → `var(--input-border-hover)`
+- `:focus` → `border-color: var(--input-border-focus); box-shadow: var(--input-focus-ring)`
+- `:disabled` → `background: var(--input-disabled-bg); border-color: var(--input-disabled-border)`
+
 ### 成功メッセージ
 ```css
 background: linear-gradient(135deg, rgba(var(--mint-rgb),0.12), rgba(var(--mint-rgb),0.04));

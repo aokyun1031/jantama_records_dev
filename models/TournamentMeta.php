@@ -22,6 +22,19 @@ class TournamentMeta
     }
 
     /**
+     * 特定キーの値を設定（UPSERT）。
+     */
+    public static function set(int $tournamentId, string $key, string $value): void
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare(
+            'INSERT INTO tournament_meta (tournament_id, key, value) VALUES (?, ?, ?)
+             ON CONFLICT (tournament_id, key) DO UPDATE SET value = EXCLUDED.value'
+        );
+        $stmt->execute([$tournamentId, $key, $value]);
+    }
+
+    /**
      * 特定キーの値を取得。
      */
     public static function get(int $tournamentId, string $key, string $default = ''): string

@@ -44,22 +44,22 @@ class TournamentSeeder extends AbstractSeed
         // 卓情報
         $tablesData = [
             // 1回戦
-            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '1卓', 'schedule' => '',           'done' => true],
-            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '2卓', 'schedule' => '金曜 21:00', 'done' => true],
-            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '3卓', 'schedule' => '土曜 21:00', 'done' => true],
-            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '4卓', 'schedule' => '日曜 13:00', 'done' => true],
-            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '5卓', 'schedule' => '日曜 22:00', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '1卓', 'played_date' => '2026-03-21', 'day_of_week' => '金曜', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '2卓', 'played_date' => '2026-03-21', 'day_of_week' => '金曜', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '3卓', 'played_date' => '2026-03-22', 'day_of_week' => '土曜', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '4卓', 'played_date' => '2026-03-23', 'day_of_week' => '日曜', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 1, 'table_name' => '5卓', 'played_date' => '2026-03-23', 'day_of_week' => '日曜', 'done' => true],
             // 2回戦
-            ['tournament_id' => $tournamentId, 'round_number' => 2, 'table_name' => '1卓', 'schedule' => '', 'done' => true],
-            ['tournament_id' => $tournamentId, 'round_number' => 2, 'table_name' => '2卓', 'schedule' => '', 'done' => true],
-            ['tournament_id' => $tournamentId, 'round_number' => 2, 'table_name' => '3卓', 'schedule' => '', 'done' => true],
-            ['tournament_id' => $tournamentId, 'round_number' => 2, 'table_name' => '4卓', 'schedule' => '', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 2, 'table_name' => '1卓', 'played_date' => '2026-03-27', 'day_of_week' => '金曜', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 2, 'table_name' => '2卓', 'played_date' => '2026-03-27', 'day_of_week' => '金曜', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 2, 'table_name' => '3卓', 'played_date' => '2026-03-28', 'day_of_week' => '土曜', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 2, 'table_name' => '4卓', 'played_date' => '2026-03-28', 'day_of_week' => '土曜', 'done' => true],
             // 3回戦
-            ['tournament_id' => $tournamentId, 'round_number' => 3, 'table_name' => '1卓', 'schedule' => '',       'done' => true],
-            ['tournament_id' => $tournamentId, 'round_number' => 3, 'table_name' => '2卓', 'schedule' => '日曜夜', 'done' => true],
-            ['tournament_id' => $tournamentId, 'round_number' => 3, 'table_name' => '3卓', 'schedule' => '',       'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 3, 'table_name' => '1卓', 'played_date' => '2026-03-29', 'day_of_week' => '日曜', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 3, 'table_name' => '2卓', 'played_date' => '2026-03-29', 'day_of_week' => '日曜', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 3, 'table_name' => '3卓', 'played_date' => '2026-03-29', 'day_of_week' => '日曜', 'done' => true],
             // 決勝
-            ['tournament_id' => $tournamentId, 'round_number' => 4, 'table_name' => '決勝卓', 'schedule' => '', 'done' => true],
+            ['tournament_id' => $tournamentId, 'round_number' => 4, 'table_name' => '決勝卓', 'played_date' => '2026-03-30', 'day_of_week' => '月曜', 'done' => true],
         ];
         $this->table('tables_info')->insert($tablesData)->save();
 

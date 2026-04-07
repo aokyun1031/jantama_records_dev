@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('選手大会戦績ページ', () => {
   test('正常に表示される', async ({ page }) => {

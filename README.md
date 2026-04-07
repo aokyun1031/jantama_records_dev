@@ -29,6 +29,7 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 ```
 ├── public/                     Webサーバー公開ディレクトリ
 │   ├── index.php               メインページ
+│   ├── tournament_view.php     大会閲覧ページ（index.phpベースの動的版）
 │   ├── interview.php           優勝インタビュー
 │   ├── player.php              選手詳細ページ（大会一覧）
 │   ├── player_analysis.php     選手の戦績分析ページ
@@ -36,6 +37,14 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 │   ├── player_new.php          選手新規登録ページ
 │   ├── player_tournament.php   選手の大会別戦績ページ
 │   ├── players.php             選手一覧ページ
+│   ├── tournaments.php         大会一覧ページ
+│   ├── tournament_new.php      大会新規作成ページ
+│   ├── tournament_edit.php     大会情報編集ページ
+│   ├── tournament_players.php  大会選手登録ページ
+│   ├── tournament.php          大会詳細ページ（ラウンド・卓一覧）
+│   ├── table_new.php           卓作成ページ
+│   ├── table.php               卓管理ページ（日程・牌譜URL・結果登録）
+│   ├── interview_edit.php      優勝インタビュー設定ページ
 │   ├── 404.php                 404エラーページ
 │   ├── 500.html                500エラーページ（静的HTML）
 │   ├── maintenance.html        メンテナンスページ（静的HTML）
@@ -43,6 +52,7 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 │   ├── css/
 │   │   ├── base.css            変数・リセット・レイアウト・Hero・プログレス
 │   │   ├── components.css      順位表・タブ・卓カード・結果・レコード
+│   │   ├── forms.css           フォーム共通スタイル（edit-*・btn-save等）
 │   │   ├── finals.css          決勝卓セクションの演出・アニメーション
 │   │   ├── champion.css        優勝おめでとうセクション
 │   │   ├── mahjong-deco.css    麻雀牌の装飾
@@ -56,6 +66,7 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 │       └── chara_deformed/     キャラクターデフォルメアイコン
 ├── models/
 │   ├── Character.php           キャラクターマスタの取得
+│   ├── Interview.php           優勝インタビューの取得・保存
 │   ├── Player.php              選手データの取得（キャラアイコン付き）
 │   ├── PlayerAnalysis.php      選手の戦績分析（対戦成績・統計）
 │   ├── RoundResult.php         ラウンド成績の取得
@@ -63,6 +74,14 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 │   ├── TableInfo.php           卓情報・メンバーの取得
 │   ├── Tournament.php          大会データの取得
 │   └── TournamentMeta.php      大会メタ情報の取得
+├── enums/
+│   ├── DayOfWeek.php           曜日（日付から曜日ラベルを取得）
+│   ├── EventType.php           イベント種別（最強位戦・鳳凰位戦等）
+│   ├── HanRestriction.php      翻縛り（一翻・二翻・四翻）
+│   ├── PlayerMode.php          対局人数（三麻・四麻）
+│   ├── RoundType.php           局数（半荘・東風・一局）
+│   ├── ToggleRule.php          ON/OFF設定（喰いタン・トビ等）
+│   └── TournamentStatus.php    大会ステータス（準備中・開催中・終了）
 ├── config/
 │   └── database.php            DB接続・ヘルパー関数・環境変数読み込み
 ├── templates/
@@ -89,7 +108,7 @@ DBはすべてNeon（リモート）を使用します。ローカルにDBコン
 └── .dockerignore
 ```
 
-`public/` のみがWebサーバーから公開されます。`config/`、`models/`、`templates/`、`db/`、`vendor/` はWeb経由でアクセスできません。
+`public/` のみがWebサーバーから公開されます。`config/`、`models/`、`enums/`、`templates/`、`db/`、`vendor/` はWeb経由でアクセスできません。
 
 Neon無料枠のスリープからの復帰を考慮し、DB接続はリトライ付き（最大3回、指数バックオフ）で行います。
 
@@ -239,6 +258,14 @@ index.php（トップ）
   │         ├→ player_edit.php（選手編集・削除）
   │         ├→ player_tournament.php（大会別戦績）
   │         └→ player_analysis.php（戦績分析）
+  ├→ tournaments.php（大会一覧）
+  │    ├→ tournament_new.php（大会作成）
+  │    └→ tournament.php（大会詳細）
+  │         ├→ tournament_edit.php（大会情報編集）
+  │         ├→ tournament_players.php（選手登録）
+  │         ├→ table_new.php（卓作成）
+  │         ├→ table.php（卓管理：日程・牌譜URL・結果登録・完了）
+  │         └→ interview_edit.php（優勝インタビュー設定・大会完了）
   └→ interview.php（優勝インタビュー）
 ```
 

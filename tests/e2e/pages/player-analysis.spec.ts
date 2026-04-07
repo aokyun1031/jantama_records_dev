@@ -1,24 +1,25 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('選手戦績分析ページ', () => {
-  test('大会参加済み選手の分析が表示される', async ({ page }) => {
+
+  test.beforeEach(async ({ page }) => {
     await page.goto('/player_analysis?id=1');
+  });
+
+  test('大会参加済み選手の分析が表示される', async ({ page }) => {
     await expect(page.locator('.analysis-badge')).toContainText('ANALYSIS');
-    await expect(page.locator('.analysis-title')).not.toBeEmpty();
+    await expect(page.locator('.analysis-title')).toBeVisible();
   });
 
   test('サマリーカードが表示される', async ({ page }) => {
-    await page.goto('/player_analysis?id=1');
     await expect(page.locator('.summary-card')).not.toHaveCount(0);
   });
 
   test('対戦成績テーブルが表示される', async ({ page }) => {
-    await page.goto('/player_analysis?id=1');
     await expect(page.locator('.h2h-table')).toBeVisible();
   });
 
   test('スコア推移テーブルが表示される', async ({ page }) => {
-    await page.goto('/player_analysis?id=1');
     await expect(page.locator('.history-table')).toBeVisible();
   });
 
@@ -28,7 +29,16 @@ test.describe('選手戦績分析ページ', () => {
   });
 
   test('個人ページへの戻るリンクがある', async ({ page }) => {
-    await page.goto('/player_analysis?id=1');
     await expect(page.locator('a[href*="player?id=1"]')).toBeVisible();
+  });
+
+  test('存在しないIDで404', async ({ page }) => {
+    const response = await page.goto('/player_analysis?id=999999');
+    expect(response?.status()).toBe(404);
+  });
+
+  test('IDなしで404', async ({ page }) => {
+    const response = await page.goto('/player_analysis');
+    expect(response?.status()).toBe(404);
   });
 });

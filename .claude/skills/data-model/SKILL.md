@@ -12,6 +12,7 @@ tournaments (1) ──→ (N) tables_info (1) ──→ (N) table_players ←─
 tournaments (1) ──→ (N) round_results ←── (N) players
 tournaments (1) ──→ (N) standings ←── (N) players
 tournaments (1) ──→ (N) tournament_meta
+tournaments (1) ──→ (N) interviews
 characters (1) ──→ (N) players
 ```
 
@@ -37,34 +38,68 @@ Player::count();                                   // 選手数
 
 ### Tournament
 ```php
-Tournament::all();              // 全大会（作成日降順）
-Tournament::find($id);          // IDで1件取得
-Tournament::byPlayer($playerId); // 特定選手が参加した大会一覧（順位・スコア付き）
+Tournament::all();                                              // 全大会（作成日降順）
+Tournament::find($id);                                          // IDで1件取得
+Tournament::findWithMeta($id);                                  // メタ情報付きで1件取得
+Tournament::allWithDetails();                                   // 一覧（参加人数・イベント種別・優勝者付き）
+Tournament::createWithDetails($name, $meta, $playerIds);        // 大会作成（メタ+選手登録）
+Tournament::updateDetails($id, $name, $meta);                   // 大会名・メタ更新
+Tournament::playerIds($id);                                     // 参加選手ID一覧
+Tournament::playedPlayerIds($id);                               // 卓に割り当て済み選手ID
+Tournament::updatePlayers($id, $playerIds);                     // 選手の追加・削除（対局済み保護あり）
+Tournament::start($id);                                         // ステータスを開催中に
+Tournament::complete($id);                                      // ステータスを完了に
+Tournament::processRoundCompletion($tournamentId, $roundNum);   // ラウンド完了処理（勝ち抜き判定含む）
+Tournament::delete($id);                                        // 削除（CASCADE）
+Tournament::byPlayer($playerId);                                // 特定選手が参加した大会一覧
 ```
 
 ### Standing
 ```php
-Standing::all($tournamentId);                          // 総合順位（選手名付き）
-Standing::finalists($tournamentId);                    // 決勝進出者（トレンド・キャラアイコン付き）
-Standing::findByPlayer($tournamentId, $playerId);      // 特定選手の順位
+Standing::all($tournamentId);                                   // 総合順位（ニックネーム・アイコン付き、勝ち抜き→敗退順）
+Standing::finalists($tournamentId);                             // 決勝進出者（トレンド・キャラアイコン付き）
+Standing::champion($tournamentId);                              // 優勝者（eliminated_round=0で最高ポイント）
+Standing::findByPlayer($tournamentId, $playerId);               // 特定選手の順位
+Standing::activePlayerIds($tournamentId);                       // 勝ち抜き中の選手ID一覧
+Standing::totalMap($tournamentId);                              // 選手ID→合計ポイントのマップ
+Standing::updateTotals($tournamentId);                          // round_resultsから全順位を再計算
+Standing::processRoundAdvancement($tournamentId, $roundNum, $advanceCount); // 勝ち抜き判定
 ```
 
 ### RoundResult
 ```php
-RoundResult::byRound($tournamentId, $roundNumber); // 特定ラウンド成績（スコア降順）
-RoundResult::byPlayer($tournamentId, $playerId);   // 特定選手の全ラウンド成績
+RoundResult::byRound($tournamentId, $roundNumber);  // 特定ラウンド成績（ニックネーム・アイコン付き）
+RoundResult::byPlayer($tournamentId, $playerId);    // 特定選手の全ラウンド成績
+RoundResult::saveScores($tournamentId, $roundNumber, $scores); // スコア一括保存（UPSERT）
 ```
 
 ### TableInfo
 ```php
-TableInfo::byRound($tournamentId, $roundNumber);                // ラウンドの卓情報（メンバー付き）
+TableInfo::find($id);                                           // 卓を1件取得
+TableInfo::findWithPlayers($id);                                // 選手一覧+既存スコア付きで取得
+TableInfo::byTournament($tournamentId);                         // ラウンド別卓一覧（アイコン・スコア付き）
+TableInfo::byRound($tournamentId, $roundNumber);                // ラウンドの卓情報（アイコン付き）
 TableInfo::byPlayerAndTournament($tournamentId, $playerId);     // 選手の参加卓情報（スコア付き）
+TableInfo::playerGroupsByRound($tournamentId, $roundNumber);    // 卓ごとの選手IDグループ（同卓回避用）
+TableInfo::create($tournamentId, $roundNumber, $tableName, $playerIds); // 卓作成
+TableInfo::createBatch($tournamentId, $roundNumber, $tables);   // 複数卓一括作成
+TableInfo::updateSchedule($id, $playedDate, $dayOfWeek, $playedTime); // 対局日更新
+TableInfo::updatePaifuUrl($id, $url);                           // 牌譜URL更新
+TableInfo::markDone($id);                                       // 卓を完了に
+TableInfo::delete($id);                                         // 卓削除（CASCADE）
 ```
 
 ### TournamentMeta
 ```php
 TournamentMeta::all($tournamentId);                        // 全メタ情報を連想配列で取得
 TournamentMeta::get($tournamentId, $key, $default);        // 特定キーの値を取得
+TournamentMeta::set($tournamentId, $key, $value);          // 値を設定（UPSERT）
+```
+
+### Interview
+```php
+Interview::byTournament($tournamentId);             // インタビューQ&A一覧
+Interview::save($tournamentId, $items);              // Q&A一括保存（全削除→再作成）
 ```
 
 ### PlayerAnalysis
