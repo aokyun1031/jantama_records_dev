@@ -6,8 +6,7 @@ require __DIR__ . '/../config/database.php';
 startSecureSession();
 
 // --- フラッシュメッセージ ---
-$flash = $_SESSION['flash'] ?? null;
-unset($_SESSION['flash']);
+$flash = consumeFlash();
 
 // --- データ取得 ---
 ['data' => $players, 'error' => $error] = fetchData(fn() => Player::all());
@@ -122,35 +121,6 @@ $pageStyle = <<<'CSS'
   margin-top: 2px;
 }
 
-.players-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: var(--btn-primary-bg);
-  color: var(--btn-text-color);
-  text-decoration: none;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
-  margin-bottom: 40px;
-}
-
-.players-back:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.4);
-}
-
-.players-new {
-  background: var(--btn-secondary-bg);
-  box-shadow: 0 4px 16px rgba(var(--mint-rgb), 0.3);
-}
-.players-new:hover {
-  box-shadow: 0 6px 24px rgba(var(--mint-rgb), 0.4);
-}
-
 .players-error {
   text-align: center;
   padding: 24px;
@@ -258,8 +228,8 @@ require __DIR__ . '/../templates/header.php';
 <?php endif; ?>
 
 <div style="text-align: center; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-  <a href="/" class="players-back">&#x2190; トップページに戻る</a>
-  <a href="player_new" class="players-back players-new">+ 選手を追加</a>
+  <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
+  <a href="player_new" class="btn-cancel" style="background:var(--btn-secondary-bg);color:var(--btn-text-color);border-color:transparent;box-shadow:0 4px 16px rgba(var(--mint-rgb),0.3);">+ 選手を追加</a>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

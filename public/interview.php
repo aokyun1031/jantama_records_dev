@@ -2,15 +2,21 @@
 declare(strict_types=1);
 require __DIR__ . '/../config/database.php';
 
-$tournamentId = 1;
+// ID指定があればその大会、なければid=1にフォールバック
+$tournamentId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: 1;
+['data' => $tournamentData] = fetchData(fn() => Tournament::find($tournamentId));
+$tournamentName = $tournamentData['name'] ?? '最強位戦';
+
 ['data' => $finalists] = fetchData(fn() => Standing::finalists($tournamentId));
-$champion = $finalists[0] ?? null;
-$pageTitle = '優勝インタビュー - 最強位戦';
-$pageDescription = '最強位戦 優勝者への優勝インタビューを掲載しています。';
+['data' => $interviews] = fetchData(fn() => Interview::byTournament($tournamentId));
+$champion = Standing::champion($tournamentId);
+
+$pageTitle = '優勝インタビュー - ' . h($tournamentName);
+$pageDescription = h($tournamentName) . ' 優勝者への優勝インタビューを掲載しています。';
 $pageOgp = [
-    'title' => '優勝インタビュー - 最強位戦',
-    'description' => '最強位戦 優勝者ホロ・ホロへの優勝インタビューを掲載しています。',
-    'url' => 'https://jantama-records.onrender.com/interview.php',
+    'title' => '優勝インタビュー - ' . $tournamentName,
+    'description' => $tournamentName . ' 優勝者への優勝インタビューを掲載しています。',
+    'url' => 'https://jantama-records.onrender.com/interview?id=' . $tournamentId,
 ];
 $pageCss = ['css/champion.css'];
 $pageStyle = <<<'CSS'
@@ -228,7 +234,7 @@ require __DIR__ . '/../templates/header.php';
 <div class="interview-hero">
   <div class="interview-badge">CHAMPION INTERVIEW</div>
   <h1 class="interview-title">優勝インタビュー</h1>
-  <div class="interview-subtitle">最強位戦 チャンピオンに聞く</div>
+  <div class="interview-subtitle"><?= h($tournamentName) ?> チャンピオンに聞く</div>
 </div>
 
 <!-- Profile Card -->
@@ -239,81 +245,30 @@ require __DIR__ . '/../templates/header.php';
       <span class="crown">👑</span>
     </div>
     <div class="interview-profile-info">
-      <div class="interview-profile-label">🏆 2026 最強位戦 優勝</div>
-      <div class="interview-profile-name"><?= $champion ? h($champion['name']) : '' ?></div>
+      <div class="interview-profile-label">&#x1F3C6; <?= h($tournamentName) ?> 優勝</div>
+      <div class="interview-profile-name"><?= $champion ? h($champion['nickname'] ?? $champion['name']) : '' ?></div>
     </div>
   </div>
 
   <!-- Interview Q&A -->
   <div class="interview-list">
-    <div class="interview-item" style="animation-delay: 0s">
-      <div class="interview-question">
-        <span class="interview-q-label">Q1</span>
-        <span>大会全体を通して、ご自身の調子やツモの感触はどうでしたか？</span>
+    <?php foreach ($interviews ?? [] as $i => $item): ?>
+      <div class="interview-item" style="animation-delay: <?= $i * 0.1 ?>s">
+        <div class="interview-question">
+          <span class="interview-q-label">Q<?= $i + 1 ?></span>
+          <span><?= h($item['question']) ?></span>
+        </div>
+        <div class="interview-answer"><?= nl2br(h($item['answer'])) ?></div>
       </div>
-      <div class="interview-answer">四人打ちにしてはいいところがよく入ったと思います。</div>
-    </div>
-
-    <div class="interview-item" style="animation-delay: 0.1s">
-      <div class="interview-question">
-        <span class="interview-q-label">Q2</span>
-        <span>大会前に密かに立てていた『テーマ』や『作戦』はありましたか？</span>
-      </div>
-      <div class="interview-answer">楽しく打てたらいいなぁって感じで特に作戦はありません。</div>
-    </div>
-
-    <div class="interview-item" style="animation-delay: 0.2s">
-      <div class="interview-question">
-        <span class="interview-q-label">Q3</span>
-        <span>今大会を通じて、ご自身の中で『MVP』と言える最高のアガリ（または最高のファインプレー）はどの局でしたか？</span>
-      </div>
-      <div class="interview-answer">決勝戦の親の時に清一色上がった時ですかね、、、配牌チートだったし思ってた所全部入って来ました、</div>
-    </div>
-
-    <div class="interview-item" style="animation-delay: 0.3s">
-      <div class="interview-question">
-        <span class="interview-q-label">Q4</span>
-        <span>逆に『あれは危なかった』、『実はあの時、手が震えていた』というヒヤッとした場面や、裏目に出た局はありましたか？</span>
-      </div>
-      <div class="interview-answer">特に無し</div>
-    </div>
-
-    <div class="interview-item" style="animation-delay: 0.4s">
-      <div class="interview-question">
-        <span class="interview-q-label">Q5</span>
-        <span>一番警戒していた、あるいは『こいつにだけは負けたくない』と思っていたプレイヤーは誰でしたか？</span>
-      </div>
-      <div class="interview-answer">ミカさんですね！</div>
-    </div>
-
-    <div class="interview-item" style="animation-delay: 0.5s">
-      <div class="interview-question">
-        <span class="interview-q-label">Q6</span>
-        <span>今回の優勝賞品は、どのように使いたいですか？</span>
-      </div>
-      <div class="interview-answer">毎週水曜日会社にヤクルトさんくるのでそこで使います！<br>子供がよく飲むので。。。</div>
-    </div>
-
-    <div class="interview-item" style="animation-delay: 0.6s">
-      <div class="interview-question">
-        <span class="interview-q-label">Q7</span>
-        <span>他の参加者たちへ、チャンピオンから愛のあるメッセージ・アドバイスをお願いします！</span>
-      </div>
-      <div class="interview-answer">勝ち負けにこだわらず楽しく麻雀しましょう。</div>
-    </div>
-
-    <div class="interview-item" style="animation-delay: 0.7s">
-      <div class="interview-question">
-        <span class="interview-q-label">Q8</span>
-        <span>最後に、次回大会への意気込みをお願いします！</span>
-      </div>
-      <div class="interview-answer">討伐賞は誰にも渡しません！</div>
-    </div>
+    <?php endforeach; ?>
+    <?php if (empty($interviews)): ?>
+      <div style="text-align:center; padding: 24px; color: var(--text-sub);">インタビューはまだ登録されていません。</div>
+    <?php endif; ?>
   </div>
 
   <!-- Back Link -->
   <div style="text-align: center;">
-    <a href="/" class="interview-back">&#x2190; トップページに戻る</a>
+    <a href="tournament_view?id=<?= $tournamentId ?>" class="btn-cancel">&#x2190; 大会ページに戻る</a>
   </div>
 </section>
 

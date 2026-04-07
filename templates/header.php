@@ -44,13 +44,29 @@
 </head>
 <body>
 
-<!-- Theme Toggle -->
-<div class="theme-toggle" id="theme-toggle">
-  <span class="theme-toggle-icon theme-toggle-sun">&#x2600;</span>
-  <div class="theme-toggle-track" id="theme-track">
-    <div class="theme-toggle-thumb"></div>
+<!-- Top Controls -->
+<div class="top-controls">
+  <!-- Theme Toggle -->
+  <div class="theme-toggle" id="theme-toggle">
+    <span class="theme-toggle-icon theme-toggle-sun">&#x2600;</span>
+    <div class="theme-toggle-track" id="theme-track">
+      <div class="theme-toggle-thumb"></div>
+    </div>
+    <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
   </div>
-  <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
+  <!-- Hamburger Menu -->
+  <button class="hamburger" id="hamburger" aria-label="メニュー">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
 </div>
+
+<!-- Nav Panel -->
+<nav class="nav-panel" id="nav-panel">
+  <a href="/tournaments" class="nav-panel-link">大会一覧</a>
+  <a href="/players" class="nav-panel-link">選手一覧</a>
+</nav>
+<div class="nav-overlay" id="nav-overlay"></div>
 
 <div class="main">

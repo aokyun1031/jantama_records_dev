@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('インタビューページ', () => {
   test.beforeEach(async ({ page }) => {
@@ -10,7 +10,7 @@ test.describe('インタビューページ', () => {
   });
 
   test('チャンピオンプロフィールが表示される', async ({ page }) => {
-    await expect(page.locator('.interview-profile-name')).not.toBeEmpty();
+    await expect(page.locator('.interview-profile-name')).toBeVisible();
     await expect(page.locator('.interview-avatar img')).toBeVisible();
   });
 

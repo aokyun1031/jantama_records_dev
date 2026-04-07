@@ -201,3 +201,70 @@ function requirePlayer(int $id): array
     }
     return $player;
 }
+
+/**
+ * GETパラメータから大会IDを検証・取得する。無効な場合は404。
+ */
+function requireTournamentId(): int
+{
+    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    if ($id === false || $id === null || $id <= 0) {
+        abort404();
+    }
+    return $id;
+}
+
+/**
+ * 大会をメタ情報付きで取得する。見つからない場合は404。
+ */
+function requireTournamentWithMeta(int $id): array
+{
+    ['data' => $tournament] = fetchData(fn() => Tournament::findWithMeta($id));
+    if (!$tournament) {
+        abort404();
+    }
+    return $tournament;
+}
+
+/**
+ * 大会メタ情報からルールタグ配列を生成する。
+ */
+function buildRuleTags(array $meta): array
+{
+    $tags = [];
+    $eventType = EventType::tryFrom($meta['event_type'] ?? '');
+    if ($eventType) {
+        $tags[] = $eventType->label();
+    }
+    $tags[] = (PlayerMode::tryFrom($meta['player_mode'] ?? '4'))?->label() ?? '';
+    $tags[] = (RoundType::tryFrom($meta['round_type'] ?? 'hanchan'))?->label() ?? '';
+    if (!empty($meta['thinking_time'])) {
+        $tags[] = $meta['thinking_time'] . '秒';
+    }
+    if (!empty($meta['starting_points'])) {
+        $tags[] = '原点' . $meta['starting_points'];
+    }
+    if (!empty($meta['return_points'])) {
+        $tags[] = '返し' . $meta['return_points'];
+    }
+    if (isset($meta['red_dora'])) {
+        $tags[] = '赤' . $meta['red_dora'];
+    }
+    $tags[] = (ToggleRule::tryFrom($meta['open_tanyao'] ?? '1'))?->label('喰いタン') ?? '';
+    $hanLabel = (HanRestriction::tryFrom($meta['han_restriction'] ?? ''))?->label();
+    if ($hanLabel) {
+        $tags[] = $hanLabel;
+    }
+    $tags[] = (ToggleRule::tryFrom($meta['bust'] ?? '0'))?->label('トビ') ?? '';
+    return array_filter($tags, fn($t) => $t !== '');
+}
+
+/**
+ * フラッシュメッセージを取得して消費する。
+ */
+function consumeFlash(): ?string
+{
+    $flash = $_SESSION['flash'] ?? null;
+    unset($_SESSION['flash']);
+    return $flash;
+}

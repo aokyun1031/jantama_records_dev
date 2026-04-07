@@ -587,7 +587,7 @@ if ($scoreHistory) {
 <?php endif; ?>
 
 <div style="text-align: center;">
-  <a href="player?id=<?= $playerId ?>" class="back-btn">&#x2190; 個人ページに戻る</a>
+  <a href="player?id=<?= $playerId ?>" class="btn-cancel">&#x2190; 個人ページに戻る</a>
 </div>
 
 <script>

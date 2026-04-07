@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('テーマ切替', () => {
   test('テーマトグルが表示される', async ({ page }) => {

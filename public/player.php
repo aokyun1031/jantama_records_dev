@@ -3,8 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/../config/database.php';
 
 startSecureSession();
-$flash = $_SESSION['flash'] ?? null;
-unset($_SESSION['flash']);
+$flash = consumeFlash();
 
 // --- バリデーション ---
 $playerId = requirePlayerId();
@@ -137,24 +136,26 @@ $pageStyle = <<<'CSS'
   font-size: 0.9rem;
   color: var(--text-sub);
 }
-
-.tournament-status {
+.tournament-event-type {
   font-size: 0.7rem;
   font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 10px;
-  letter-spacing: 1px;
+  color: var(--text-sub);
+  margin-bottom: 14px;
 }
 
-.status-completed {
-  background: linear-gradient(135deg, rgba(var(--mint-rgb),0.15), rgba(var(--mint-rgb),0.05));
-  color: var(--mint);
+.tournament-status {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
 }
-
-.status-in-progress {
-  background: linear-gradient(135deg, rgba(var(--accent-rgb),0.15), rgba(var(--accent-rgb),0.05));
-  color: var(--pink);
-}
+.tournament-status.preparing { background: rgba(var(--gold-rgb), 0.15); color: var(--gold); }
+.tournament-status.active { background: rgba(var(--mint-rgb), 0.15); color: var(--success); }
+.tournament-status.completed { background: rgba(var(--accent-rgb), 0.1); color: var(--text-sub); }
 
 .tournament-progress {
   display: block;
@@ -231,6 +232,13 @@ $pageStyle = <<<'CSS'
 .tournament-link:hover .link-arrow {
   transform: translateX(2px);
   opacity: 1;
+}
+
+.tournament-link.disabled {
+  color: var(--text-light);
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .player-error {
@@ -351,14 +359,19 @@ require __DIR__ . '/../templates/header.php';
       <div class="tournament-body">
         <div class="tournament-header">
           <span class="tournament-name"><?= h($t['name']) ?></span>
-          <span class="tournament-status <?= $t['status'] === 'completed' ? 'status-completed' : 'status-in-progress' ?>">
-            <?= $t['status'] === 'completed' ? '大会終了' : '開催中' ?>
+          <?php $tsEnum = TournamentStatus::tryFrom($t['status']); ?>
+          <span class="tournament-status <?= $tsEnum?->cssClass() ?? '' ?>">
+            <?= h($tsEnum?->label() ?? $t['status']) ?>
           </span>
         </div>
+        <?php $eventType = EventType::tryFrom($t['event_type'] ?? ''); ?>
+        <?php if ($eventType): ?>
+          <div class="tournament-event-type"><?= h($eventType->label()) ?></div>
+        <?php endif; ?>
         <?php
-          $isChampion = (int)$t['rank'] === 1 && $t['status'] === 'completed';
           $elimRound  = (int)$t['eliminated_round'];
           $lastRound  = (int)$t['last_round'];
+          $isChampion = $elimRound === 0 && $t['status'] === TournamentStatus::Completed->value;
           if ($isChampion):
         ?>
           <span class="tournament-progress progress-champion">優勝</span>
@@ -371,7 +384,11 @@ require __DIR__ . '/../templates/header.php';
       </div>
       <div class="tournament-links">
         <a href="player_tournament?player_id=<?= $playerId ?>&amp;tournament_id=<?= (int)$t['id'] ?>" class="tournament-link">個人戦績 <span class="link-arrow">&#x203A;</span></a>
-        <a href="/" class="tournament-link">全体戦績 <span class="link-arrow">&#x203A;</span></a>
+        <?php if ($t['status'] === TournamentStatus::Preparing->value): ?>
+          <span class="tournament-link disabled">大会閲覧ページ</span>
+        <?php else: ?>
+          <a href="tournament_view?id=<?= (int)$t['id'] ?>" class="tournament-link">大会閲覧ページ <span class="link-arrow">&#x203A;</span></a>
+        <?php endif; ?>
       </div>
     </div>
   <?php endforeach; ?>
@@ -379,7 +396,7 @@ require __DIR__ . '/../templates/header.php';
 <?php endif; ?>
 
 <div style="text-align: center;">
-  <a href="players" class="btn btn-primary" style="margin-bottom: 40px;">&#x2190; 選手一覧に戻る</a>
+  <a href="players" class="btn-cancel" style="margin-bottom: 40px;">&#x2190; 選手一覧に戻る</a>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

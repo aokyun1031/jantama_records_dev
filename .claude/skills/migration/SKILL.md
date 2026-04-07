@@ -75,6 +75,28 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 - characters テーブル新規作成（id, name, icon_filename）
 - players テーブルに character_id カラム + FK追加（ON DELETE SET NULL）
 
+### キャラクターシード＆選手割り当て（20260329300000_seed_characters_and_assign_players）
+
+- characters テーブルにキャラクターデータを投入
+- 既存選手に character_id を割り当て
+
+### 対局日カラム変更（20260406100534_replace_schedule_with_played_date）
+
+- tables_info の schedule カラムを played_date（DATE型）に変更
+
+### 牌譜URL追加（20260406102308_add_paifu_url_to_tables_info）
+
+- tables_info に paifu_url カラム（TEXT）を追加
+
+### 対局時間追加（20260407035154_add_played_time_to_tables_info）
+
+- tables_info に played_time カラム（VARCHAR(5)）を追加
+
+### インタビューテーブル作成（20260407062401_create_interviews_table）
+
+- interviews テーブル新規作成（id, tournament_id, question, answer, sort_order）
+- FK: tournament_id → tournaments（ON DELETE CASCADE）
+
 ## デプロイ
 
 - 本番: Renderデプロイ時に `start.sh` 経由で自動実行される

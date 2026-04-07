@@ -11,10 +11,9 @@ if (!$playerId || !$tournamentId) {
 
 // --- データ取得 ---
 $player = requirePlayer($playerId);
-['data' => $tournament] = fetchData(fn() => Tournament::find($tournamentId));
-if (!$tournament) {
-    abort404();
-}
+$tournament = requireTournamentWithMeta($tournamentId);
+$meta = $tournament['meta'];
+$ruleTags = buildRuleTags($meta);
 
 ['data' => $standing] = fetchData(fn() => Standing::findByPlayer($tournamentId, $playerId));
 ['data' => $rounds, 'error' => $error] = fetchData(fn() => TableInfo::byPlayerAndTournament($tournamentId, $playerId));
@@ -42,6 +41,28 @@ $pageStyle = <<<'CSS'
   animation: fadeDown 0.8s ease both;
 }
 
+.result-tournament-name {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.result-rules {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.result-rule-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--text-sub);
+}
 .result-identity {
   margin-bottom: 12px;
   animation: fadeUp 1s ease both;
@@ -284,16 +305,21 @@ require __DIR__ . '/../templates/header.php';
 ?>
 
 <div class="result-hero">
-  <div class="result-badge"><?= h($tournament['name']) ?></div>
+  <div class="result-badge">TOURNAMENT RECORD</div>
+  <div class="result-tournament-name"><?= h($tournament['name']) ?></div>
+  <div class="result-rules">
+    <?php foreach ($ruleTags as $tag): ?>
+      <span class="result-rule-tag"><?= h($tag) ?></span>
+    <?php endforeach; ?>
+  </div>
   <div class="result-identity">
     <?php if ($player['character_icon']): ?>
       <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="<?= h($player['name']) ?>" class="result-hero-icon" width="88" height="88">
     <?php endif; ?>
-    <h1 class="result-title"><?= h($player['name']) ?></h1>
-    <?php if ($player['nickname'] !== null && $player['nickname'] !== ''): ?><div class="result-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
+    <h1 class="result-title"><?= h($player['nickname'] ?? $player['name']) ?></h1>
   </div>
   <?php if ($standing):
-    $isChampion = (int)$standing['rank'] === 1 && $tournament['status'] === 'completed';
+    $isChampion = (int)$standing['rank'] === 1 && $tournament['status'] === TournamentStatus::Completed->value;
     $elimRound  = (int)$standing['eliminated_round'];
   ?>
     <?php if ($isChampion): ?>
@@ -323,7 +349,7 @@ require __DIR__ . '/../templates/header.php';
     ['data' => $finalRoundStr] = fetchData(fn() => TournamentMeta::get($tournamentId, 'current_round', '0'));
     $tournamentFinalRound = (int)($finalRoundStr ?? '0');
     foreach ($rounds as $ri => $round):
-      $isFinal = (int)$round['round_number'] === $tournamentFinalRound && $tournament['status'] === 'completed';
+      $isFinal = (int)$round['round_number'] === $tournamentFinalRound && $tournament['status'] === TournamentStatus::Completed->value;
   ?>
     <div class="round-section" style="animation-delay: <?= $ri * 0.1 ?>s">
       <div class="round-header">
@@ -362,7 +388,7 @@ require __DIR__ . '/../templates/header.php';
 <?php endif; ?>
 
 <div style="text-align: center;">
-  <a href="player?id=<?= $playerId ?>" class="back-btn">&#x2190; 個人ページに戻る</a>
+  <a href="player?id=<?= $playerId ?>" class="btn-cancel">&#x2190; 個人ページに戻る</a>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

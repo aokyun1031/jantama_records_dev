@@ -39,7 +39,7 @@ for ($r = 1; $r <= 4; $r++) {
     foreach ($tables ?? [] as $t) {
         $jsTable = [
             'name' => $t['table_name'],
-            'sched' => $t['schedule'],
+            'sched' => $t['day_of_week'],
             'players' => array_map(fn($p) => $p['name'], $t['players']),
         ];
         if ($r >= 3) {

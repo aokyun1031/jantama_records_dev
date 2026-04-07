@@ -17,7 +17,7 @@ export async function createTestPlayer(
   await page.locator('.chara-option').first().click();
   await page.click('button.btn-save');
   // リダイレクト先 /player?id=N からIDを取得
-  await page.waitForURL(/\/player\?id=\d+/);
+  await page.waitForURL(/\/player\?id=\d+/, { waitUntil: 'domcontentloaded' });
   const url = new URL(page.url());
   return parseInt(url.searchParams.get('id')!, 10);
 }
@@ -25,13 +25,13 @@ export async function createTestPlayer(
 /**
  * テスト用プレイヤーを削除する。大会参加済みの場合はスキップ。
  */
-export async function deleteTestPlayer(page: Page, id: number): Promise<void> {
+async function deleteTestPlayer(page: Page, id: number): Promise<void> {
   await page.goto(`/player_edit?id=${id}`);
   const deleteBtn = page.locator('button.btn-delete');
   if (await deleteBtn.isVisible()) {
-    page.on('dialog', (dialog) => dialog.accept());
+    page.once('dialog', (dialog) => dialog.accept());
     await deleteBtn.click();
-    await page.waitForURL(/\/players/);
+    await page.waitForURL(/\/players/, { waitUntil: 'domcontentloaded' });
   }
 }
 
@@ -55,6 +55,44 @@ export async function cleanupTestPlayers(page: Page): Promise<void> {
 
   for (const id of idsToDelete) {
     await deleteTestPlayer(page, id);
+  }
+}
+
+/**
+ * テスト用大会をフォーム経由で作成し、選手全員を登録してIDを返す。
+ */
+export async function createTestTournamentWithPlayers(
+  page: Page,
+  name: string
+): Promise<number> {
+  await page.goto('/tournament_new');
+  await page.fill('input[name="name"]', name);
+  await page.click('#btn-select-all');
+  await page.click('button.btn-save');
+  await page.waitForURL(/\/tournaments(\?.*)?$/, { waitUntil: 'domcontentloaded' });
+
+  // IDを取得
+  await page.goto('/tournaments');
+  const card = page.locator('.tournament-card', { hasText: name });
+  const link = card.locator('a.tournament-link', { hasText: '管理ページ' });
+  const href = await link.getAttribute('href');
+  return parseInt(href!.match(/id=(\d+)/)![1], 10);
+}
+
+/**
+ * 指定IDの大会を削除する。エラーは無視する。
+ */
+export async function deleteTestTournament(page: Page, id: number): Promise<void> {
+  try {
+    await page.goto(`/tournament_edit?id=${id}`);
+    const deleteBtn = page.locator('button.btn-delete');
+    if (await deleteBtn.isVisible({ timeout: 3000 })) {
+      page.once('dialog', (dialog) => dialog.accept());
+      await deleteBtn.click();
+      await page.waitForURL(/\/tournaments/, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    }
+  } catch {
+    // 完了済みや既に削除済みの場合はスキップ
   }
 }
 

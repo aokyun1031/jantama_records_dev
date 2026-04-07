@@ -80,6 +80,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </form>
 ```
 
+## フォームバリデーション
+
+二層バリデーションで実装する。`novalidate` は付けない。
+
+### 1. HTML5バリデーション（ブラウザ側・第一防御線）
+
+入力フィールドに `required`, `maxlength`, `min`, `max` 等の属性を付ける。
+ブラウザがネイティブのエラーメッセージ（ツールチップ）を表示し、不正な送信をブロックする。
+
+```html
+<input type="text" name="name" class="edit-input" required maxlength="100">
+<input type="number" name="points" class="edit-input" required min="100" max="200000" step="100">
+```
+
+- テキスト入力・数値入力には `required` を付ける
+- ラジオボタン・セレクトはデフォルト値が選択済みなので `required` 不要
+- チェックボックスグループ（選手選択など）はHTML5だけでは検証できないのでPHP側で検証
+
+### 2. PHPバリデーション（サーバー側・フォールバック）
+
+HTML5バリデーションを迂回された場合のフォールバック。`$validationError` にメッセージを格納し、
+`.edit-message.error` で表示する。
+
+```php
+$validationError = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!validateCsrfToken()) {
+        http_response_code(403);
+        $validationError = '不正なリクエストです。ページを再読み込みしてください。';
+    } else {
+        $input = sanitizeInput('field_name');
+        if ($input === '') {
+            $validationError = '○○を入力してください。';
+        }
+        // ... 追加のバリデーション
+    }
+}
+```
+
+```html
+<?php if ($validationError): ?>
+  <div class="edit-message error"><?= h($validationError) ?></div>
+<?php endif; ?>
+```
+
+### メッセージの書き方
+
+| 種類 | パターン | 例 |
+|---|---|---|
+| 必須 | `○○を入力してください。` | `大会名を入力してください。` |
+| 文字数 | `○○はN文字以内で入力してください。` | `呼称は50文字以内で入力してください。` |
+| 範囲 | `○○はN〜Mの範囲で入力してください。` | `配給原点は100〜200,000の範囲で入力してください。` |
+| 選択必須 | `○○を選択してください。` / `○○を1人以上選択してください。` | `キャラクターを選択してください。` |
+| 不正値 | `不正な○○です。` / `不正な○○設定です。` | `不正な赤ドラ設定です。` |
+| DB失敗 | `○○に失敗しました。` | `登録に失敗しました。` |
+
 ## ヘルパー関数（config/database.php）
 
 | 関数 | 用途 |
@@ -92,22 +148,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 | `validateCsrfToken()` | POSTのCSRFトークンを検証（bool） |
 | `regenerateCsrfToken()` | トークン再生成 + セッションID再生成。POST成功後に呼ぶ |
 | `sanitizeInput($key)` | POST入力の制御文字除去 + trim |
+| `consumeFlash()` | フラッシュメッセージを取得して消費する |
+| `buildRuleTags($meta)` | 大会メタ情報からルールタグ配列を生成 |
 | `abort404()` | 404レスポンスを返して終了 |
 | `requirePlayerId()` | GETのidを検証・取得。無効なら404 |
 | `requirePlayer($id)` | プレイヤーをDB取得。見つからなければ404 |
+| `requireTournamentId()` | GETのidを検証・取得。無効なら404 |
+| `requireTournamentWithMeta($id)` | 大会をメタ付きで取得。見つからなければ404 |
 
 ## モデル
+
+詳細は `data-model` スキルを参照。主要メソッドのみ:
 
 | モデル | 主なメソッド |
 |---|---|
 | `Character` | `all()`, `find($id)` |
-| `Player` | `all()`, `find($id)`, `create($name, $nickname, $characterId)`, `existsByName($name)`, `update($id, $nickname, $characterId)`, `hasTournaments($id)`, `delete($id)`, `count()` |
-| `Tournament` | `all()`, `find($id)`, `byPlayer($playerId)` |
-| `Standing` | `all($tournamentId)`, `finalists($tournamentId)`, `findByPlayer($tournamentId, $playerId)` |
-| `RoundResult` | `byRound($tournamentId, $roundNumber)`, `byPlayer($tournamentId, $playerId)` |
-| `TableInfo` | `byRound($tournamentId, $roundNumber)`, `byPlayerAndTournament($tournamentId, $playerId)` |
-| `TournamentMeta` | `all($tournamentId)`, `get($tournamentId, $key, $default)` |
-| `PlayerAnalysis` | `summary($playerId)`, `avgTableRank($playerId)`, `headToHead($playerId)`, `scoreHistory($playerId)` |
+| `Player` | `all()`, `find($id)`, `create()`, `update()`, `delete()`, `existsByName()`, `hasTournaments()`, `count()` |
+| `Tournament` | `all()`, `allWithDetails()`, `find($id)`, `findWithMeta($id)`, `createWithDetails()`, `updateDetails()`, `playerIds()`, `playedPlayerIds()`, `updatePlayers()`, `start()`, `complete()`, `processRoundCompletion()`, `delete()`, `byPlayer()` |
+| `Standing` | `all($tid)`, `finalists($tid)`, `champion($tid)`, `findByPlayer()`, `activePlayerIds()`, `totalMap()`, `updateTotals()`, `processRoundAdvancement()` |
+| `RoundResult` | `byRound($tid, $round)`, `byPlayer($tid, $pid)`, `saveScores($tid, $round, $scores)` |
+| `TableInfo` | `find($id)`, `findWithPlayers($id)`, `byTournament($tid)`, `byRound()`, `byPlayerAndTournament()`, `playerGroupsByRound()`, `create()`, `createBatch()`, `updateSchedule()`, `updatePaifuUrl()`, `markDone()`, `delete()` |
+| `TournamentMeta` | `all($tid)`, `get($tid, $key, $default)`, `set($tid, $key, $value)` |
+| `Interview` | `byTournament($tid)`, `save($tid, $items)` |
+| `PlayerAnalysis` | `summary($pid)`, `avgTableRank($pid)`, `headToHead($pid)`, `scoreHistory($pid)` |
+
+## 共通CSS
+
+フォーム付きページでは `css/forms.css` を読み込む。edit-*、btn-save、player-select-* 等の共通クラスが定義済み。
+
+```php
+$pageCss = ['css/forms.css'];
+$pageStyle = ''; // ページ固有CSSが無ければ空文字列
+```
+
+`$pageStyle` には forms.css / components.css に無いページ固有スタイルのみ書く。戻るボタンは `btn-cancel` クラス（components.css で定義済み）を使う。
 
 ## テンプレート変数
 
@@ -115,8 +189,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 |---|---|---|
 | `$pageTitle` | 必須 | `<title>` タグ |
 | `$pageDescription` | 推奨 | `<meta name="description">` |
-| `$pageStyle` | 任意 | ページ固有のインラインCSS |
-| `$pageCss` | 任意 | 追加CSSファイルの配列 |
+| `$pageStyle` | 任意 | ページ固有のインラインCSS（共通CSSに無いものだけ） |
+| `$pageCss` | 任意 | 追加CSSファイルの配列（フォームページは `['css/forms.css']`） |
 | `$pageOgp` | 任意 | OGP設定（`title`, `description`, `url`） |
 | `$pageScripts` | 任意 | 追加JSファイルの配列 |
 | `$pageInlineScript` | 任意 | インラインJS（`json_encode` には `JSON_HEX_TAG` 必須） |
