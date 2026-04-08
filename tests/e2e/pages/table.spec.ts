@@ -1,5 +1,5 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestTournamentWithPlayers, deleteTestTournament } from '../helpers/test-helpers';
+import { TEST_PREFIX, createTestTournamentWithPlayers, deleteTestTournament, createOptimizedPage } from '../helpers/test-helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('卓管理', () => {
@@ -8,7 +8,7 @@ test.describe('卓管理', () => {
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(90000);
-    const page = await browser.newPage();
+    const page = await createOptimizedPage(browser);
     tournamentId = await createTestTournamentWithPlayers(
       page,
       `${TEST_PREFIX}table_mgmt_${Date.now()}`
@@ -29,7 +29,7 @@ test.describe('卓管理', () => {
   });
 
   test.afterAll(async ({ browser }) => {
-    const page = await browser.newPage();
+    const page = await createOptimizedPage(browser);
     await deleteTestTournament(page, tournamentId);
     await page.close();
   });
@@ -56,7 +56,7 @@ test.describe('卓管理', () => {
     for (let i = 0; i < count; i++) {
       await scoreInputs.nth(i).fill((scorePool[i % scorePool.length]).toString());
     }
-    const doneBtn = page.locator('.tb-btn-done');
+    const doneBtn = page.locator('form:has(input[value="game_data"]) .tb-btn-done');
     await expect(doneBtn).toBeVisible();
     page.once('dialog', (dialog) => dialog.accept());
     await doneBtn.click();

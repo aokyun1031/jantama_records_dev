@@ -7,9 +7,13 @@
     "test:ui": "npx playwright test --ui",
     "test:pages": "npx playwright test pages/",
     "test:features": "npx playwright test features/",
-    "setup": "npx playwright install chromium --with-deps"
+    "setup": "npx playwright install chromium --with-deps",
+    "lint": "npx eslint .",
+    "typecheck": "npx tsc --noEmit"
   },
   "devDependencies": {
-    "@playwright/test": "^1.50"
+    "@playwright/test": "^1.59.1",
+    "eslint": "^10.2.0",
+    "typescript-eslint": "^8.58.1"
   }
 }

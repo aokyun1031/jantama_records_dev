@@ -6,8 +6,8 @@ test.describe('選手一覧ページ', () => {
   });
 
   test('ページが正常に表示される', async ({ page }) => {
-    await expect(page).toHaveTitle(/選手一覧/);
-    await expect(page.locator('.players-badge')).toContainText('PLAYERS');
+    await expect.soft(page).toHaveTitle(/選手一覧/);
+    await expect.soft(page.locator('.players-badge')).toContainText('PLAYERS');
   });
 
   test('選手カードが表示される', async ({ page }) => {

@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: '.',
   testMatch: ['pages/**/*.spec.ts', 'features/**/*.spec.ts'],
   fullyParallel: true,
-  workers: 2,
+  workers: process.env.CI ? 2 : 4,
   retries: 1,
   reporter: 'list',
   timeout: 30000,
@@ -14,8 +14,8 @@ export default defineConfig({
     navigationTimeout: 15000,
     waitUntil: 'domcontentloaded',
     reducedMotion: 'reduce',
-    screenshot: 'off',
-    trace: 'off',
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
   },
   projects: [
     {

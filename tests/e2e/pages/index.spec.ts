@@ -10,8 +10,8 @@ test.describe('トップページ', () => {
   });
 
   test('チャンピオンセクションが表示される', async ({ page }) => {
-    await expect(page.locator('.champion-name')).toBeVisible();
-    await expect(page.locator('.champion-score')).toBeVisible();
+    await expect.soft(page.locator('.champion-name')).toBeVisible();
+    await expect.soft(page.locator('.champion-score')).toBeVisible();
   });
 
   test('決勝カードが4枚表示される', async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe('トップページ', () => {
   });
 
   test('フッターに著作権表記がある', async ({ page }) => {
-    await expect(page.locator('.footer-copyright')).toContainText('Soul Games');
-    await expect(page.locator('.footer-copyright')).toContainText('Yostar');
+    await expect.soft(page.locator('.footer-copyright')).toContainText('Soul Games');
+    await expect.soft(page.locator('.footer-copyright')).toContainText('Yostar');
   });
 });

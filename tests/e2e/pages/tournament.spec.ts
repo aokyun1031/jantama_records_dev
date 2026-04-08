@@ -1,12 +1,12 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestTournamentWithPlayers, deleteTestTournament } from '../helpers/test-helpers';
+import { TEST_PREFIX, createTestTournamentWithPlayers, deleteTestTournament , createOptimizedPage } from '../helpers/test-helpers';
 
 test.describe('大会詳細', () => {
   test.describe.configure({ mode: 'serial' });
   let tournamentId: number;
 
   test.beforeAll(async ({ browser }) => {
-    const page = await browser.newPage();
+    const page = await createOptimizedPage(browser);
     tournamentId = await createTestTournamentWithPlayers(
       page,
       `${TEST_PREFIX}detail_${Date.now()}`
@@ -15,7 +15,7 @@ test.describe('大会詳細', () => {
   });
 
   test.afterAll(async ({ browser }) => {
-    const page = await browser.newPage();
+    const page = await createOptimizedPage(browser);
     await deleteTestTournament(page, tournamentId);
     await page.close();
   });

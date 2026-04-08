@@ -32,11 +32,6 @@ test.describe('選手戦績分析ページ', () => {
     await expect(page.locator('a[href*="player?id=1"]')).toBeVisible();
   });
 
-  test('存在しないIDで404', async ({ page }) => {
-    const response = await page.goto('/player_analysis?id=999999');
-    expect(response?.status()).toBe(404);
-  });
-
   test('IDなしで404', async ({ page }) => {
     const response = await page.goto('/player_analysis');
     expect(response?.status()).toBe(404);

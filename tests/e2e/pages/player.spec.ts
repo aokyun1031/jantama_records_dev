@@ -3,8 +3,8 @@ import { test, expect } from '../helpers/fixtures';
 test.describe('選手詳細ページ', () => {
   test('既存選手のページが表示される', async ({ page }) => {
     await page.goto('/player?id=1');
-    await expect(page.locator('.player-badge')).toContainText('PLAYER');
-    await expect(page.locator('.player-title')).not.toBeEmpty();
+    await expect.soft(page.locator('.player-badge')).toContainText('PLAYER');
+    await expect.soft(page.locator('.player-title')).not.toBeEmpty();
   });
 
   test('キャラクターアイコンが表示される', async ({ page }) => {
@@ -18,8 +18,8 @@ test.describe('選手詳細ページ', () => {
 
   test('編集リンクが表示される', async ({ page }) => {
     await page.goto('/player?id=1');
-    await expect(page.locator('.player-edit-link')).toBeVisible();
-    await expect(page.locator('.player-edit-link')).toHaveAttribute('href', /player_edit\?id=1/);
+    await expect.soft(page.locator('.player-edit-link')).toBeVisible();
+    await expect.soft(page.locator('.player-edit-link')).toHaveAttribute('href', /player_edit\?id=1/);
   });
 
   test('大会戦績が表示される', async ({ page }) => {
@@ -40,8 +40,8 @@ test.describe('選手詳細ページ', () => {
 
   test('存在しないIDで404が返る', async ({ page }) => {
     const response = await page.goto('/player?id=99999');
-    expect(response?.status()).toBe(404);
-    await expect(page.locator('.error-code')).toContainText('404');
+    expect.soft(response?.status()).toBe(404);
+    await expect.soft(page.locator('.error-code')).toContainText('404');
   });
 
   test('IDなしで404が返る', async ({ page }) => {

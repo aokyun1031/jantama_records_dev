@@ -1,5 +1,5 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestPlayer, cleanupTestPlayers } from '../helpers/test-helpers';
+import { TEST_PREFIX, createTestPlayer, cleanupTestPlayers , createOptimizedPage } from '../helpers/test-helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('選手編集・削除', () => {
@@ -8,13 +8,13 @@ test.describe('選手編集・削除', () => {
 
   test.beforeAll(async ({ browser }, testInfo) => {
     testInfo.setTimeout(60000);
-    const page = await browser.newPage();
+    const page = await createOptimizedPage(browser);
     testPlayerId = await createTestPlayer(page, testName, '編集前');
     await page.close();
   });
 
   test.afterAll(async ({ browser }) => {
-    const page = await browser.newPage();
+    const page = await createOptimizedPage(browser);
     // テスト名で検索して全て削除（beforeAll失敗時の孤立データも含む）
     await cleanupTestPlayers(page);
     await page.close();

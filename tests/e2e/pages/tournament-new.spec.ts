@@ -1,11 +1,11 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, deleteTestTournament } from '../helpers/test-helpers';
+import { TEST_PREFIX, deleteTestTournament , createOptimizedPage } from '../helpers/test-helpers';
 
 test.describe('大会新規作成', () => {
   const createdIds: number[] = [];
 
   test.afterAll(async ({ browser }) => {
-    const page = await browser.newPage();
+    const page = await createOptimizedPage(browser);
     // 作成された大会IDを収集
     await page.goto('/tournaments');
     const cards = page.locator('.tournament-card');

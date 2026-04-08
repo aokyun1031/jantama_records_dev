@@ -1,10 +1,10 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestPlayer, cleanupTestPlayers } from '../helpers/test-helpers';
+import { TEST_PREFIX, createTestPlayer, cleanupTestPlayers , createOptimizedPage } from '../helpers/test-helpers';
 
 test.describe('選手新規登録', () => {
 
   test.afterAll(async ({ browser }) => {
-    const page = await browser.newPage();
+    const page = await createOptimizedPage(browser);
     await cleanupTestPlayers(page);
     await page.close();
   });
