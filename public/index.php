@@ -358,7 +358,7 @@ require __DIR__ . '/../templates/header.php';
       <a href="<?= $href ?>" class="lp-tournament-card">
         <div class="lp-tournament-body">
           <div class="lp-tournament-name"><?= h($t['name']) ?></div>
-          <div class="lp-tournament-meta"><?= (int) $t['player_count'] ?>名参加<?= !empty($t['winner_name']) ? ' ・ 優勝: ' . h($t['winner_name']) : '' ?></div>
+          <div class="lp-tournament-meta"><?= (int) $t['player_count'] ?>名参加<?= $t['status'] === TournamentStatus::Completed->value && !empty($t['winner_name']) ? ' ・ 優勝: ' . h($t['winner_name']) : '' ?></div>
         </div>
         <span class="lp-tournament-status <?= $tsEnum?->cssClass() ?? '' ?>"><?= h($tsEnum?->label() ?? '') ?></span>
         <span class="lp-tournament-chevron">&#x203A;</span>
