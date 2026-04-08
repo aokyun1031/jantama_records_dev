@@ -229,13 +229,23 @@ $pageInlineScript = <<<JS
       '<textarea name="answers[]" class="iv-qa-input answer" placeholder="回答を入力...">' + esc(data.answer) + '</textarea>';
 
     div.querySelector('.iv-qa-remove').addEventListener('click', function() {
+      syncFromDom();
       items.splice(idx, 1);
       render();
     });
     return div;
   }
 
+  function syncFromDom() {
+    var qInputs = list.querySelectorAll('input[name="questions[]"]');
+    var aInputs = list.querySelectorAll('textarea[name="answers[]"]');
+    for (var i = 0; i < qInputs.length; i++) {
+      items[i] = { question: qInputs[i].value, answer: aInputs[i].value };
+    }
+  }
+
   btnAdd.addEventListener('click', function() {
+    syncFromDom();
     items.push({ question: '', answer: '' });
     render();
     // 最後の質問入力にフォーカス
@@ -245,12 +255,7 @@ $pageInlineScript = <<<JS
 
   // フォーム送信前に現在の値をitemsに反映
   document.getElementById('interview-form').addEventListener('submit', function() {
-    var qInputs = list.querySelectorAll('input[name="questions[]"]');
-    var aInputs = list.querySelectorAll('textarea[name="answers[]"]');
-    items = [];
-    for (var i = 0; i < qInputs.length; i++) {
-      items.push({ question: qInputs[i].value, answer: aInputs[i].value });
-    }
+    syncFromDom();
   });
 
   // 初回描画。空なら1つ追加
