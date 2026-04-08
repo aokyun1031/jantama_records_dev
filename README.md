@@ -236,7 +236,18 @@ npx wrangler deploy   # デプロイ
 
 - 静的アセット → Cloudflareエッジにキャッシュ（`CF-Cache-Status: HIT`）
 - PHPページ → キャッシュせずRenderに転送（`Cache-Control: no-store`）
+- Cron Triggers → 5分ごとにオリジンをピング（Renderスリープ防止）+ トップページHTMLをKVにキャッシュ
+- Workers KV → オリジンダウン時にトップページのフォールバック表示
 - 無料枠: 10万リクエスト/日
+
+## Cloudflare Turnstile（bot対策）
+
+全フォームページにTurnstileウィジェットを埋め込み済み。bot によるフォーム送信を防止する。
+
+- サーバーサイド検証: `validatePost()`（`config/security.php`）でCSRF + Turnstile を一括検証
+- 環境変数: `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY`（`.env` およびRender管理画面で設定）
+- CSP に `https://challenges.cloudflare.com`（スクリプト + iframe）を許可済み
+- ダッシュボード: https://dash.cloudflare.com → Turnstile
 
 ## Cloudflare Web Analytics（アクセス解析）
 

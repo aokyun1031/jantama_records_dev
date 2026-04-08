@@ -17,9 +17,9 @@ $player = requirePlayer($playerId);
 $success = isset($_GET['saved']) && $_GET['saved'] === '1';
 $validationError = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken()) {
-        http_response_code(403);
-        $validationError = '不正なリクエストです。ページを再読み込みしてください。';
+    $validationError = validatePost();
+    if ($validationError) {
+        // バリデーションエラー
     } elseif (isset($_POST['action']) && $_POST['action'] === 'delete') {
         if ($hasTournaments) {
             $validationError = '大会に参加しているため削除できません。';
@@ -72,6 +72,7 @@ $pageStyle = <<<'CSS'
 .edit-name-readonly { font-size: 0.8rem; color: var(--text-sub); margin-top: 6px; }
 CSS;
 
+$pageTurnstile = true;
 require __DIR__ . '/../templates/header.php';
 ?>
 
@@ -118,6 +119,7 @@ require __DIR__ . '/../templates/header.php';
 
     <div class="edit-actions">
       <a href="player?id=<?= $playerId ?>" class="btn-cancel">&#x2190; 個人ページに戻る</a>
+      <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
       <button type="submit" class="btn-save">保存</button>
     </div>
 
@@ -132,6 +134,7 @@ require __DIR__ . '/../templates/header.php';
       <form method="post" action="player_edit?id=<?= $playerId ?>" data-confirm="<?= h($player['name']) ?> を削除しますか？この操作は取り消せません。">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="delete">
+        <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
         <button type="submit" class="btn-delete">削除する</button>
       </form>
     <?php endif; ?>

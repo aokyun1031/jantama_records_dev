@@ -17,13 +17,61 @@ export default {
         return await handleStatic(request, originUrl, ctx);
       }
 
+      // トップページ → オリジンダウン時にKVフォールバック
+      if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/index")) {
+        return await handleTopPage(request, url, originUrl, env);
+      }
+
       // 動的ページ → そのままプロキシ
       return await proxyToOrigin(request, url, originUrl);
     } catch (err) {
+      // トップページならKVフォールバックを試行
+      if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/index")) {
+        const cached = await env.TOP_PAGE_CACHE.get("index");
+        if (cached) {
+          return new Response(cached, {
+            headers: { "Content-Type": "text/html;charset=UTF-8", "X-Cache-Fallback": "true" },
+          });
+        }
+      }
       return new Response("Service Temporarily Unavailable", { status: 502 });
     }
   },
+
+  // 5分ごとにオリジンをピング＋トップページをKVにキャッシュ
+  async scheduled(event, env, ctx) {
+    try {
+      const res = await fetch(env.ORIGIN + "/", {
+        headers: { Accept: "text/html" },
+      });
+      if (res.ok) {
+        const html = await res.text();
+        await env.TOP_PAGE_CACHE.put("index", html, { expirationTtl: 3600 });
+      }
+    } catch (e) {
+      // オリジン到達不可 — キャッシュは上書きしない
+    }
+  },
 };
+
+async function handleTopPage(request, workerUrl, originUrl, env) {
+  const response = await proxyToOrigin(request, workerUrl, originUrl);
+
+  // オリジンが正常ならそのまま返す
+  if (response.status < 500) {
+    return response;
+  }
+
+  // オリジンエラー → KVフォールバック
+  const cached = await env.TOP_PAGE_CACHE.get("index");
+  if (cached) {
+    return new Response(cached, {
+      headers: { "Content-Type": "text/html;charset=UTF-8", "X-Cache-Fallback": "true" },
+    });
+  }
+
+  return response;
+}
 
 async function handleStatic(request, originUrl, ctx) {
   const cache = caches.default;

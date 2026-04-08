@@ -16,9 +16,9 @@ $meta = $tournament['meta'];
 
 // --- POST処理（削除） ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken()) {
-        http_response_code(403);
-        $flash = '不正なリクエストです。ページを再読み込みしてください。';
+    $flash = validatePost();
+    if ($flash) {
+        // バリデーションエラー
     } else {
         $action = sanitizeInput('action');
         if ($action === 'delete') {
@@ -288,6 +288,7 @@ $pageStyle = <<<'CSS'
 
 CSS;
 
+$pageTurnstile = true;
 require __DIR__ . '/../templates/header.php';
 
 // 日付表示ヘルパー: "2026/4/11（土）21:00"
@@ -583,6 +584,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
       <form method="post" action="tournament?id=<?= $tournamentId ?>" data-confirm="本当にこの大会を削除しますか？&#10;関連する全データも削除されます。">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="delete">
+        <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
         <button type="submit" class="td-btn-delete">大会を削除</button>
       </form>
     </div>

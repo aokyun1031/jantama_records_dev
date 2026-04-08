@@ -39,6 +39,23 @@ function validateCsrfToken(): bool
 }
 
 /**
+ * POSTリクエストのCSRF + Turnstile を一括検証する。
+ * 検証OKなら null、NGならエラーメッセージを返す（403も設定済み）。
+ */
+function validatePost(): ?string
+{
+    if (!validateCsrfToken()) {
+        http_response_code(403);
+        return '不正なリクエストです。ページを再読み込みしてください。';
+    }
+    if (!validateTurnstile()) {
+        http_response_code(403);
+        return 'ボット検証に失敗しました。ページを再読み込みしてもう一度お試しください。';
+    }
+    return null;
+}
+
+/**
  * CSRFトークンを再生成する。POST成功後に呼び出す。
  * セッションIDも再生成してセッション固定攻撃を防止する。
  */
@@ -58,6 +75,47 @@ function cspNonce(): string
         $nonce = bin2hex(random_bytes(16));
     }
     return $nonce;
+}
+
+/**
+ * Turnstile レスポンストークンを検証する。
+ */
+function validateTurnstile(): bool
+{
+    $token = $_POST['cf-turnstile-response'] ?? '';
+    $secret = $_ENV['TURNSTILE_SECRET_KEY'] ?? getenv('TURNSTILE_SECRET_KEY');
+
+    if ($token === '' || !$secret) {
+        return false;
+    }
+
+    $response = file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => 'Content-Type: application/x-www-form-urlencoded',
+            'content' => http_build_query([
+                'secret' => $secret,
+                'response' => $token,
+                'remoteip' => $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '',
+            ]),
+            'timeout' => 5,
+        ],
+    ]));
+
+    if ($response === false) {
+        return false;
+    }
+
+    $result = json_decode($response, true);
+    return ($result['success'] ?? false) === true;
+}
+
+/**
+ * Turnstile のサイトキーを返す。
+ */
+function turnstileSiteKey(): string
+{
+    return $_ENV['TURNSTILE_SITE_KEY'] ?? getenv('TURNSTILE_SITE_KEY') ?: '';
 }
 
 /**

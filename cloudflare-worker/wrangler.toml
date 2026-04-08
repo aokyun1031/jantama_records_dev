@@ -4,3 +4,12 @@ compatibility_date = "2026-04-08"
 
 [vars]
 ORIGIN = "https://jantama-records.onrender.com"
+
+# 5分ごとにオリジンをピング + トップページをKVにキャッシュ
+[triggers]
+crons = ["*/5 * * * *"]
+
+# トップページのHTMLをエッジにキャッシュ（オリジンダウン時のフォールバック用）
+[[kv_namespaces]]
+binding = "TOP_PAGE_CACHE"
+id = "91dc4533708d4b51bd54913fe971a04b"

@@ -39,9 +39,9 @@ $success = isset($_GET['saved']) && $_GET['saved'] === '1';
 $validationError = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
-    if (!validateCsrfToken()) {
-        http_response_code(403);
-        $validationError = '不正なリクエストです。ページを再読み込みしてください。';
+    $validationError = validatePost();
+    if ($validationError) {
+        // バリデーションエラー
     } else {
         $action = sanitizeInput('action');
 
@@ -246,6 +246,7 @@ $pageStyle = <<<'CSS'
 .tb-actions { text-align: center; margin-top: 24px; }
 CSS;
 
+$pageTurnstile = true;
 require __DIR__ . '/../templates/header.php';
 ?>
 
@@ -298,6 +299,7 @@ require __DIR__ . '/../templates/header.php';
             <label class="tb-label" for="input-time">時間</label>
             <input type="time" id="input-time" name="played_time" class="tb-input" value="<?= h($table['played_time'] ?? '') ?>">
           </div>
+          <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
           <button type="submit" class="tb-btn-small">対局日のみ保存</button>
         </div>
       </form>
@@ -383,6 +385,7 @@ require __DIR__ . '/../templates/header.php';
       <?php endfor; ?>
       <div class="tb-done-section">
         <input type="hidden" name="complete" value="1">
+        <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
         <button type="submit" class="tb-btn-done" data-confirm="対局結果を保存して卓を完了にしますか？">対局結果を保存して卓を完了にする</button>
       </div>
     </form>
@@ -408,6 +411,7 @@ require __DIR__ . '/../templates/header.php';
               <input type="hidden" name="score_<?= $g ?>_<?= (int) $p['player_id'] ?>" class="bulk-score" data-game="<?= $g ?>" data-pid="<?= (int) $p['player_id'] ?>">
             <?php endforeach; ?>
           <?php endfor; ?>
+          <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
           <button type="submit" class="tb-btn-done" id="btn-bulk-save">まとめて保存 &amp; 完了</button>
         </form>
       </div>

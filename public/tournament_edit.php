@@ -28,9 +28,9 @@ $postHanRestriction = $meta['han_restriction'] ?? '1';
 $postBust = $meta['bust'] ?? '0';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken()) {
-        http_response_code(403);
-        $validationError = '不正なリクエストです。ページを再読み込みしてください。';
+    $validationError = validatePost();
+    if ($validationError) {
+        // バリデーションエラー
     } else {
         $postEventType = sanitizeInput('event_type');
         $postName = sanitizeInput('name');
@@ -109,6 +109,7 @@ $pageTitle = h($tournament['name']) . ' 編集 - ' . SITE_NAME;
 $pageCss = ['css/forms.css'];
 $pageStyle = '';
 
+$pageTurnstile = true;
 require __DIR__ . '/../templates/header.php';
 ?>
 
@@ -132,6 +133,7 @@ require __DIR__ . '/../templates/header.php';
 
     <div class="edit-actions">
       <a href="tournament?id=<?= $tournamentId ?>" class="btn-cancel">&#x2190; 大会ページに戻る</a>
+      <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
       <button type="submit" class="btn-save">保存</button>
     </div>
   </form>

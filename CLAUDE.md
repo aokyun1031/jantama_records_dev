@@ -79,7 +79,10 @@ npx wrangler deploy                      # デプロイ
 - GETパラメータは `requirePlayerId()` / `requireTournamentId()` / `filter_input()` で検証する
 - POST入力は `sanitizeInput($key)` で取得する（制御文字除去 + trim）
 - 配列形式のPOST入力は `preg_replace('/[\x00-\x1F\x7F]/u', '', trim(...))` で同等処理する
-- フォームページは `startSecureSession()` + `ensureCsrfToken()` + `validateCsrfToken()` を使う
+- フォームページは `startSecureSession()` + `ensureCsrfToken()` を使う
+- POST検証は `validatePost()` を使う（CSRF + Turnstile を一括検証）
+- フォームHTMLに `<div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>` を送信ボタンの前に追加する
+- フォームページは `$pageTurnstile = true;` をヘッダーincludeの前に設定する
 - POST成功後は `$_SESSION['flash']` にメッセージを設定 → `regenerateCsrfToken()` → PRGリダイレクト
 - フラッシュメッセージの読み取りは `consumeFlash()` を使う
 - `json_encode` には `JSON_UNESCAPED_UNICODE | JSON_HEX_TAG` を付ける

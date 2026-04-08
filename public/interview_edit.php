@@ -20,9 +20,9 @@ $validationError = '';
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validateCsrfToken()) {
-        http_response_code(403);
-        $validationError = '不正なリクエストです。ページを再読み込みしてください。';
+    $validationError = validatePost();
+    if ($validationError) {
+        // バリデーションエラー
     } else {
         $action = sanitizeInput('action');
 
@@ -142,6 +142,7 @@ $pageStyle = <<<'CSS'
 
 CSS;
 
+$pageTurnstile = true;
 require __DIR__ . '/../templates/header.php';
 ?>
 
@@ -183,6 +184,7 @@ require __DIR__ . '/../templates/header.php';
 
     <div class="iv-actions">
       <a href="tournament?id=<?= $tournamentId ?>" class="btn-cancel">&#x2190; 大会ページに戻る</a>
+      <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
       <button type="submit" class="iv-btn-save">インタビューを保存</button>
     </div>
   </form>
@@ -195,6 +197,7 @@ require __DIR__ . '/../templates/header.php';
       <form method="post" action="interview_edit?id=<?= $tournamentId ?>" data-confirm="大会を完了しますか？&#10;この操作は取り消せません。">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="complete">
+        <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
         <button type="submit" class="iv-btn-complete">大会を完了する</button>
       </form>
     </div>
