@@ -202,8 +202,11 @@ function fmt(s){return (s>=0?'+':'')+s.toFixed(1)}
 function barW(s){return Math.min(Math.abs(s)/MAX_BAR*100,100)}
 
 function icon(ic,sz){
-  if(!ic) return '';
   sz=sz||24;
+  if(!ic){
+    var fs=Math.max(0.4,(sz*0.016).toFixed(2));
+    return '<span class="chara-icon-none" style="width:'+sz+'px;height:'+sz+'px;font-size:'+fs+'rem">NO<br>IMG</span>';
+  }
   return '<img src="img/chara_deformed/'+esc(ic)+'" width="'+sz+'" height="'+sz+'" alt="" style="border-radius:50%;vertical-align:middle" loading="lazy">';
 }
 
