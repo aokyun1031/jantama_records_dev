@@ -13,7 +13,8 @@
 - Render（ホスティング）
 - GitHub Codespaces（開発環境）
 - UptimeRobot（死活監視）
-- Cloudflare Workers（CDNリバースプロキシ）
+- Cloudflare Workers（CDNリバースプロキシ + Cron Triggersでスリープ防止 + Workers KVでフォールバック）
+- Cloudflare Turnstile（bot対策）
 - Cloudflare Web Analytics（アクセス解析）
 
 ## 環境構成
@@ -111,7 +112,7 @@ php -S 0.0.0.0:8080 -t public
 ```bash
 # 初期設定
 cp .env.example .env
-# .env にNeon devブランチの接続文字列を設定
+# .env にNeon devブランチの接続文字列とTurnstileキーを設定
 cp phinx.php.example phinx.php
 
 # 起動
