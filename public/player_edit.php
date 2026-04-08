@@ -117,7 +117,7 @@ require __DIR__ . '/../templates/header.php';
       </div>
     </div>
 
-    <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
+
     <div class="edit-actions">
       <a href="player?id=<?= $playerId ?>" class="btn-cancel">&#x2190; 個人ページに戻る</a>
       <button type="submit" class="btn-save">保存</button>
@@ -134,7 +134,7 @@ require __DIR__ . '/../templates/header.php';
       <form method="post" action="player_edit?id=<?= $playerId ?>" data-confirm="<?= h($player['name']) ?> を削除しますか？この操作は取り消せません。">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="delete">
-        <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
+    
         <button type="submit" class="btn-delete">削除する</button>
       </form>
     <?php endif; ?>

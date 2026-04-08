@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
             $bulkUrls = [];
             $hasError = false;
             for ($g = 1; $g <= $gameCount; $g++) {
-                $rawUrl = sanitizeInput('bulk_paifu_' . $g);
+                $rawUrl = sanitizeInput('paifu_url_' . $g);
                 $bulkUrls[$g] = $rawUrl !== '' ? extractUrl($rawUrl) : '';
                 $scores = [];
                 foreach ($table['players'] as $p) {
@@ -276,6 +276,11 @@ require __DIR__ . '/../templates/header.php';
     </div>
   </div>
 
+  <?php if (!$isDone): ?>
+  <form method="post" action="table?id=<?= $tableId ?>" id="table-form">
+    <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
+  <?php endif; ?>
+
   <!-- 対局日 -->
   <div class="tb-section">
     <div class="tb-section-title" style="display:flex;align-items:center;gap:12px;">
@@ -287,22 +292,17 @@ require __DIR__ . '/../templates/header.php';
     <?php if ($isDone): ?>
       <div><?= $table['played_date'] ? h($table['played_date']) . ($table['day_of_week'] ? '（' . h($table['day_of_week']) . '）' : '') . ($table['played_time'] ? ' ' . h($table['played_time']) : '') : '未設定' ?></div>
     <?php else: ?>
-      <form method="post" action="table?id=<?= $tableId ?>">
-        <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
-        <input type="hidden" name="action" value="schedule">
-        <div class="tb-form-row">
-          <div>
-            <label class="tb-label" for="input-date">日付</label>
-            <input type="date" id="input-date" name="played_date" class="tb-input" value="<?= h($table['played_date'] ?? '') ?>">
-          </div>
-          <div>
-            <label class="tb-label" for="input-time">時間</label>
-            <input type="time" id="input-time" name="played_time" class="tb-input" value="<?= h($table['played_time'] ?? '') ?>">
-          </div>
-          <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
-          <button type="submit" class="tb-btn-small">対局日のみ保存</button>
+      <div class="tb-form-row">
+        <div>
+          <label class="tb-label" for="input-date">日付</label>
+          <input type="date" id="input-date" name="played_date" class="tb-input" value="<?= h($table['played_date'] ?? '') ?>">
         </div>
-      </form>
+        <div>
+          <label class="tb-label" for="input-time">時間</label>
+          <input type="time" id="input-time" name="played_time" class="tb-input" value="<?= h($table['played_time'] ?? '') ?>">
+        </div>
+        <button type="submit" name="action" value="schedule" class="tb-btn-small">対局日のみ保存</button>
+      </div>
     <?php endif; ?>
   </div>
 
@@ -356,9 +356,6 @@ require __DIR__ . '/../templates/header.php';
       </div>
     <?php endif; ?>
   <?php else: ?>
-    <form method="post" action="table?id=<?= $tableId ?>">
-      <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
-      <input type="hidden" name="action" value="game_data">
       <?php for ($g = 1; $g <= $gameCount; $g++): ?>
         <div class="tb-section">
           <div class="tb-section-title" style="display:flex;align-items:center;gap:12px;">
@@ -385,10 +382,8 @@ require __DIR__ . '/../templates/header.php';
       <?php endfor; ?>
       <div class="tb-done-section">
         <input type="hidden" name="complete" value="1">
-        <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
-        <button type="submit" class="tb-btn-done" data-confirm="対局結果を保存して卓を完了にしますか？">対局結果を保存して卓を完了にする</button>
+        <button type="submit" name="action" value="game_data" class="tb-btn-done" data-confirm="対局結果を保存して卓を完了にしますか？">対局結果を保存して卓を完了にする</button>
       </div>
-    </form>
 
     <?php if ($isDev): ?>
       <!-- 一括保存（開発環境のみ） -->
@@ -398,24 +393,11 @@ require __DIR__ . '/../templates/header.php';
           <button type="button" class="tb-btn-random" id="btn-random-all">&#x1F3B2; 全てランダム入力</button>
         </div>
         <div class="tn-hint" style="margin-bottom: 12px;">日時・牌譜URL・スコアをまとめて保存し、卓を完了にします。</div>
-        <form method="post" action="table?id=<?= $tableId ?>" id="bulk-form">
-          <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
-          <input type="hidden" name="action" value="bulk">
-          <input type="hidden" name="played_date" id="bulk-date">
-          <input type="hidden" name="played_time" id="bulk-time">
-          <?php for ($g = 1; $g <= $gameCount; $g++): ?>
-            <input type="hidden" name="bulk_paifu_<?= $g ?>" class="bulk-paifu" data-game="<?= $g ?>">
-          <?php endfor; ?>
-          <?php for ($g = 1; $g <= $gameCount; $g++): ?>
-            <?php foreach ($table['players'] as $p): ?>
-              <input type="hidden" name="score_<?= $g ?>_<?= (int) $p['player_id'] ?>" class="bulk-score" data-game="<?= $g ?>" data-pid="<?= (int) $p['player_id'] ?>">
-            <?php endforeach; ?>
-          <?php endfor; ?>
-          <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
-          <button type="submit" class="tb-btn-done" id="btn-bulk-save">まとめて保存 &amp; 完了</button>
-        </form>
+        <button type="submit" name="action" value="bulk" class="tb-btn-done" data-confirm="全項目を保存して卓を完了にしますか？">まとめて保存 &amp; 完了</button>
       </div>
     <?php endif; ?>
+
+  </form>
   <?php endif; ?>
 
   <div class="tb-actions">
@@ -510,31 +492,6 @@ $pageInlineScript = $isDev ? <<<JS
       }
     });
   });
-
-  // 一括フォームの値を各入力欄から同期
-  var bulkForm = document.getElementById('bulk-form');
-  if (bulkForm) {
-    bulkForm.addEventListener('submit', function(e) {
-      var d = document.getElementById('input-date');
-      var t = document.getElementById('input-time');
-      if (d) document.getElementById('bulk-date').value = d.value;
-      if (t) document.getElementById('bulk-time').value = t.value;
-      document.querySelectorAll('.bulk-paifu').forEach(function(h) {
-        var g = h.getAttribute('data-game');
-        var src = document.querySelector('input[name="paifu_url_' + g + '"]:not(.bulk-paifu)');
-        if (src) h.value = src.value;
-      });
-      document.querySelectorAll('.bulk-score').forEach(function(h) {
-        var g = h.getAttribute('data-game');
-        var pid = h.getAttribute('data-pid');
-        var src = document.querySelector('input[name="score_' + g + '_' + pid + '"]:not(.bulk-score)');
-        if (src) h.value = src.value;
-      });
-      if (!confirm('全項目を保存して卓を完了にしますか？')) {
-        e.preventDefault();
-      }
-    });
-  }
 
   // 全てランダム入力
   var btnAll = document.getElementById('btn-random-all');

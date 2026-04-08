@@ -1,6 +1,8 @@
 
 <div class="footer">
-  <!-- <div class="footer-site">&copy; 2026 <?= SITE_NAME ?></div> -->
+  <?php if (!empty($pageTurnstile)): ?>
+  <div class="turnstile-footer" id="turnstile-container"></div>
+  <?php endif; ?>
   <div class="footer-copyright">当サイトは非公式のファンサイトです。使用しているゲーム画像の著作権は、Soul Games, Inc. および株式会社Yostarに帰属します。<br>&copy;2019 Soul Games, Inc. &copy;2019 Yostar, Inc. All Rights Reserved.</div>
 </div>
 
@@ -33,7 +35,31 @@
 <script src="<?= asset('js/confirm-dialog.js') ?>" nonce="<?= cspNonce() ?>"></script>
 <script src="<?= asset('js/theme-toggle.js') ?>" nonce="<?= cspNonce() ?>" defer></script>
 <?php if (!empty($pageTurnstile)): ?>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script nonce="<?= cspNonce() ?>">
+(function(){
+  document.documentElement.classList.add('ts-pending');
+  var token='';
+  function syncToken(){
+    document.querySelectorAll('form').forEach(function(f){
+      var inp=f.querySelector('input[name="cf-turnstile-response"]');
+      if(!inp){inp=document.createElement('input');inp.type='hidden';inp.name='cf-turnstile-response';f.appendChild(inp);}
+      inp.value=token;
+    });
+  }
+  document.addEventListener('submit',function(e){
+    if(document.documentElement.classList.contains('ts-pending'))e.preventDefault();
+  },true);
+  window.onTurnstileLoad=function(){
+    turnstile.render('#turnstile-container',{
+      sitekey:<?= json_encode(turnstileSiteKey(), JSON_HEX_TAG) ?>,
+      callback:function(t){token=t;syncToken();document.documentElement.classList.remove('ts-pending');},
+      'expired-callback':function(){token='';syncToken();document.documentElement.classList.add('ts-pending');},
+      'error-callback':function(){return true;}
+    });
+  };
+})();
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
 <?php endif; ?>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "1fcd94888ded45fcb070b401177e91fc"}'></script>
 </body>

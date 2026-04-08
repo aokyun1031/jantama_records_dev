@@ -37,7 +37,8 @@
 .edit-select:focus{outline:none;border-color:var(--input-border-focus);box-shadow:var(--input-focus-ring)}
 
 /* Turnstile */
-.cf-turnstile{display:flex;justify-content:center;margin-top:24px}
+.turnstile-footer{display:flex;justify-content:center;margin-bottom:12px}
+.ts-pending button[type="submit"],.ts-pending input[type="submit"]{opacity:0.5;cursor:not-allowed}
 
 /* Actions */
 .edit-actions{display:flex;gap:12px;justify-content:center;margin-top:24px}

@@ -584,7 +584,6 @@ $statusClass = $tsEnum?->cssClass() ?? '';
       <form method="post" action="tournament?id=<?= $tournamentId ?>" data-confirm="本当にこの大会を削除しますか？&#10;関連する全データも削除されます。">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="delete">
-        <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
         <button type="submit" class="td-btn-delete">大会を削除</button>
       </form>
     </div>

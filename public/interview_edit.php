@@ -182,7 +182,7 @@ require __DIR__ . '/../templates/header.php';
       <button type="button" class="iv-btn-add" id="btn-add-qa">+ 質問を追加</button>
     </div>
 
-    <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
+
     <div class="iv-actions">
       <a href="tournament?id=<?= $tournamentId ?>" class="btn-cancel">&#x2190; 大会ページに戻る</a>
       <button type="submit" class="iv-btn-save">インタビューを保存</button>
@@ -197,7 +197,7 @@ require __DIR__ . '/../templates/header.php';
       <form method="post" action="interview_edit?id=<?= $tournamentId ?>" data-confirm="大会を完了しますか？&#10;この操作は取り消せません。">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="complete">
-        <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
+    
         <button type="submit" class="iv-btn-complete">大会を完了する</button>
       </form>
     </div>
