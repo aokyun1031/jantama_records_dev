@@ -32,5 +32,6 @@
 </script>
 <script src="<?= asset('js/confirm-dialog.js') ?>" nonce="<?= cspNonce() ?>"></script>
 <script src="<?= asset('js/theme-toggle.js') ?>" nonce="<?= cspNonce() ?>" defer></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "1fcd94888ded45fcb070b401177e91fc"}'></script>
 </body>
 </html>

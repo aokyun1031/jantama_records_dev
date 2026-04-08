@@ -14,6 +14,7 @@
 - GitHub Codespaces（開発環境）
 - UptimeRobot（死活監視）
 - Cloudflare Workers（CDNリバースプロキシ）
+- Cloudflare Web Analytics（アクセス解析）
 
 ## 環境構成
 
@@ -236,3 +237,12 @@ npx wrangler deploy   # デプロイ
 - 静的アセット → Cloudflareエッジにキャッシュ（`CF-Cache-Status: HIT`）
 - PHPページ → キャッシュせずRenderに転送（`Cache-Control: no-store`）
 - 無料枠: 10万リクエスト/日
+
+## Cloudflare Web Analytics（アクセス解析）
+
+全ページのフッターにビーコンスクリプトを埋め込み済み（`templates/footer.php`）。Workers URL・Render URL どちらのアクセスも収集される。
+
+- ダッシュボード: https://dash.cloudflare.com → Web Analytics
+- PV数、ユニークビジター、ページ別アクセス、リファラー、国・デバイス等を確認可能
+- Cookie不使用（プライバシーバナー不要）
+- CSP に `https://static.cloudflareinsights.com`（スクリプト）と `https://cloudflareinsights.com`（データ送信）を許可済み
