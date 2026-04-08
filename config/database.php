@@ -301,7 +301,8 @@ function charaIcon(?string $icon, int $size = 28, string $class = ''): string
             . ' class="chara-icon' . ($class !== '' ? ' ' . h($class) : '') . '"'
             . ' loading="lazy">';
     }
+    $fs = max(0.4, round($size * 0.016, 2));
     return '<span class="chara-icon-none' . ($class !== '' ? ' ' . h($class) : '') . '"'
-        . ' style="width:' . $size . 'px;height:' . $size . 'px;font-size:' . round($size * 0.16, 1) . 'rem"'
+        . ' style="width:' . $size . 'px;height:' . $size . 'px;font-size:' . $fs . 'rem"'
         . '>NO<br>IMG</span>';
 }
