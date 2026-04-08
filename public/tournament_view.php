@@ -52,21 +52,19 @@ foreach ($roundNumbers as $rn) {
     $roundPlayerCounts[$rn] = count($playerSet);
 }
 
-// JS用データ構築
-$roundScores = [];
-$jsRoundTables = [];
-$jsRoundAbove = [];
-$jsRoundBelow = [];
-
 // standings の eliminated_round をベースに勝ち抜け/敗退を判定
 $eliminatedMap = [];
 foreach ($allStandings ?? [] as $s) {
     $eliminatedMap[$s['name']] = (int) $s['eliminated_round'];
 }
 
+// ラウンドごとの勝ち抜け/敗退リストと、ラウンド別スコアを構築
+$roundScores = [];
+$roundAbove = [];
+$roundBelow = [];
+
 foreach ($roundNumbers as $r) {
     ['data' => $results] = fetchData(fn() => RoundResult::byRound($tournamentId, $r));
-    ['data' => $tables] = fetchData(fn() => TableInfo::byRound($tournamentId, $r));
 
     foreach ($results ?? [] as $res) {
         $roundScores[$res['name']][] = (float) $res['score'];
@@ -85,40 +83,25 @@ foreach ($roundNumbers as $r) {
             $above[] = $entry;
         }
     }
-    $jsRoundAbove[$r] = $above;
-    $jsRoundBelow[$r] = $below;
-
-    $jsTables = [];
-    foreach ($tables ?? [] as $t) {
-        $jsTable = [
-            'name' => $t['table_name'],
-            'sched' => $t['day_of_week'] ?? '',
-            'players' => array_map(fn($p) => ['name' => $p['name'], 'icon' => $p['icon'] ?? ''], $t['players']),
-            'done' => (bool) $t['done'],
-        ];
-        $jsTables[] = $jsTable;
-    }
-    $jsRoundTables[$r] = $jsTables;
-}
-
-$jsStandings = [];
-foreach ($allStandings ?? [] as $s) {
-    $displayName = $s['nickname'] ?? $s['name'];
-    $jsStandings[] = [
-        'rank' => (int) $s['rank'],
-        'name' => $displayName,
-        'icon' => $s['character_icon'] ?? '',
-        'total' => (float) $s['total'],
-        'r' => $roundScores[$s['name']] ?? [],
-        'pending' => (bool) $s['pending'],
-        'elim' => (int) $s['eliminated_round'],
-    ];
+    $roundAbove[$r] = $above;
+    $roundBelow[$r] = $below;
 }
 
 // ルールタグ
 $ruleTags = buildRuleTags($meta);
 $eventType = EventType::tryFrom($meta['event_type'] ?? '');
 $eventLabel = $eventType ? $eventType->label() : '';
+
+// スコアフォーマットヘルパー
+function fmtScore(float $score): string
+{
+    return ($score >= 0 ? '+' : '') . number_format($score, 1);
+}
+
+function scoreCls(float $score): string
+{
+    return $score >= 0 ? 'plus' : 'minus';
+}
 
 // --- テンプレート変数 ---
 $pageTitle = h($tournamentName) . ' - 最強位戦';
@@ -147,12 +130,12 @@ $pageStyle = <<<'CSS'
 
 /* 全体順位のアイコン整列 */
 .standing-name { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
-.standing-name img { flex-shrink: 0; }
+.standing-name img, .standing-name .chara-icon-none { flex-shrink: 0; }
 
 /* 対戦結果のアイコン整列 */
 .result-name { display: flex; align-items: center; gap: 2px; }
-.result-name img { flex-shrink: 0; }
-.table-detail-player img { flex-shrink: 0; }
+.result-name img, .result-name .chara-icon-none { flex-shrink: 0; }
+.table-detail-player img, .table-detail-player .chara-icon-none { flex-shrink: 0; }
 
 /* 勝ち抜けバッジ */
 .result-advance-badge { display: inline-block; font-size: 0.6rem; font-weight: 700; color: var(--success); background: rgba(var(--mint-rgb), 0.12); padding: 1px 8px; border-radius: 8px; margin-left: 8px; vertical-align: middle; }
@@ -172,136 +155,7 @@ $pageStyle = <<<'CSS'
 .table-detail-block { margin-bottom: 14px; }
 CSS;
 
-// --- 全レンダリングをインラインスクリプトに統合（render.js 不使用） ---
-$jsStandingsJson = json_encode($jsStandings, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
-$jsAllRoundData = [];
-foreach ($roundNumbers as $r) {
-    $jsAllRoundData[$r] = [
-        'tables' => json_encode($jsRoundTables[$r] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG),
-        'above' => json_encode($jsRoundAbove[$r] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG),
-        'below' => json_encode($jsRoundBelow[$r] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG),
-    ];
-}
-
-ob_start();
-?>
-(function(){
-// --- Data ---
-var MAX_BAR=130;
-var MEDALS=['\u{1F947}','\u{1F948}','\u{1F949}'];
-var standings=<?= $jsStandingsJson ?>;
-var rounds={};
-<?php foreach ($roundNumbers as $r): ?>
-rounds[<?= $r ?>]={tables:<?= $jsAllRoundData[$r]['tables'] ?>,above:<?= $jsAllRoundData[$r]['above'] ?>,below:<?= $jsAllRoundData[$r]['below'] ?>};
-<?php endforeach; ?>
-
-// --- Helpers (from render.js) ---
-function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
-function cls(s){return s>=0?'plus':'minus'}
-function fmt(s){return (s>=0?'+':'')+s.toFixed(1)}
-function barW(s){return Math.min(Math.abs(s)/MAX_BAR*100,100)}
-
-function icon(ic,sz){
-  sz=sz||24;
-  if(!ic){
-    var fs=Math.max(0.4,(sz*0.016).toFixed(2));
-    return '<span class="chara-icon-none" style="width:'+sz+'px;height:'+sz+'px;font-size:'+fs+'rem">NO<br>IMG</span>';
-  }
-  return '<img src="img/chara_deformed/'+esc(ic)+'" width="'+sz+'" height="'+sz+'" alt="" style="border-radius:50%;vertical-align:middle" loading="lazy">';
-}
-
-function buildScoreMap(above,below){
-  var map={};
-  for(var i=0;i<above.length;i++) map[above[i].name]={score:above[i].score,icon:above[i].icon};
-  for(var i=0;i<below.length;i++) map[below[i].name]={score:below[i].score,icon:below[i].icon};
-  return map;
-}
-
-function renderTables(tables,opts){
-  var html='<div class="table-grid">';
-  for(var i=0;i<tables.length;i++){
-    var t=tables[i];
-    var cardCls='table-card';
-    var schedHtml='';
-    if(opts&&opts.showDone){
-      cardCls+=t.done?' table-done':' table-pending';
-      schedHtml=t.done?'\u2713 完了':'未対戦';
-    } else if(t.sched){
-      schedHtml=t.sched;
-    }
-    html+='<div class="'+cardCls+'"><div class="table-card-head">'
-      +'<span class="table-card-name">'+esc(t.name)+'</span>'
-      +(schedHtml?'<span class="table-card-sched">'+schedHtml+'</span>':'')
-      +'</div><ul class="table-card-players">';
-    for(var j=0;j<t.players.length;j++){
-      var p=t.players[j];
-      html+='<li>'+icon(p.icon,22)+esc(p.name)+'</li>';
-    }
-    html+='</ul></div>';
-  }
-  return html+'</div>';
-}
-
-function renderResults(results,startRank){
-  var html='';
-  for(var i=0;i<results.length;i++){
-    var r=results[i];
-    html+='<div class="result-row result-advance">'
-      +'<div class="result-rank">'+(startRank+i)+'</div>'
-      +'<div class="result-name">'+icon(r.icon)+esc(r.name)+'<span class="result-advance-badge">\u2714 勝ち抜け</span></div>'
-      +'<div class="result-score '+cls(r.score)+'">'+fmt(r.score)+'</div>'
-    +'</div>';
-  }
-  return html;
-}
-
-function renderElim(results,startRank){
-  var html='<div class="elim-section"><div class="elim-title">\u25BC 敗退</div>';
-  for(var i=0;i<results.length;i++){
-    var r=results[i];
-    html+='<div class="result-row elim-row">'
-      +'<div class="result-rank">'+(startRank+i)+'</div>'
-      +'<div class="result-name">'+icon(r.icon)+esc(r.name)+'</div>'
-      +'<div class="result-score '+cls(r.score)+'">'+fmt(r.score)+'</div>'
-    +'</div>';
-  }
-  return html+'</div>';
-}
-
-function renderTableDetails(tables,scoreMap,opts){
-  var html='<div class="table-details">';
-  var posLabels=['1st','2nd','3rd','4th'];
-  for(var i=0;i<tables.length;i++){
-    var t=tables[i];
-    var isPending=opts&&opts.showDone&&!t.done;
-    html+='<div class="table-detail-block">';
-    html+='<div class="table-detail-head">'
-      +'<span class="table-detail-name">'+esc(t.name)+' 結果</span>';
-    if(isPending){
-      html+='<span class="table-detail-badge" style="background:rgba(var(--accent-rgb),0.06);color:var(--text-sub);border:1px solid var(--glass-border)">未対戦</span>';
-    }
-    html+='</div>';
-    if(isPending){
-      html+='<div class="table-detail-pending">'+t.players.map(function(p){return esc(p.name)}).join('\u30FB')+' の対戦待ち</div>';
-    } else {
-      var sorted=t.players.map(function(p){var s=scoreMap[p.name]; return {name:p.name,icon:p.icon,score:s?s.score:0}});
-      sorted.sort(function(a,b){return b.score-a.score});
-      for(var j=0;j<sorted.length;j++){
-        var p=sorted[j];
-        var posCls=j===0?'pos-1':'';
-        var trophy='';
-        html+='<div class="table-detail-row">'
-          +'<div class="table-detail-pos '+posCls+'">'+posLabels[j]+'</div>'
-          +'<div class="table-detail-player">'+trophy+icon(p.icon)+esc(p.name)+'</div>'
-          +'<div class="table-detail-score '+cls(p.score)+'">'+fmt(p.score)+'</div>'
-        +'</div>';
-      }
-    }
-    html+='</div>';
-  }
-  return html+'</div>';
-}
-
+$pageInlineScript = <<<'JS'
 window.switchTab=function(idx){
   var btns=document.querySelectorAll('.tab-btn');
   var tabs=document.querySelectorAll('.tab-content');
@@ -310,74 +164,7 @@ window.switchTab=function(idx){
     tabs[i].classList.toggle('active',i===idx);
   }
 };
-
-// --- Render standings ---
-var box=document.getElementById('standings');
-if(box){
-  var html='';
-  var shownDivider=false;
-  for(var i=0;i<standings.length;i++){
-    var p=standings[i];
-    if(p.elim===0 && p.total<0 && !shownDivider){
-      shownDivider=true;
-      html+='<div class="standing-divider">\u00B1 0</div>';
-    }
-    var c=cls(p.total);
-    var bw=barW(p.total);
-    var detail=p.r.map(function(v){return (v>=0?'+':'')+v.toFixed(1)}).join(' \u2192 ');
-    if(p.elim>0) detail+=' \u2192 '+p.elim+'回戦敗退';
-    var rankHtml=p.rank>0&&p.rank<=3?'<span class="medal">'+MEDALS[p.rank-1]+'</span>':''+(i+1);
-    var badgeHtml='';
-    if(p.pending) badgeHtml='<span class="badge-pending">未対戦</span>';
-    else if(p.elim>0) badgeHtml='<span class="badge-elim">'+p.elim+'回戦敗退</span>';
-    var topCls=(i<3&&p.elim===0)?' top-'+(i+1):'';
-    var elimCls=p.elim>0?' eliminated':'';
-    html+='<div class="standing-item'+topCls+elimCls+'" data-delay="'+(i*0.08)+'" data-bar="'+bw+'">'
-      +'<div class="standing-bar '+c+'"></div>'
-      +'<div class="standing-rank">'+rankHtml+'</div>'
-      +'<div class="standing-info">'
-        +'<div class="standing-name">'+icon(p.icon,28)+esc(p.name)+' '+badgeHtml+'</div>'
-        +'<div class="standing-detail">'+detail+'</div>'
-      +'</div>'
-      +'<div class="standing-score '+c+'" data-target="'+p.total+'">'+fmt(p.total)+'</div>'
-    +'</div>';
-  }
-  box.innerHTML=html;
-}
-
-// --- Populate tabs ---
-var roundKeys=[<?= implode(',', $roundNumbers) ?>];
-var finalRounds={<?php
-  $finals = [];
-  foreach ($roundNumbers as $rn) {
-      if (($roundSettings[$rn]['is_final'] ?? false)) $finals[] = $rn . ':true';
-  }
-  echo implode(',', $finals);
-?>};
-for(var ri=0;ri<roundKeys.length;ri++){
-  var rn=roundKeys[ri];
-  var rd=rounds[rn];
-  var tabEl=document.getElementById('tab'+ri);
-  if(!tabEl||!rd) continue;
-  var scoreMap=buildScoreMap(rd.above,rd.below);
-  var showDone=<?= $lastRound > 0 ? 'rn>=' . ($lastRound - 1) : 'true' ?>;
-  var isFinal=!!finalRounds[rn] || (ri===roundKeys.length-1 && <?= $isCompleted ? 'true' : 'false' ?>);
-  if(isFinal){
-    // 決勝: 卓別結果のみ表示（全体順位は不要）
-    tabEl.innerHTML=
-      renderTables(rd.tables,{showDone:true})
-      +renderTableDetails(rd.tables,scoreMap,{showDone:true});
-  } else {
-    tabEl.innerHTML=
-      renderTables(rd.tables,showDone?{showDone:true}:null)
-      +renderTableDetails(rd.tables,scoreMap,showDone?{showDone:true}:null)
-      +'<div class="results-list"><div class="results-sub">全体順位</div>'+renderResults(rd.above,1)+'</div>'
-      +(rd.below.length>0?renderElim(rd.below,rd.above.length+1):'');
-  }
-}
-})();
-<?php
-$pageInlineScript = ob_get_clean();
+JS;
 
 require __DIR__ . '/../templates/header.php';
 
@@ -537,15 +324,124 @@ foreach ($roundSettings as $rn => $rs) {
     <?php endforeach; ?>
   </div>
 
-  <?php foreach ($roundNumbers as $i => $rn): ?>
-    <div class="tab-content <?= ($i === $totalRounds - 1) ? 'active' : '' ?>" id="tab<?= $i ?>"></div>
+  <?php
+    $posLabels = ['1st', '2nd', '3rd', '4th'];
+    $medals = ['🥇', '🥈', '🥉'];
+  ?>
+  <?php foreach ($roundNumbers as $i => $rn):
+    $rSettings = $roundSettings[$rn] ?? [];
+    $tables = $roundsData[$rn] ?? [];
+    $above = $roundAbove[$rn] ?? [];
+    $below = $roundBelow[$rn] ?? [];
+    $showDone = $lastRound > 0 ? $rn >= ($lastRound - 1) : true;
+    $isFinal = $rSettings['is_final'] || ($i === $totalRounds - 1 && $isCompleted);
+    $isLast = ($i === $totalRounds - 1);
+
+    // スコアマップ構築（卓別結果でプレイヤー名→スコア+アイコンを引く）
+    $scoreMap = [];
+    foreach ($above as $a) {
+        $scoreMap[$a['name']] = $a;
+    }
+    foreach ($below as $b) {
+        $scoreMap[$b['name']] = $b;
+    }
+  ?>
+    <div class="tab-content <?= $isLast ? 'active' : '' ?>">
+      <!-- 卓カード一覧 -->
+      <div class="table-grid">
+        <?php foreach ($tables as $t):
+          $cardCls = 'table-card';
+          $schedHtml = '';
+          if ($showDone || $isFinal) {
+              $cardCls .= $t['done'] ? ' table-done' : ' table-pending';
+              $schedHtml = $t['done'] ? '&#10003; 完了' : '未対戦';
+          } elseif (!empty($t['day_of_week'])) {
+              $schedHtml = h($t['day_of_week']);
+          }
+        ?>
+          <div class="<?= $cardCls ?>">
+            <div class="table-card-head">
+              <span class="table-card-name"><?= h($t['table_name']) ?></span>
+              <?php if ($schedHtml): ?><span class="table-card-sched"><?= $schedHtml ?></span><?php endif; ?>
+            </div>
+            <ul class="table-card-players">
+              <?php foreach ($t['players'] as $p): ?>
+                <li><?= charaIcon($p['icon'] ?? null, 22) ?><?= h($p['name']) ?></li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+        <?php endforeach; ?>
+      </div>
+
+      <!-- 卓別結果 -->
+      <div class="table-details">
+        <?php foreach ($tables as $t):
+          $isPending = ($showDone || $isFinal) && !$t['done'];
+        ?>
+          <div class="table-detail-block">
+            <div class="table-detail-head">
+              <span class="table-detail-name"><?= h($t['table_name']) ?> 結果</span>
+              <?php if ($isPending): ?>
+                <span class="table-detail-badge" style="background:rgba(var(--accent-rgb),0.06);color:var(--text-sub);border:1px solid var(--glass-border)">未対戦</span>
+              <?php endif; ?>
+            </div>
+            <?php if ($isPending): ?>
+              <div class="table-detail-pending"><?= implode('・', array_map(fn($p) => h($p['name']), $t['players'])) ?> の対戦待ち</div>
+            <?php else:
+              // スコア降順でソート
+              $sorted = $t['players'];
+              usort($sorted, fn($a, $b) => (float) ($b['score'] ?? 0) <=> (float) ($a['score'] ?? 0));
+            ?>
+              <?php foreach ($sorted as $j => $p):
+                $score = (float) ($p['score'] ?? 0);
+              ?>
+                <div class="table-detail-row">
+                  <div class="table-detail-pos <?= $j === 0 ? 'pos-1' : '' ?>"><?= $posLabels[$j] ?? ($j + 1) ?></div>
+                  <div class="table-detail-player"><?= charaIcon($p['icon'] ?? null, 24) ?><?= h($p['name']) ?></div>
+                  <div class="table-detail-score <?= scoreCls($score) ?>"><?= fmtScore($score) ?></div>
+                </div>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+
+      <?php if (!$isFinal): ?>
+        <!-- 全体順位 -->
+        <?php if (!empty($above)): ?>
+          <div class="results-list">
+            <div class="results-sub">全体順位</div>
+            <?php foreach ($above as $rank => $r): ?>
+              <div class="result-row result-advance">
+                <div class="result-rank"><?= $rank + 1 ?></div>
+                <div class="result-name"><?= charaIcon($r['icon'] ?? null, 24) ?><?= h($r['name']) ?><span class="result-advance-badge">&#x2714; 勝ち抜け</span></div>
+                <div class="result-score <?= scoreCls($r['score']) ?>"><?= fmtScore($r['score']) ?></div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+
+        <?php if (!empty($below)): ?>
+          <div class="elim-section">
+            <div class="elim-title">&#x25BC; 敗退</div>
+            <?php foreach ($below as $rank => $r): ?>
+              <div class="result-row elim-row">
+                <div class="result-rank"><?= count($above) + $rank + 1 ?></div>
+                <div class="result-name"><?= charaIcon($r['icon'] ?? null, 24) ?><?= h($r['name']) ?></div>
+                <div class="result-score <?= scoreCls($r['score']) ?>"><?= fmtScore($r['score']) ?></div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      <?php endif; ?>
+    </div>
   <?php endforeach; ?>
 </section>
 <?php endif; ?>
 
 <?php
   $hasAnyResults = false;
-  foreach ($jsRoundAbove as $above) { if (!empty($above)) { $hasAnyResults = true; break; } }
+  foreach ($roundAbove as $above) { if (!empty($above)) { $hasAnyResults = true; break; } }
 ?>
 <?php if ($hasAnyResults): ?>
 <div class="tile-divider">
@@ -560,7 +456,48 @@ foreach ($roundSettings as $rn => $rs) {
   <div class="section-header">
     <div class="section-title">&#x1F005; 総合ポイント</div>
   </div>
-  <div id="standings"></div>
+  <div id="standings">
+    <?php
+      $maxBar = 130;
+      $shownDivider = false;
+      foreach ($allStandings ?? [] as $i => $s):
+        $displayName = $s['nickname'] ?? $s['name'];
+        $total = (float) $s['total'];
+        $elim = (int) $s['eliminated_round'];
+        $rank = (int) $s['rank'];
+        $pending = (bool) $s['pending'];
+        $icon = $s['character_icon'] ?? '';
+        $scores = $roundScores[$s['name']] ?? [];
+        $barW = min(abs($total) / $maxBar * 100, 100);
+
+        $detail = implode(' → ', array_map(fn($v) => ($v >= 0 ? '+' : '') . number_format($v, 1), $scores));
+        if ($elim > 0) $detail .= ' → ' . $elim . '回戦敗退';
+
+        $topCls = ($i < 3 && $elim === 0) ? ' top-' . ($i + 1) : '';
+        $elimCls = $elim > 0 ? ' eliminated' : '';
+    ?>
+      <?php if ($elim === 0 && $total < 0 && !$shownDivider): $shownDivider = true; ?>
+        <div class="standing-divider">&plusmn; 0</div>
+      <?php endif; ?>
+      <div class="standing-item<?= $topCls . $elimCls ?>" data-delay="<?= $i * 0.08 ?>" data-bar="<?= $barW ?>">
+        <div class="standing-bar <?= scoreCls($total) ?>"></div>
+        <div class="standing-rank"><?php if ($rank > 0 && $rank <= 3): ?><span class="medal"><?= $medals[$rank - 1] ?></span><?php else: ?><?= $i + 1 ?><?php endif; ?></div>
+        <div class="standing-info">
+          <div class="standing-name">
+            <?= charaIcon($icon ?: null, 28) ?>
+            <?= h($displayName) ?>
+            <?php if ($pending): ?>
+              <span class="badge-pending">未対戦</span>
+            <?php elseif ($elim > 0): ?>
+              <span class="badge-elim"><?= $elim ?>回戦敗退</span>
+            <?php endif; ?>
+          </div>
+          <div class="standing-detail"><?= h($detail) ?></div>
+        </div>
+        <div class="standing-score <?= scoreCls($total) ?>" data-target="<?= $total ?>"><?= fmtScore($total) ?></div>
+      </div>
+    <?php endforeach; ?>
+  </div>
 </section>
 <?php endif; ?>
 
