@@ -35,21 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validateCsrfToken()) {
         http_response_code(403);
         $validationError = '不正なリクエストです。ページを再読み込みしてください。';
-    } elseif (isset($_POST['action']) && $_POST['action'] === 'delete') {
-        if ($tournament['status'] !== TournamentStatus::Preparing->value) {
-            $validationError = '大会が進行中または完了済みのため削除できません。';
-        } else {
-            try {
-                Tournament::delete($tournamentId);
-                $_SESSION['flash'] = '大会を削除しました。';
-                regenerateCsrfToken();
-                header('Location: tournaments');
-                exit;
-            } catch (PDOException $e) {
-                error_log('[DB] ' . $e->getMessage());
-                $validationError = '削除に失敗しました。';
-            }
-        }
     } else {
         $postEventType = sanitizeInput('event_type');
         $postName = sanitizeInput('name');
@@ -285,19 +270,6 @@ require __DIR__ . '/../templates/header.php';
     </div>
   </form>
 
-  <div class="edit-danger-section">
-    <div class="edit-danger-header">大会の削除</div>
-    <?php if ($tournament['status'] !== TournamentStatus::Preparing->value): ?>
-      <p class="edit-danger-desc">大会が進行中または完了済みのため削除できません。</p>
-    <?php else: ?>
-      <p class="edit-danger-desc">この大会と関連するすべてのデータ（対戦結果・順位・卓情報）を完全に削除します。この操作は取り消せません。</p>
-      <form method="post" action="tournament_edit?id=<?= $tournamentId ?>" onsubmit="return confirm('<?= h($tournament['name']) ?> を削除しますか？関連データもすべて削除されます。この操作は取り消せません。')">
-        <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
-        <input type="hidden" name="action" value="delete">
-        <button type="submit" class="btn-delete">削除する</button>
-      </form>
-    <?php endif; ?>
-  </div>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

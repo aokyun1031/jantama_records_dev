@@ -22,10 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $action = sanitizeInput('action');
         if ($action === 'delete') {
-            // 卓が存在する場合は削除不可
-            ['data' => $existingRounds] = fetchData(fn() => TableInfo::byTournament($tournamentId));
-            if (!empty($existingRounds)) {
-                $flash = '卓が作成済みのため削除できません。';
+            if ($tournament['status'] === TournamentStatus::Completed->value) {
+                $flash = '完了済みの大会は削除できません。';
             } else {
                 Tournament::delete($tournamentId);
                 $_SESSION['flash'] = '大会を削除しました。';
@@ -43,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $isCompleted = $tournament['status'] === TournamentStatus::Completed->value;
 $hasTables = !empty($rounds);
-$canDelete = !$hasTables && !$isCompleted;
+$canDelete = !$isCompleted;
 $playerCount = count($standings ?? []);
 
 // --- 進行状態の判定 ---
@@ -602,9 +600,9 @@ $statusClass = $tsEnum?->cssClass() ?? '';
 
   <?php if ($canDelete): ?>
     <div class="td-delete">
-      <div class="td-delete-title">大会の削除</div>
-      <div class="td-delete-desc">この大会を削除します。この操作は取り消せません。</div>
-      <form method="post" action="tournament?id=<?= $tournamentId ?>" onsubmit="return confirm('本当にこの大会を削除しますか？')">
+      <!-- <div class="td-delete-title">大会の削除</div> -->
+      <div class="td-delete-desc">この大会と関連する全データ（卓・成績・インタビュー）を削除します。<br>この操作は取り消せません。</div>
+      <form method="post" action="tournament?id=<?= $tournamentId ?>" onsubmit="return confirm('本当にこの大会を削除しますか？\n関連する全データも削除されます。')">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="delete">
         <button type="submit" class="td-btn-delete">大会を削除</button>
