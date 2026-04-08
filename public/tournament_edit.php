@@ -10,10 +10,6 @@ ensureCsrfToken();
 $tournamentId = requireTournamentId();
 $tournament = requireTournamentWithMeta($tournamentId);
 
-if ($tournament['status'] === TournamentStatus::Completed->value) {
-    abort404();
-}
-
 $meta = $tournament['meta'];
 
 // POST値の保持用（初期値はDB値）

@@ -310,11 +310,9 @@ $statusClass = $tsEnum?->cssClass() ?? '';
   <div class="td-badge">TOURNAMENT</div>
   <div class="td-title-row">
     <h1 class="td-title"><?= h($tournament['name']) ?></h1>
-    <?php if (!$isCompleted): ?>
-      <a href="tournament_edit?id=<?= $tournamentId ?>" class="td-edit-link" title="大会情報を編集">
-        <svg class="td-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-      </a>
-    <?php endif; ?>
+    <a href="tournament_edit?id=<?= $tournamentId ?>" class="td-edit-link" title="大会情報を編集">
+      <svg class="td-edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+    </a>
   </div>
   <div class="td-rules">
     <?php foreach ($ruleTags as $tag): ?>
