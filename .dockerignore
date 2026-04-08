@@ -12,6 +12,7 @@ phinx.php
 vendor/
 node_modules
 tests/
+cloudflare-worker/
 
 # ドキュメント
 *.md

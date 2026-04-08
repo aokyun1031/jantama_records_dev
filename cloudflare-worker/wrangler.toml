@@ -1,0 +1,6 @@
+name = "jantama-records-proxy"
+main = "src/index.js"
+compatibility_date = "2026-04-08"
+
+[vars]
+ORIGIN = "https://jantama-records.onrender.com"
