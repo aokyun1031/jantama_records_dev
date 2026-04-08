@@ -44,6 +44,13 @@
 </head>
 <body>
 
+<!-- Site Logo -->
+<?php if (!empty($isTopPage)): ?>
+  <div class="site-logo" aria-label="現在のページ: トップ">雀魂部屋主催</div>
+<?php else: ?>
+  <a href="/" class="site-logo">雀魂部屋主催</a>
+<?php endif; ?>
+
 <!-- Top Controls -->
 <div class="top-controls">
   <!-- Theme Toggle -->
@@ -64,6 +71,7 @@
 
 <!-- Nav Panel -->
 <nav class="nav-panel" id="nav-panel">
+  <a href="/" class="nav-panel-link">トップページ</a>
   <a href="/tournaments" class="nav-panel-link">大会一覧</a>
   <a href="/players" class="nav-panel-link">選手一覧</a>
 </nav>

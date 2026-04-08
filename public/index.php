@@ -2,6 +2,8 @@
 declare(strict_types=1);
 require __DIR__ . '/../config/database.php';
 
+$isTopPage = true;
+
 // --- データ取得 ---
 ['data' => $tournaments] = fetchData(fn() => Tournament::allWithDetails());
 ['data' => $allPlayers] = fetchData(fn() => Player::all());
