@@ -14,6 +14,7 @@ $player = requirePlayer($playerId);
 // --- テンプレート変数 ---
 $pageTitle = h($player['name']) . ' - 最強位戦';
 $pageDescription = h($player['name']) . ' の大会戦績ページです。';
+$pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .player-hero {
   text-align: center;
@@ -286,46 +287,12 @@ $pageStyle = <<<'CSS'
   }
 }
 
-.player-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  max-width: 600px;
-  margin: 0 auto 20px;
-  padding: 16px 24px;
-  border-radius: var(--radius);
-  font-size: 0.9rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, rgba(var(--mint-rgb),0.12), rgba(var(--mint-rgb),0.04));
-  color: var(--success);
-  border: 1px solid rgba(var(--mint-rgb),0.3);
-  box-shadow: 0 2px 12px rgba(var(--mint-rgb),0.1);
-  animation: playerMsgIn 0.4s ease, playerMsgOut 0.6s ease 3s forwards;
-}
-.player-message::before {
-  content: '\2714';
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-@keyframes playerMsgIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes playerMsgOut {
-  from { opacity: 1; max-height: 60px; margin-bottom: 20px; padding: 16px 24px; }
-  80% { opacity: 0; }
-  to { opacity: 0; max-height: 0; margin-bottom: 0; padding: 0 24px; overflow: hidden; }
-}
+.edit-message { max-width: 600px; margin-left: auto; margin-right: auto; }
 CSS;
 
 // --- 表示 ---
 require __DIR__ . '/../templates/header.php';
 ?>
-
-<?php if ($flash): ?>
-  <div class="player-message"><?= h($flash) ?></div>
-<?php endif; ?>
 
 <div class="player-hero">
   <div class="player-badge">PLAYER</div>
@@ -343,6 +310,10 @@ require __DIR__ . '/../templates/header.php';
   </div>
   <a href="player_analysis?id=<?= $playerId ?>" class="btn btn-secondary" style="margin-top: 20px;">個人戦績分析</a>
 </div>
+
+<?php if ($flash): ?>
+  <div class="edit-message success"><?= h($flash) ?></div>
+<?php endif; ?>
 
 <?php if ($error): ?>
   <div class="player-error">

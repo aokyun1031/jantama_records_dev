@@ -78,7 +78,7 @@ test.describe('選手編集・削除', () => {
     await expect(page).toHaveURL(/\/players/);
 
     // フラッシュメッセージ
-    await expect(page.locator('.players-message')).toContainText('削除しました');
+    await expect(page.locator('.edit-message.success')).toContainText('削除しました');
 
     // 削除後は404
     const response = await page.goto(`/player?id=${testPlayerId}`);

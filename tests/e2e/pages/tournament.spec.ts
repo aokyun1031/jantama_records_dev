@@ -68,7 +68,7 @@ test.describe('大会詳細', () => {
     page.once('dialog', (dialog) => dialog.accept());
     await page.click('.td-btn-delete');
     await page.waitForURL(/\/tournaments/, { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('.tournaments-message')).toContainText('削除しました');
+    await expect(page.locator('.edit-message.success')).toContainText('削除しました');
   });
 
   test('存在しないIDで404', async ({ page }) => {
