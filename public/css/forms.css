@@ -36,6 +36,9 @@
 .edit-select:hover:not(:disabled):not(:focus){border-color:var(--input-border-hover)}
 .edit-select:focus{outline:none;border-color:var(--input-border-focus);box-shadow:var(--input-focus-ring)}
 
+/* Turnstile */
+.cf-turnstile{display:flex;justify-content:center;margin-top:24px}
+
 /* Actions */
 .edit-actions{display:flex;gap:12px;justify-content:center;margin-top:24px}
 .btn-save{display:inline-block;padding:12px 32px;background:var(--btn-primary-bg);color:var(--btn-text-color);border:none;border-radius:12px;font-weight:700;font-size:0.9rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:transform 0.3s,box-shadow 0.3s;box-shadow:0 4px 16px rgba(var(--accent-rgb),0.3)}

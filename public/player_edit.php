@@ -117,9 +117,9 @@ require __DIR__ . '/../templates/header.php';
       </div>
     </div>
 
+    <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
     <div class="edit-actions">
       <a href="player?id=<?= $playerId ?>" class="btn-cancel">&#x2190; 個人ページに戻る</a>
-      <div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>
       <button type="submit" class="btn-save">保存</button>
     </div>
 
