@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 ensureCsrfToken();
@@ -140,7 +140,7 @@ $jsPlayers = array_map(fn($p) => [
 ], $tournamentPlayers);
 
 // --- テンプレート変数 ---
-$pageTitle = '卓作成 - ' . h($tournament['name']) . ' - 最強位戦';
+$pageTitle = '卓作成 - ' . h($tournament['name']) . ' - ' . SITE_NAME;
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .tn-hero { text-align: center; padding: 48px 20px 24px; }

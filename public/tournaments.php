@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 
@@ -20,8 +20,8 @@ $tournamentMetas = !empty($tournamentIds)
 // ステータスラベル
 
 // --- テンプレート変数 ---
-$pageTitle = '大会一覧 - 最強位戦';
-$pageDescription = '最強位戦の大会一覧です。';
+$pageTitle = '大会一覧 - ' . SITE_NAME;
+$pageDescription = '麻雀トーナメントの大会一覧です。';
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .tournaments-hero {

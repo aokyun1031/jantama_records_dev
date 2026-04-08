@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/bootstrap.php';
 http_response_code(404);
-$pageTitle = 'ページが見つかりません - 最強位戦';
+$pageTitle = 'ページが見つかりません - ' . SITE_NAME;
 $pageStyle = <<<'CSS'
 .error-page {
   text-align: center;

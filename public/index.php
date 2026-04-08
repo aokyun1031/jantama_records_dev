@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 $isTopPage = true;
 
@@ -18,11 +18,11 @@ $latestCompleted = !empty($completedTournaments) ? reset($completedTournaments) 
 $latestChampion = $latestCompleted ? Standing::champion((int) $latestCompleted['id']) : null;
 
 // --- テンプレート変数 ---
-$pageTitle = '最強位戦 - 麻雀トーナメント戦績サイト';
-$pageDescription = '雀魂で開催する麻雀トーナメント「最強位戦」の戦績・対局結果・選手情報を掲載しています。';
+$pageTitle = SITE_NAME . ' - 麻雀トーナメント戦績サイト';
+$pageDescription = '雀魂で開催する麻雀トーナメントの戦績・対局結果・選手情報を掲載しています。';
 $pageOgp = [
-    'title' => '最強位戦 - 麻雀トーナメント戦績サイト',
-    'description' => '雀魂で開催する麻雀トーナメント「最強位戦」の戦績・対局結果・選手情報を掲載しています。',
+    'title' => SITE_NAME . ' - 麻雀トーナメント戦績サイト',
+    'description' => '雀魂で開催する麻雀トーナメントの戦績・対局結果・選手情報を掲載しています。',
     'url' => 'https://jantama-records.onrender.com/',
 ];
 $pageStyle = <<<'CSS'

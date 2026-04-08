@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 ensureCsrfToken();
@@ -97,7 +97,7 @@ if ($playerCount === 0) {
 $ruleTags = buildRuleTags($meta);
 
 // --- テンプレート変数 ---
-$pageTitle = h($tournament['name']) . ' - 最強位戦';
+$pageTitle = h($tournament['name']) . ' - ' . SITE_NAME;
 $pageDescription = h($tournament['name']) . 'の大会詳細ページです。';
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'

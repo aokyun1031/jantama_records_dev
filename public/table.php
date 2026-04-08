@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 ensureCsrfToken();
@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
 
 
 // --- テンプレート変数 ---
-$pageTitle = h($table['table_name']) . ' - ' . h($tournament['name']) . ' - 最強位戦';
+$pageTitle = h($table['table_name']) . ' - ' . h($tournament['name']) . ' - ' . SITE_NAME;
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .tb-hero { text-align: center; padding: 48px 20px 24px; }

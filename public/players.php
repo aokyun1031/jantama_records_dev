@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 
@@ -12,8 +12,8 @@ $flash = consumeFlash();
 ['data' => $players, 'error' => $error] = fetchData(fn() => Player::all());
 
 // --- テンプレート変数 ---
-$pageTitle = '選手一覧 - 最強位戦';
-$pageDescription = '最強位戦に参加する選手の一覧です。';
+$pageTitle = '選手一覧 - ' . SITE_NAME;
+$pageDescription = '麻雀トーナメントに参加する選手の一覧です。';
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .players-hero {

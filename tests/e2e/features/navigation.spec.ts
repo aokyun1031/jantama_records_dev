@@ -48,12 +48,11 @@ test.describe('ページ間ナビゲーション', () => {
     await expect(page).toHaveURL(/\/players/);
   });
 
-  test('トップ → インタビュー → 戻る の遷移', async ({ page }) => {
-    await page.goto('/');
-    await page.click('a[href="interview"]');
+  test('インタビュー → トップへ戻る の遷移', async ({ page }) => {
+    await page.goto('/interview');
     await expect(page).toHaveURL(/\/interview/);
 
-    await page.click('a[href="/"]');
-    await expect(page).not.toHaveURL(/\/interview/);
+    await page.locator('a.site-logo').click();
+    await expect(page).toHaveURL(/\/$/);
   });
 });

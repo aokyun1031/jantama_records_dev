@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 // --- バリデーション ---
 $tournamentId = requireTournamentId();
@@ -104,10 +104,10 @@ function scoreCls(float $score): string
 }
 
 // --- テンプレート変数 ---
-$pageTitle = h($tournamentName) . ' - 最強位戦';
+$pageTitle = h($tournamentName) . ' - ' . SITE_NAME;
 $pageDescription = h($tournamentName) . 'の全対局結果と最終順位を掲載しています。';
 $pageOgp = [
-    'title' => $tournamentName . ' - 最強位戦',
+    'title' => $tournamentName . ' - ' . SITE_NAME,
     'description' => $tournamentName . 'の全対局結果と最終順位を掲載しています。',
     'url' => 'https://jantama-records.onrender.com/tournament_view?id=' . $tournamentId,
 ];

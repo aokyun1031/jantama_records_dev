@@ -57,37 +57,10 @@ test.describe('大会情報編集', () => {
     await expect(page.locator('.edit-message.error')).toContainText('大会名を入力');
   });
 
-  test('削除セクションが表示される', async ({ page }) => {
-    await page.goto(`/tournament_edit?id=${tournamentId}`);
-    await expect(page.locator('.edit-danger-header')).toContainText('大会の削除');
-    await expect(page.locator('.btn-delete')).toBeVisible();
-  });
-
-  test('大会を削除できる', async ({ page }) => {
-    // 削除用の大会を作成
-    const name = `${TEST_PREFIX}delete_tournament_${Date.now()}`;
-    await page.goto('/tournament_new');
-    await page.fill('input[name="name"]', name);
-    await page.click('button.btn-save');
-    await page.waitForURL(/\/tournaments(\?.*)?$/, { waitUntil: 'domcontentloaded' });
-
-    // IDを取得
-    await page.goto('/tournaments');
-    const card = page.locator('a.tournament-card', { hasText: name });
-    const href = await card.getAttribute('href');
-    const deleteId = parseInt(href!.match(/id=(\d+)/)![1], 10);
-
-    // 削除
-    await page.goto(`/tournament_edit?id=${deleteId}`);
-    page.once('dialog', (dialog) => dialog.accept());
-    await page.click('.btn-delete');
-    await page.waitForURL(/\/tournaments/, { waitUntil: 'domcontentloaded' });
-
-    // 削除後のフラッシュメッセージ
-    await expect(page.locator('.edit-message.success')).toContainText('削除しました');
-
-    // 大会が一覧から消えている
-    await expect(page.locator('.tournament-card', { hasText: name })).toHaveCount(0);
+  test('大会詳細ページに削除セクションが表示される', async ({ page }) => {
+    await page.goto(`/tournament?id=${tournamentId}`);
+    await expect(page.locator('.td-delete')).toBeVisible();
+    await expect(page.locator('.td-btn-delete')).toBeVisible();
   });
 
   test('存在しない大会IDで404', async ({ page }) => {
@@ -100,11 +73,9 @@ test.describe('大会情報編集', () => {
     expect(response?.status()).toBe(404);
   });
 
-  test('準備中以外の大会は削除ボタンが非表示', async ({ page }) => {
-    // 大会のステータスが preparing でない場合、削除できないメッセージが表示される
-    // beforeAllの大会は preparing なので削除可能テストは上で実施済み
-    // ここではメッセージの存在を確認（ステータス変更は他テストに委譲）
-    await page.goto(`/tournament_edit?id=${tournamentId}`);
-    await expect(page.locator('.edit-danger-section')).toBeVisible();
+  test('完了済み大会は削除ボタンが非表示', async ({ page }) => {
+    // 完了済み大会（id=1）の詳細ページで削除セクションが表示されないことを確認
+    await page.goto('/tournament?id=1');
+    await expect(page.locator('.td-delete')).not.toBeVisible();
   });
 });

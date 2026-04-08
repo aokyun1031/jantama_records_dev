@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= h($pageTitle ?? '雀魂部屋主催') ?></title>
+<title><?= h($pageTitle ?? SITE_NAME) ?></title>
 <?php if (!empty($pageDescription)): ?>
 <meta name="description" content="<?= h($pageDescription) ?>">
 <?php endif; ?>
@@ -15,7 +15,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="<?= h($pageOgp['url'] ?? '') ?>">
 <meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
-<meta property="og:site_name" content="雀魂部屋主催">
+<meta property="og:site_name" content="<?= SITE_NAME ?>">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="<?= h($pageOgp['title'] ?? $pageTitle) ?>">
 <meta name="twitter:description" content="<?= h($pageOgp['description'] ?? '') ?>">
@@ -46,9 +46,9 @@
 
 <!-- Site Logo -->
 <?php if (!empty($isTopPage)): ?>
-  <div class="site-logo" aria-label="現在のページ: トップ">雀魂部屋主催</div>
+  <div class="site-logo" aria-label="現在のページ: トップ"><?= SITE_NAME ?></div>
 <?php else: ?>
-  <a href="/" class="site-logo">雀魂部屋主催</a>
+  <a href="/" class="site-logo"><?= SITE_NAME ?></a>
 <?php endif; ?>
 
 <!-- Top Controls -->

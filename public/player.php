@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 $flash = consumeFlash();
@@ -12,7 +12,7 @@ $player = requirePlayer($playerId);
 ['data' => $tournaments, 'error' => $error] = fetchData(fn() => Tournament::byPlayer($playerId));
 
 // --- テンプレート変数 ---
-$pageTitle = h($player['name']) . ' - 最強位戦';
+$pageTitle = h($player['name']) . ' - ' . SITE_NAME;
 $pageDescription = h($player['name']) . ' の大会戦績ページです。';
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'

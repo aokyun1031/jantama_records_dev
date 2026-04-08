@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 ensureCsrfToken();
@@ -93,7 +93,7 @@ $jsInterviews = json_encode(array_map(fn($item) => [
 ], $interviews ?? []), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 
 // --- テンプレート変数 ---
-$pageTitle = '優勝インタビュー設定 - ' . h($tournament['name']) . ' - 最強位戦';
+$pageTitle = '優勝インタビュー設定 - ' . h($tournament['name']) . ' - ' . SITE_NAME;
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .iv-hero { text-align: center; padding: 48px 20px 24px; }

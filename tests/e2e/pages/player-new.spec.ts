@@ -37,7 +37,7 @@ test.describe('選手新規登録', () => {
     expect(id).toBeGreaterThan(0);
     await expect(page.locator('.player-title')).toContainText(name);
     // フラッシュメッセージ
-    await expect(page.locator('.player-message')).toContainText('登録しました');
+    await expect(page.locator('.edit-message.success')).toContainText('登録しました');
   });
 
   test('重複名で登録するとエラー', async ({ page }) => {

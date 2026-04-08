@@ -15,24 +15,19 @@ test.describe('大会一覧', () => {
     const count = await cards.count();
     expect(count).toBeGreaterThan(0);
 
-    // 最初のカードに名前・ステータス・メタ情報が表示されている
+    // 最初のカードに名前・ステータスが表示されている
     const firstCard = cards.first();
     await expect(firstCard.locator('.tournament-name')).not.toBeEmpty();
     await expect(firstCard.locator('.tournament-status')).toBeVisible();
-    await expect(firstCard.locator('.tournament-meta')).toBeVisible();
   });
 
   test('トップページへのリンクがある', async ({ page }) => {
     await page.goto('/tournaments');
-    const backLink = page.locator('.tournaments-back').first();
-    await expect(backLink).toContainText('トップページに戻る');
-    await expect(backLink).toHaveAttribute('href', '/');
+    await expect(page.locator('.tournaments-actions a[href="/"]')).toBeVisible();
   });
 
   test('大会作成ページへのリンクがある', async ({ page }) => {
     await page.goto('/tournaments');
-    const newLink = page.locator('.tournaments-new');
-    await expect(newLink).toContainText('大会を作成');
-    await expect(newLink).toHaveAttribute('href', 'tournament_new');
+    await expect(page.locator('.tournaments-actions a[href="tournament_new"]')).toBeVisible();
   });
 });

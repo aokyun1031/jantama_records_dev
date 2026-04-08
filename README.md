@@ -1,6 +1,6 @@
-# 最強位戦 - 麻雀トーナメント
+# 雀魂部屋主催 - 麻雀トーナメント戦績サイト
 
-雀魂（じゃんたま）で開催する身内向け麻雀トーナメント「最強位戦」の戦績ページです。
+雀魂（じゃんたま）で開催する身内向け麻雀トーナメントの戦績サイトです。最強位戦・鳳凰位戦・マスターズ・百段位戦・プチイベントなど、複数の大会種別に対応しています。
 
 ## 技術スタック
 
@@ -56,12 +56,13 @@ index.php（トップ）
   │         └→ player_analysis.php（戦績分析）
   ├→ tournaments.php（大会一覧）
   │    ├→ tournament_new.php（大会作成）
-  │    └→ tournament.php（大会詳細）
+  │    └→ tournament.php（大会管理）
   │         ├→ tournament_edit.php（大会情報編集）
   │         ├→ tournament_players.php（選手登録）
   │         ├→ table_new.php（卓作成）
   │         ├→ table.php（卓管理：日程・牌譜URL・結果登録・完了）
   │         └→ interview_edit.php（優勝インタビュー設定・大会完了）
+  ├→ tournament_view.php（大会結果閲覧）
   └→ interview.php（優勝インタビュー）
 ```
 
@@ -177,4 +178,4 @@ npx playwright test features/    # 機能テストのみ
 |---|---|
 | `tests/e2e/pages/` | ページ別テスト（表示・CRUD・バリデーション・404） |
 | `tests/e2e/features/` | 機能テスト（テーマ切替・クリーンURL・セキュリティ・ナビゲーション） |
-| `tests/e2e/helpers/` | 共通ユーティリティ（テストプレイヤー作成・削除） |
+| `tests/e2e/helpers/` | 共通ユーティリティ（カスタムfixture・テストプレイヤー管理） |
