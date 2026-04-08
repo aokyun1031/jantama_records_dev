@@ -438,11 +438,6 @@ require __DIR__ . '/../templates/header.php';
         </form>
       </div>
     <?php endif; ?>
-
-  <?php else: ?>
-    <div class="tb-section" style="text-align: center;">
-      <div class="tb-completed-badge">完了</div>
-    </div>
   <?php endif; ?>
 
   <div class="tb-actions">

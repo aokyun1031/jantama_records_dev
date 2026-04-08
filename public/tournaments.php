@@ -154,19 +154,37 @@ $pageStyle = <<<'CSS'
 .tournament-link {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--purple);
   text-decoration: none;
-  padding: 3px 10px;
-  border: 1px solid rgba(var(--accent-rgb), 0.2);
+  padding: 5px 12px;
   border-radius: 6px;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
-.tournament-link:hover {
-  background: rgba(var(--accent-rgb), 0.08);
+.tournament-link--view {
+  background: rgba(var(--accent-rgb), 0.1);
+  color: var(--purple);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+}
+.tournament-link--view:hover {
+  background: rgba(var(--accent-rgb), 0.18);
   border-color: rgba(var(--accent-rgb), 0.4);
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.15);
+}
+.tournament-link--admin {
+  background: transparent;
+  color: var(--text-sub);
+  border: 1px solid var(--glass-border);
+}
+.tournament-link--admin:hover {
+  background: rgba(var(--accent-rgb), 0.05);
+  border-color: rgba(var(--accent-rgb), 0.2);
+  color: var(--text);
 }
 .tournament-link.disabled {
   color: var(--text-light);
+  background: transparent;
   border-color: var(--glass-border);
   opacity: 0.5;
   cursor: not-allowed;
@@ -298,11 +316,11 @@ require __DIR__ . '/../templates/header.php';
           </div>
           <div class="tournament-links">
             <?php if ($t['status'] === TournamentStatus::Preparing->value): ?>
-              <span class="tournament-link disabled">閲覧ページ</span>
+              <span class="tournament-link tournament-link--view disabled">&#x1F441; 閲覧ページ</span>
             <?php else: ?>
-              <a href="tournament_view?id=<?= (int) $t['id'] ?>" class="tournament-link">閲覧ページ</a>
+              <a href="tournament_view?id=<?= (int) $t['id'] ?>" class="tournament-link tournament-link--view">&#x1F441; 閲覧ページ</a>
             <?php endif; ?>
-            <a href="tournament?id=<?= (int) $t['id'] ?>" class="tournament-link">管理ページ</a>
+            <a href="tournament?id=<?= (int) $t['id'] ?>" class="tournament-link tournament-link--admin">&#x2699; 管理ページ</a>
           </div>
         </div>
       </div>
