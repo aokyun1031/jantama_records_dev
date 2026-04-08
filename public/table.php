@@ -383,7 +383,7 @@ require __DIR__ . '/../templates/header.php';
       <?php endfor; ?>
       <div class="tb-done-section">
         <input type="hidden" name="complete" value="1">
-        <button type="submit" class="tb-btn-done" onclick="return confirm('対局結果を保存して卓を完了にしますか？')">対局結果を保存して卓を完了にする</button>
+        <button type="submit" class="tb-btn-done" data-confirm="対局結果を保存して卓を完了にしますか？">対局結果を保存して卓を完了にする</button>
       </div>
     </form>
 

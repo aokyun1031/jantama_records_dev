@@ -156,14 +156,21 @@ $pageStyle = <<<'CSS'
 CSS;
 
 $pageInlineScript = <<<'JS'
-window.switchTab=function(idx){
-  var btns=document.querySelectorAll('.tab-btn');
-  var tabs=document.querySelectorAll('.tab-content');
-  for(var i=0;i<btns.length;i++){
-    btns[i].classList.toggle('active',i===idx);
-    tabs[i].classList.toggle('active',i===idx);
+(function(){
+  function switchTab(idx){
+    var btns=document.querySelectorAll('.tab-btn');
+    var tabs=document.querySelectorAll('.tab-content');
+    for(var i=0;i<btns.length;i++){
+      btns[i].classList.toggle('active',i===idx);
+      tabs[i].classList.toggle('active',i===idx);
+    }
   }
-};
+  document.querySelectorAll('.tab-btn[data-tab-index]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      switchTab(parseInt(btn.dataset.tabIndex,10));
+    });
+  });
+})();
 JS;
 
 require __DIR__ . '/../templates/header.php';
@@ -320,7 +327,7 @@ foreach ($roundSettings as $rn => $rs) {
       $pCount = $roundPlayerCounts[$rn] ?? 0;
       $isLast = ($i === $totalRounds - 1);
     ?>
-      <button class="tab-btn <?= $isLast ? 'active' : '' ?>" onclick="switchTab(<?= $i ?>)"><?= h($label) ?><br><small><?= $tableCount ?>卓 <?= $pCount ?>名</small></button>
+      <button class="tab-btn <?= $isLast ? 'active' : '' ?>" data-tab-index="<?= $i ?>"><?= h($label) ?><br><small><?= $tableCount ?>卓 <?= $pCount ?>名</small></button>
     <?php endforeach; ?>
   </div>
 

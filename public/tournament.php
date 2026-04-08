@@ -580,7 +580,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
     <div class="td-delete">
       <!-- <div class="td-delete-title">大会の削除</div> -->
       <div class="td-delete-desc">この大会と関連する全データ（卓・成績・インタビュー）を削除します。<br>この操作は取り消せません。</div>
-      <form method="post" action="tournament?id=<?= $tournamentId ?>" onsubmit="return confirm('本当にこの大会を削除しますか？\n関連する全データも削除されます。')">
+      <form method="post" action="tournament?id=<?= $tournamentId ?>" data-confirm="本当にこの大会を削除しますか？&#10;関連する全データも削除されます。">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="delete">
         <button type="submit" class="td-btn-delete">大会を削除</button>

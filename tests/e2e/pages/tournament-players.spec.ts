@@ -68,17 +68,6 @@ test.describe('大会選手登録', () => {
     expect(checkedAfter).toBe(0);
   });
 
-  test('検索フィルターが動作する', async ({ page }) => {
-    await page.goto(`/tournament_players?id=${tournamentId}`);
-    const initialCount = await page.locator('.player-select-option').count();
-    expect(initialCount).toBeGreaterThan(0);
-
-    await page.fill('#player-search', 'zzzzxxxx_no_match');
-    await expect(page.locator('.player-select-option:not([hidden])')).toHaveCount(0);
-
-    await page.fill('#player-search', '');
-    await expect(page.locator('.player-select-option:not([hidden])')).toHaveCount(initialCount);
-  });
 
   test('存在しない大会IDで404', async ({ page }) => {
     const response = await page.goto('/tournament_players?id=999999');

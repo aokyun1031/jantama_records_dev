@@ -1,3 +1,7 @@
+<?php
+$_nonce = cspNonce();
+header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'nonce-{$_nonce}'; img-src 'self' data:");
+?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -31,7 +35,7 @@
 <link rel="stylesheet" href="<?= asset($css) ?>">
 <?php endforeach; ?>
 <link rel="stylesheet" href="<?= asset('css/theme-dark.css') ?>" id="theme-dark">
-<script>
+<script nonce="<?= cspNonce() ?>">
 (function(){var s=localStorage.getItem('saikyo-theme');if(s!=='dark'){document.getElementById('theme-dark').disabled=true}})();
 </script>
 <link rel="stylesheet" href="<?= asset('css/theme-toggle.css') ?>">

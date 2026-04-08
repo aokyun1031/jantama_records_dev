@@ -8,14 +8,14 @@
 
 <?php // $pageInlineScript はエスケープなしで出力される。json_encode には必ず JSON_HEX_TAG を使用すること。 ?>
 <?php if (!empty($pageInlineScript)): ?>
-<script>
+<script nonce="<?= cspNonce() ?>">
 <?= $pageInlineScript ?>
 </script>
 <?php endif; ?>
 <?php foreach (($pageScripts ?? []) as $script): ?>
-<script src="<?= asset($script) ?>" defer></script>
+<script src="<?= asset($script) ?>" nonce="<?= cspNonce() ?>" defer></script>
 <?php endforeach; ?>
-<script>
+<script nonce="<?= cspNonce() ?>">
 (function(){
   var btn=document.getElementById('hamburger');
   var panel=document.getElementById('nav-panel');
@@ -30,6 +30,7 @@
   overlay.addEventListener('click',toggle);
 })();
 </script>
-<script src="<?= asset('js/theme-toggle.js') ?>" defer></script>
+<script src="<?= asset('js/confirm-dialog.js') ?>" nonce="<?= cspNonce() ?>"></script>
+<script src="<?= asset('js/theme-toggle.js') ?>" nonce="<?= cspNonce() ?>" defer></script>
 </body>
 </html>

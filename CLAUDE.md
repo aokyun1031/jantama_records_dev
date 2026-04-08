@@ -77,6 +77,9 @@ npx playwright test --ui                         # UIモード
 - POST成功後は `$_SESSION['flash']` にメッセージを設定 → `regenerateCsrfToken()` → PRGリダイレクト
 - フラッシュメッセージの読み取りは `consumeFlash()` を使う
 - `json_encode` には `JSON_UNESCAPED_UNICODE | JSON_HEX_TAG` を付ける
+- `<script>` タグには `nonce="<?= cspNonce() ?>"` を必ず付ける
+- インラインスクリプトは `$pageInlineScript` 変数を使い、直接 `<script>` タグを書かない
+- イベントハンドラ属性（`onclick`, `onsubmit` 等）は使わない。`addEventListener` または `data-confirm` パターンを使う
 - 大会スコープのデータ取得は `$tournamentId` を必ず指定する（`Player` を除く全モデル）
 - モデルやenum追加後は `composer dump-autoload` を実行する
 - `.env` の読み込みは phpdotenv (`Dotenv\Dotenv::createImmutable()`) を使う

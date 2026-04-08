@@ -49,6 +49,18 @@ function regenerateCsrfToken(): void
 }
 
 /**
+ * CSP用のnonceを生成・返却する。同一リクエスト内では同じ値を返す。
+ */
+function cspNonce(): string
+{
+    static $nonce = null;
+    if ($nonce === null) {
+        $nonce = bin2hex(random_bytes(16));
+    }
+    return $nonce;
+}
+
+/**
  * POST入力値をサニタイズして返す。制御文字を除去し、前後の空白をトリムする。
  */
 function sanitizeInput(string $key): string

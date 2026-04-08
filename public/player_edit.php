@@ -129,7 +129,7 @@ require __DIR__ . '/../templates/header.php';
       <p class="edit-danger-desc">この選手は大会に参加しているため削除できません。</p>
     <?php else: ?>
       <p class="edit-danger-desc">この選手を完全に削除します。この操作は取り消せません。</p>
-      <form method="post" action="player_edit?id=<?= $playerId ?>" onsubmit="return confirm('<?= h($player['name']) ?> を削除しますか？この操作は取り消せません。')">
+      <form method="post" action="player_edit?id=<?= $playerId ?>" data-confirm="<?= h($player['name']) ?> を削除しますか？この操作は取り消せません。">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="delete">
         <button type="submit" class="btn-delete">削除する</button>

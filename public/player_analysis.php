@@ -590,7 +590,8 @@ if ($scoreHistory) {
   <a href="player?id=<?= $playerId ?>" class="btn-cancel">&#x2190; 個人ページに戻る</a>
 </div>
 
-<script>
+<?php
+$pageInlineScript = <<<'JS'
 (function() {
   var table = document.querySelector('.h2h-table');
   if (!table) return;
@@ -624,6 +625,5 @@ if ($scoreHistory) {
     });
   });
 })();
-</script>
-
-<?php require __DIR__ . '/../templates/footer.php'; ?>
+JS;
+require __DIR__ . '/../templates/footer.php'; ?>
