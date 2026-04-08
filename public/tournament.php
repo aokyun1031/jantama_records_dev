@@ -265,8 +265,6 @@ $pageStyle = <<<'CSS'
 .td-table-player::before { content: none; }
 .td-table-player.advanced { color: var(--text); font-weight: 700; }
 .td-table-player.eliminated { opacity: 0.45; }
-.td-table-player-icon { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-.td-table-player-noicon { width: 28px; height: 28px; border-radius: 50%; background: var(--glass-border); flex-shrink: 0; }
 
 /* --- 順位表 --- */
 .td-standings { margin-top: 32px; }
@@ -390,6 +388,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
       $rk = 'round_' . $currentRound;
       $rIsFinal = ($meta[$rk . '_is_final'] ?? '0') === '1';
       $rAdvance = (int) ($meta[$rk . '_advance_count'] ?? 0);
+      $rAdvanceMode = $meta[$rk . '_advance_mode'] ?? 'per_table';
       $rGameCount = (int) ($meta[$rk . '_game_count'] ?? 0);
       $rGameType = $meta[$rk . '_game_type'] ?? '';
       $gameTypeLabel = (RoundType::tryFrom($rGameType ?? ''))?->label() ?? '';
@@ -411,7 +410,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
           <?php if ($rIsFinal): ?>
             <span class="td-round-tag">総合ポイント1位が優勝</span>
           <?php elseif ($rAdvance > 0): ?>
-            <span class="td-round-tag">各卓上位<?= $rAdvance ?>名勝ち抜け</span>
+            <span class="td-round-tag"><?= $rAdvanceMode === 'overall' ? '全体' : '各卓' ?>上位<?= $rAdvance ?>名勝ち抜け</span>
           <?php endif; ?>
         </div>
       <?php endif; ?>
@@ -441,11 +440,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
                 }
               ?>
                 <li class="td-table-player<?= $pClass ?>">
-                  <?php if ($p['icon']): ?>
-                    <img src="img/chara_deformed/<?= h($p['icon']) ?>" alt="" class="td-table-player-icon" width="28" height="28" loading="lazy">
-                  <?php else: ?>
-                    <span class="td-table-player-noicon"></span>
-                  <?php endif; ?>
+                  <?= charaIcon($p['icon'], 28) ?>
                   <span class="td-table-player-name"><?= h($p['name']) ?></span>
                   <?php if ($t['done'] && $p['score'] !== null): ?>
                     <span class="td-table-player-score <?= (float) $p['score'] >= 0 ? 'score-plus' : 'score-minus' ?>">
@@ -469,6 +464,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
             $prk = 'round_' . $roundNumber;
             $prIsFinal = ($meta[$prk . '_is_final'] ?? '0') === '1';
             $prAdvance = (int) ($meta[$prk . '_advance_count'] ?? 0);
+            $prAdvanceMode = $meta[$prk . '_advance_mode'] ?? 'per_table';
             $prGameCount = (int) ($meta[$prk . '_game_count'] ?? 0);
             $prGameType = $meta[$prk . '_game_type'] ?? '';
             $prGameTypeLabel = (RoundType::tryFrom($prGameType))?->label() ?? '';
@@ -486,7 +482,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
                 <?php if ($prIsFinal): ?>
                   <span class="td-round-tag">総合ポイント1位が優勝</span>
                 <?php elseif ($prAdvance > 0): ?>
-                  <span class="td-round-tag">各卓上位<?= $prAdvance ?>名勝ち抜け</span>
+                  <span class="td-round-tag"><?= $prAdvanceMode === 'overall' ? '全体' : '各卓' ?>上位<?= $prAdvance ?>名勝ち抜け</span>
                 <?php endif; ?>
               </div>
             <?php endif; ?>
@@ -509,11 +505,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
                       }
                     ?>
                       <li class="td-table-player<?= $pClass ?>">
-                        <?php if ($p['icon']): ?>
-                          <img src="img/chara_deformed/<?= h($p['icon']) ?>" alt="" class="td-table-player-icon" width="28" height="28" loading="lazy">
-                        <?php else: ?>
-                          <span class="td-table-player-noicon"></span>
-                        <?php endif; ?>
+                        <?= charaIcon($p['icon'], 28) ?>
                         <span class="td-table-player-name"><?= h($p['name']) ?></span>
                         <?php if ($t['done'] && $p['score'] !== null): ?>
                           <span class="td-table-player-score <?= (float) $p['score'] >= 0 ? 'score-plus' : 'score-minus' ?>">
@@ -540,11 +532,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
           <?php if ($isCompleted): ?>
             <?php foreach ($standings as $s): ?>
               <tr>
-                <td>
-                  <?php if ($s['character_icon']): ?>
-                    <img src="img/chara_deformed/<?= h($s['character_icon']) ?>" alt="" width="28" height="28" style="border-radius:50%;vertical-align:middle;" loading="lazy">
-                  <?php endif; ?>
-                </td>
+                <td><?= charaIcon($s['character_icon'], 28) ?></td>
                 <td><?= h($s['nickname'] ?? $s['name']) ?></td>
                 <td class="<?= (float) $s['total'] >= 0 ? 'score-plus' : 'score-minus' ?>">
                   <?= (float) $s['total'] >= 0 ? '+' : '' ?><?= h((string) $s['total']) ?>
@@ -558,11 +546,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
             ?>
             <?php foreach ($activeList as $s): ?>
               <tr>
-                <td>
-                  <?php if ($s['character_icon']): ?>
-                    <img src="img/chara_deformed/<?= h($s['character_icon']) ?>" alt="" width="28" height="28" style="border-radius:50%;vertical-align:middle;" loading="lazy">
-                  <?php endif; ?>
-                </td>
+                <td><?= charaIcon($s['character_icon'], 28) ?></td>
                 <td><?= h($s['nickname'] ?? $s['name']) ?></td>
                 <td class="<?= (float) $s['total'] >= 0 ? 'score-plus' : 'score-minus' ?>">
                   <?= (float) $s['total'] >= 0 ? '+' : '' ?><?= h((string) $s['total']) ?>
@@ -573,11 +557,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
               <tr class="td-standings-divider"><td colspan="3">敗退</td></tr>
               <?php foreach ($eliminatedList as $s): ?>
                 <tr class="td-standings-eliminated">
-                  <td>
-                    <?php if ($s['character_icon']): ?>
-                      <img src="img/chara_deformed/<?= h($s['character_icon']) ?>" alt="" width="24" height="24" style="border-radius:50%;vertical-align:middle;opacity:0.5;" loading="lazy">
-                    <?php endif; ?>
-                  </td>
+                  <td><?= charaIcon($s['character_icon'], 24) ?></td>
                   <td><?= h($s['nickname'] ?? $s['name']) ?></td>
                   <td class="<?= (float) $s['total'] >= 0 ? 'score-plus' : 'score-minus' ?>">
                     <?= (float) $s['total'] >= 0 ? '+' : '' ?><?= h((string) $s['total']) ?>

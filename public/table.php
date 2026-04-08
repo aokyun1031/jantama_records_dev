@@ -210,8 +210,6 @@ $pageStyle = <<<'CSS'
 
 .tb-players { display: flex; flex-wrap: wrap; gap: 12px; }
 .tb-player { display: flex; align-items: center; gap: 8px; }
-.tb-player-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-.tb-player-noicon { width: 32px; height: 32px; border-radius: 50%; background: var(--glass-border); display: flex; align-items: center; justify-content: center; font-size: 0.4rem; color: var(--text-sub); }
 .tb-player-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
 
 .tb-label { font-weight: 700; font-size: 0.85rem; color: var(--text); margin-bottom: 8px; display: block; }
@@ -270,11 +268,7 @@ require __DIR__ . '/../templates/header.php';
     <div class="tb-players">
       <?php foreach ($table['players'] as $p): ?>
         <div class="tb-player">
-          <?php if ($p['character_icon']): ?>
-            <img src="img/chara_deformed/<?= h($p['character_icon']) ?>" alt="<?= h($p['nickname'] ?? $p['name']) ?>" class="tb-player-icon" width="32" height="32" loading="lazy">
-          <?php else: ?>
-            <div class="tb-player-noicon">NO<br>IMG</div>
-          <?php endif; ?>
+          <?= charaIcon($p['character_icon'], 32) ?>
           <span class="tb-player-name"><?= h($p['nickname'] ?? $p['name']) ?></span>
         </div>
       <?php endforeach; ?>

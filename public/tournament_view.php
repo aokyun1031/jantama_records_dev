@@ -34,6 +34,7 @@ foreach ($roundNumbers as $rn) {
     $roundSettings[$rn] = [
         'is_final' => ($meta[$rk . '_is_final'] ?? '0') === '1',
         'advance_count' => (int) ($meta[$rk . '_advance_count'] ?? 0),
+        'advance_mode' => $meta[$rk . '_advance_mode'] ?? 'per_table',
         'game_count' => (int) ($meta[$rk . '_game_count'] ?? 0),
         'game_type' => $meta[$rk . '_game_type'] ?? '',
     ];
@@ -57,6 +58,12 @@ $jsRoundTables = [];
 $jsRoundAbove = [];
 $jsRoundBelow = [];
 
+// standings の eliminated_round をベースに勝ち抜け/敗退を判定
+$eliminatedMap = [];
+foreach ($allStandings ?? [] as $s) {
+    $eliminatedMap[$s['name']] = (int) $s['eliminated_round'];
+}
+
 foreach ($roundNumbers as $r) {
     ['data' => $results] = fetchData(fn() => RoundResult::byRound($tournamentId, $r));
     ['data' => $tables] = fetchData(fn() => TableInfo::byRound($tournamentId, $r));
@@ -71,10 +78,11 @@ foreach ($roundNumbers as $r) {
         $displayName = $res['nickname'] ?? $res['name'];
         $icon = $res['character_icon'] ?? '';
         $entry = ['name' => $displayName, 'score' => (float) $res['score'], 'icon' => $icon];
-        if ($res['is_above_cutoff']) {
-            $above[] = $entry;
-        } else {
+        $elimRound = $eliminatedMap[$res['name']] ?? 0;
+        if ($elimRound === $r) {
             $below[] = $entry;
+        } else {
+            $above[] = $entry;
         }
     }
     $jsRoundAbove[$r] = $above;

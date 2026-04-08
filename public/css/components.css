@@ -239,6 +239,10 @@
 }
 .btn-cancel:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.08)}
 
+/* Character icon */
+.chara-icon{border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle}
+.chara-icon-none{border-radius:50%;background:var(--glass-border);display:inline-flex;align-items:center;justify-content:center;color:var(--text-sub);font-weight:700;line-height:1.1;text-align:center;flex-shrink:0;vertical-align:middle}
+
 /* Mobile performance: disable backdrop-filter */
 @media(max-width:768px){
   .standing-item,.table-card,.table-detail-block,.records,.progress-track{backdrop-filter:none}

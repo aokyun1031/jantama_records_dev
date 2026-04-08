@@ -77,9 +77,9 @@ class Standing
     }
 
     /**
-     * ラウンド完了後の勝ち抜き判定。各卓の下位選手を敗退扱いにする。
+     * ラウンド完了後の勝ち抜き判定。各卓上位または全体上位で判定する。
      */
-    public static function processRoundAdvancement(int $tournamentId, int $roundNumber, int $advanceCount): void
+    public static function processRoundAdvancement(int $tournamentId, int $roundNumber, int $advanceCount, string $advanceMode = 'per_table'): void
     {
         $pdo = getDbConnection();
 
@@ -97,18 +97,22 @@ class Standing
         $stmt->execute([$tournamentId, $roundNumber]);
         $rows = $stmt->fetchAll();
 
-        // 卓ごとにグループ化
-        $tables = [];
-        foreach ($rows as $row) {
-            $tables[$row['table_id']][] = (int) $row['player_id'];
-        }
-
-        // 各卓で上位 advanceCount 名以外を敗退に
-        $eliminatedIds = [];
-        foreach ($tables as $players) {
-            // 既にスコア降順でソート済み（ORDER BY rr.score DESC）
-            $eliminated = array_slice($players, $advanceCount);
-            $eliminatedIds = array_merge($eliminatedIds, $eliminated);
+        if ($advanceMode === 'overall') {
+            // 全体上位: 全プレイヤーをスコア降順でソートし、上位N名以外を敗退に
+            usort($rows, fn($a, $b) => (float) ($b['score'] ?? 0) <=> (float) ($a['score'] ?? 0));
+            $allPlayers = array_map(fn($r) => (int) $r['player_id'], $rows);
+            $eliminatedIds = array_slice($allPlayers, $advanceCount);
+        } else {
+            // 各卓上位: 卓ごとにグループ化し、各卓の上位N名以外を敗退に
+            $tables = [];
+            foreach ($rows as $row) {
+                $tables[$row['table_id']][] = (int) $row['player_id'];
+            }
+            $eliminatedIds = [];
+            foreach ($tables as $players) {
+                $eliminated = array_slice($players, $advanceCount);
+                $eliminatedIds = array_merge($eliminatedIds, $eliminated);
+            }
         }
 
         if ($eliminatedIds) {

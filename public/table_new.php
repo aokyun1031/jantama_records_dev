@@ -93,6 +93,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // ラウンド設定
                 $isFinal = isset($_POST['is_final']) && $_POST['is_final'] === '1';
                 $advanceCount = (int) ($_POST['advance_count'] ?? 2);
+                $advanceMode = sanitizeInput('advance_mode');
+                if (!in_array($advanceMode, ['per_table', 'overall'], true)) {
+                    $advanceMode = 'per_table';
+                }
                 $gameCount = (int) ($_POST['game_count'] ?? 2);
                 $gameType = sanitizeInput('game_type');
                 $validGameTypes = ['hanchan', 'tonpu', 'ikkyoku'];
@@ -109,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $rk = 'round_' . $roundNumber;
                     TournamentMeta::set($tournamentId, $rk . '_is_final', $isFinal ? '1' : '0');
                     TournamentMeta::set($tournamentId, $rk . '_advance_count', (string) $advanceCount);
+                    TournamentMeta::set($tournamentId, $rk . '_advance_mode', $advanceMode);
                     TournamentMeta::set($tournamentId, $rk . '_game_count', (string) $gameCount);
                     TournamentMeta::set($tournamentId, $rk . '_game_type', $gameType);
                     $_SESSION['flash'] = count($tablesData) . '卓を作成しました。';
@@ -278,9 +283,15 @@ require __DIR__ . '/../templates/header.php';
           </div>
           <div class="tn-option-group" id="advance-group">
             <span class="tn-option-label">勝ち抜け</span>
+            <div class="tn-radio-group">
+              <input type="radio" name="advance_mode" value="per_table" id="amode-table" class="tn-radio" checked>
+              <label for="amode-table" class="tn-radio-label">各卓</label>
+              <input type="radio" name="advance_mode" value="overall" id="amode-overall" class="tn-radio">
+              <label for="amode-overall" class="tn-radio-label">全体</label>
+            </div>
             <select name="advance_count" class="tn-select" id="select-advance">
               <?php for ($i = 1; $i <= $playerMode - 1; $i++): ?>
-                <option value="<?= $i ?>" <?= $i === 2 ? 'selected' : '' ?>>各卓 上位<?= $i ?>名</option>
+                <option value="<?= $i ?>" <?= $i === 2 ? 'selected' : '' ?>>上位<?= $i ?>名</option>
               <?php endfor; ?>
             </select>
           </div>
@@ -385,6 +396,41 @@ $pageInlineScript = <<<JS
     selectAdvance.addEventListener('change', updateAdvancePreview);
   }
 
+  // 勝ち抜けモード切替
+  var advanceModeRadios = document.querySelectorAll('input[name="advance_mode"]');
+  advanceModeRadios.forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      rebuildAdvanceOptions();
+      updateAdvancePreview();
+    });
+  });
+
+  function getAdvanceMode() {
+    var checked = document.querySelector('input[name="advance_mode"]:checked');
+    return checked ? checked.value : 'per_table';
+  }
+
+  function rebuildAdvanceOptions() {
+    if (!selectAdvance) return;
+    var mode = getAdvanceMode();
+    var totalPlayers = players.length;
+    var max = mode === 'overall' ? totalPlayers - 1 : playerMode - 1;
+    var oldVal = parseInt(selectAdvance.value);
+    selectAdvance.innerHTML = '';
+    for (var i = 1; i <= max; i++) {
+      var opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = '上位' + i + '名';
+      selectAdvance.appendChild(opt);
+    }
+    if (mode === 'overall') {
+      var defaultVal = Math.ceil(totalPlayers / 2);
+      selectAdvance.value = (oldVal > 0 && oldVal <= max) ? oldVal : defaultVal;
+    } else {
+      selectAdvance.value = (oldVal > 0 && oldVal <= max) ? oldVal : 2;
+    }
+  }
+
   function updateAdvancePreview() {
     if (!advancePreview) return;
     // 決勝チェック時は非表示
@@ -398,9 +444,10 @@ $pageInlineScript = <<<JS
       return;
     }
     var advance = selectAdvance ? parseInt(selectAdvance.value) : 2;
-    // シミュレーション: 同じ勝ち抜き人数が続く前提で決勝まで追う
+    var mode = getAdvanceMode();
+    // シミュレーション: 決勝まで追う
     var steps = [];
-    var cur = tableCount * advance;
+    var cur = mode === 'overall' ? advance : tableCount * advance;
     var hasWarn = false;
     for (var round = 0; round < 10; round++) {
       var tc = Math.ceil(cur / playerMode);

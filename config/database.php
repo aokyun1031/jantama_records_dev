@@ -288,3 +288,20 @@ function extractUrl(string $input): string
     }
     return $input;
 }
+
+/**
+ * キャラクターアイコンのHTMLを返す。アイコンがない場合は「NO IMG」プレースホルダーを返す。
+ *
+ * @param int $size ピクセルサイズ（width/height）
+ */
+function charaIcon(?string $icon, int $size = 28, string $class = ''): string
+{
+    if ($icon) {
+        return '<img src="img/chara_deformed/' . h($icon) . '" alt="" width="' . $size . '" height="' . $size . '"'
+            . ' class="chara-icon' . ($class !== '' ? ' ' . h($class) : '') . '"'
+            . ' loading="lazy">';
+    }
+    return '<span class="chara-icon-none' . ($class !== '' ? ' ' . h($class) : '') . '"'
+        . ' style="width:' . $size . 'px;height:' . $size . 'px;font-size:' . round($size * 0.16, 1) . 'rem"'
+        . '>NO<br>IMG</span>';
+}

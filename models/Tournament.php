@@ -225,9 +225,10 @@ class Tournament
             $rk = 'round_' . $roundNumber;
             $isFinal = (TournamentMeta::get($tournamentId, $rk . '_is_final') === '1');
             $advanceCount = (int) TournamentMeta::get($tournamentId, $rk . '_advance_count', '0');
+            $advanceMode = TournamentMeta::get($tournamentId, $rk . '_advance_mode', 'per_table');
 
             if (!$isFinal && $advanceCount > 0) {
-                Standing::processRoundAdvancement($tournamentId, $roundNumber, $advanceCount);
+                Standing::processRoundAdvancement($tournamentId, $roundNumber, $advanceCount, $advanceMode);
                 $msg = $roundNumber . '回戦が全卓完了しました。勝ち抜き判定を行いました。';
             } elseif ($isFinal) {
                 $msg = '決勝が完了しました！';

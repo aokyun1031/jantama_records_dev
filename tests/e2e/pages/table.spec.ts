@@ -48,22 +48,15 @@ test.describe('卓管理', () => {
     await expect(page.locator('.edit-message.success')).toBeVisible();
   });
 
-  test('スコアを入力して一時保存できる', async ({ page }) => {
+  test('対局結果を保存して卓を完了にできる', async ({ page }) => {
     await page.goto(`/table?id=${tableId}`);
     const scoreInputs = page.locator('form:has(input[value="game_data"]) input.tb-score-input');
     const count = await scoreInputs.count();
-    const scorePool = [25.0, 10.0, -5.0, -30.0, 15.0, -15.0];
+    const scorePool = [25.0, 10.0, -5.0, -30.0];
     for (let i = 0; i < count; i++) {
       await scoreInputs.nth(i).fill((scorePool[i % scorePool.length]).toString());
     }
-    await page.click('.tb-btn-save-draft');
-    await page.waitForURL(/table\?id=\d+&saved=1/, { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('.edit-message.success')).toBeVisible();
-  });
-
-  test('対局結果を保存して卓を完了にできる', async ({ page }) => {
-    await page.goto(`/table?id=${tableId}`);
-    const doneBtn = page.locator('button[name="complete"]');
+    const doneBtn = page.locator('.tb-btn-done');
     await expect(doneBtn).toBeVisible();
     page.once('dialog', (dialog) => dialog.accept());
     await doneBtn.click();
