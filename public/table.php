@@ -69,9 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                 }
             }
         } elseif ($action === 'game_data') {
-            $wantComplete = ($_POST['complete'] ?? '') === '1';
-
-            // 牌譜URL + スコアを一括保存
+            // 牌譜URL + スコアを一括保存 → 卓を完了にする
             $urls = [];
             $allGameScores = [];
             $hasError = false;
@@ -86,19 +84,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                 }
                 $urls[$g] = $url;
 
-                // スコア
+                // スコア（全員必須）
                 $scores = [];
                 foreach ($table['players'] as $p) {
                     $pid = (int) $p['player_id'];
                     $rawScore = sanitizeInput('score_' . $g . '_' . $pid);
                     if ($rawScore === '') {
-                        if ($wantComplete) {
-                            $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . h($p['nickname'] ?? $p['name']) . 'のスコアを入力してください。';
-                            $hasError = true;
-                            break 2;
-                        }
-                        $scores[] = null;
-                        continue;
+                        $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . h($p['nickname'] ?? $p['name']) . 'のスコアを入力してください。';
+                        $hasError = true;
+                        break 2;
                     }
                     $score = filter_var($rawScore, FILTER_VALIDATE_FLOAT);
                     if ($score === false) {
@@ -118,23 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                 try {
                     TablePaifuUrl::saveAll($tableId, $urls);
                     foreach ($allGameScores as $g => $gameScores) {
-                        $validScores = array_filter($gameScores, fn($s) => $s !== null);
-                        if (!empty($validScores)) {
-                            RoundResult::saveScores($tournamentId, (int) $table['round_number'], $validScores, $g);
-                        }
+                        RoundResult::saveScores($tournamentId, (int) $table['round_number'], $gameScores, $g);
                     }
-
-                    if ($wantComplete) {
-                        TableInfo::markDone($tableId);
-                        Standing::updateTotals($tournamentId);
-                        $_SESSION['flash'] = Tournament::processRoundCompletion($tournamentId, (int) $table['round_number']);
-                        regenerateCsrfToken();
-                        header('Location: tournament?id=' . $tournamentId);
-                        exit;
-                    }
-
+                    TableInfo::markDone($tableId);
+                    Standing::updateTotals($tournamentId);
+                    $_SESSION['flash'] = Tournament::processRoundCompletion($tournamentId, (int) $table['round_number']);
                     regenerateCsrfToken();
-                    header('Location: table?id=' . $tableId . '&saved=1');
+                    header('Location: tournament?id=' . $tournamentId);
                     exit;
                 } catch (PDOException $e) {
                     error_log('[DB] ' . $e->getMessage());
@@ -256,8 +240,6 @@ $pageStyle = <<<'CSS'
 .tb-btn-done { padding: 12px 32px; background: var(--btn-secondary-bg); color: var(--btn-text-color); border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 16px rgba(var(--mint-rgb), 0.3); }
 .tb-btn-done:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(var(--mint-rgb), 0.4); }
 .tb-btn-done:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-.tb-btn-save-draft { padding: 8px 20px; background: none; color: var(--text-sub); border: 1.5px solid var(--glass-border); border-radius: 8px; font-weight: 700; font-size: 0.8rem; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
-.tb-btn-save-draft:hover { background: rgba(var(--accent-rgb), 0.06); border-color: rgba(var(--accent-rgb), 0.3); color: var(--text); }
 
 .tb-completed-badge { display: inline-block; background: rgba(var(--mint-rgb), 0.15); color: var(--success); font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; margin-bottom: 8px; }
 .tb-paifu-link { color: var(--purple); text-decoration: none; font-size: 0.8rem; word-break: break-all; }
@@ -406,10 +388,8 @@ require __DIR__ . '/../templates/header.php';
         </div>
       <?php endfor; ?>
       <div class="tb-done-section">
-        <button type="submit" name="complete" value="1" class="tb-btn-done" onclick="return confirm('対局結果を保存して卓を完了にしますか？')">対局結果を保存して卓を完了にする</button>
-        <div style="margin-top: 10px;">
-          <button type="submit" class="tb-btn-save-draft">一時保存</button>
-        </div>
+        <input type="hidden" name="complete" value="1">
+        <button type="submit" class="tb-btn-done" onclick="return confirm('対局結果を保存して卓を完了にしますか？')">対局結果を保存して卓を完了にする</button>
       </div>
     </form>
 

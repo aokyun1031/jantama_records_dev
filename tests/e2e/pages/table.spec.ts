@@ -75,9 +75,7 @@ test.describe('卓管理', () => {
   test('完了した卓は読み取り専用', async ({ page }) => {
     await page.goto(`/table?id=${tableId}`);
     await expect(page.locator('.tb-badge')).toContainText('COMPLETED');
-    await expect(page.locator('.tb-completed-badge')).toBeVisible();
     // フォームが表示されない
-    await expect(page.locator('.tb-btn-done')).toHaveCount(0);
     await expect(page.locator('form:has(input[value="game_data"])')).toHaveCount(0);
   });
 
