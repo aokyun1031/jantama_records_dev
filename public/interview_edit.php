@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 ensureCsrfToken();
@@ -93,7 +93,7 @@ $jsInterviews = json_encode(array_map(fn($item) => [
 ], $interviews ?? []), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 
 // --- テンプレート変数 ---
-$pageTitle = '優勝インタビュー設定 - ' . h($tournament['name']) . ' - 最強位戦';
+$pageTitle = '優勝インタビュー設定 - ' . h($tournament['name']) . ' - ' . SITE_NAME;
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .iv-hero { text-align: center; padding: 48px 20px 24px; }
@@ -192,7 +192,7 @@ require __DIR__ . '/../templates/header.php';
     <div class="iv-complete-section">
       <div class="iv-complete-title">大会を完了する</div>
       <div class="iv-complete-desc">インタビューを保存した後、大会を完了できます。<br>完了した後も、インタビューの編集は可能です。</div>
-      <form method="post" action="interview_edit?id=<?= $tournamentId ?>" onsubmit="return confirm('大会を完了しますか？\nこの操作は取り消せません。')">
+      <form method="post" action="interview_edit?id=<?= $tournamentId ?>" data-confirm="大会を完了しますか？&#10;この操作は取り消せません。">
         <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="action" value="complete">
         <button type="submit" class="iv-btn-complete">大会を完了する</button>

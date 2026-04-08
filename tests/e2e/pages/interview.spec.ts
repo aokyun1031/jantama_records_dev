@@ -20,6 +20,6 @@ test.describe('インタビューページ', () => {
   });
 
   test('トップページへの戻るリンクがある', async ({ page }) => {
-    await expect(page.locator('a[href="/"]')).toBeVisible();
+    await expect(page.locator('a.site-logo')).toBeVisible();
   });
 });

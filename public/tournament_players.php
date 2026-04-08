@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 ensureCsrfToken();
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // --- テンプレート変数 ---
-$pageTitle = h($tournament['name']) . ' 選手登録 - 最強位戦';
+$pageTitle = h($tournament['name']) . ' 選手登録 - ' . SITE_NAME;
 $pageCss = ['css/forms.css'];
 $pageStyle = '';
 
@@ -121,34 +121,7 @@ require __DIR__ . '/../templates/header.php';
 </div>
 
 <?php
-$pageInlineScript = <<<'JS'
-(function() {
-  var grid = document.getElementById('player-grid');
-  var countEl = document.getElementById('selected-count');
-  var btnAll = document.getElementById('btn-select-all');
-  var btnNone = document.getElementById('btn-deselect-all');
-
-  function updateCount() {
-    var checked = grid.querySelectorAll('input[type="checkbox"]:checked').length;
-    countEl.textContent = checked + '人選択中';
-  }
-
-  grid.addEventListener('change', updateCount);
-  updateCount();
-
-  btnAll.addEventListener('click', function() {
-    var options = grid.querySelectorAll('.player-select-option:not(.locked) input[type="checkbox"]');
-    for (var i = 0; i < options.length; i++) options[i].checked = true;
-    updateCount();
-  });
-
-  btnNone.addEventListener('click', function() {
-    var options = grid.querySelectorAll('.player-select-option:not(.locked) input[type="checkbox"]');
-    for (var i = 0; i < options.length; i++) options[i].checked = false;
-    updateCount();
-  });
-})();
-JS;
+$pageScripts = ['js/player-select.js'];
 
 require __DIR__ . '/../templates/footer.php';
 ?>

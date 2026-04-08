@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 // --- バリデーション ---
 $playerId = requirePlayerId();
@@ -13,7 +13,7 @@ $player = requirePlayer($playerId);
 $error = $e2 || $e3 || $e4 || $e5;
 
 // --- テンプレート変数 ---
-$pageTitle = h($player['name']) . ' 戦績分析 - 最強位戦';
+$pageTitle = h($player['name']) . ' 戦績分析 - ' . SITE_NAME;
 $pageDescription = h($player['name']) . ' の戦績分析ページです。';
 $pageStyle = <<<'CSS'
 .analysis-hero {
@@ -590,7 +590,8 @@ if ($scoreHistory) {
   <a href="player?id=<?= $playerId ?>" class="btn-cancel">&#x2190; 個人ページに戻る</a>
 </div>
 
-<script>
+<?php
+$pageInlineScript = <<<'JS'
 (function() {
   var table = document.querySelector('.h2h-table');
   if (!table) return;
@@ -624,6 +625,5 @@ if ($scoreHistory) {
     });
   });
 })();
-</script>
-
-<?php require __DIR__ . '/../templates/footer.php'; ?>
+JS;
+require __DIR__ . '/../templates/footer.php'; ?>

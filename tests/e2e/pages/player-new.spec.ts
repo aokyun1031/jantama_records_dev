@@ -1,13 +1,8 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestPlayer, cleanupTestPlayers , createOptimizedPage } from '../helpers/test-helpers';
+import { TEST_PREFIX, createTestPlayer } from '../helpers/test-helpers';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('選手新規登録', () => {
-
-  test.afterAll(async ({ browser }) => {
-    const page = await createOptimizedPage(browser);
-    await cleanupTestPlayers(page);
-    await page.close();
-  });
 
   test('フォームが正しく表示される', async ({ page }) => {
     await page.goto('/player_new');
@@ -37,7 +32,7 @@ test.describe('選手新規登録', () => {
     expect(id).toBeGreaterThan(0);
     await expect(page.locator('.player-title')).toContainText(name);
     // フラッシュメッセージ
-    await expect(page.locator('.player-message')).toContainText('登録しました');
+    await expect(page.locator('.edit-message.success')).toContainText('登録しました');
   });
 
   test('重複名で登録するとエラー', async ({ page }) => {

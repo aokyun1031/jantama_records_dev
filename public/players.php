@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 
@@ -12,8 +12,9 @@ $flash = consumeFlash();
 ['data' => $players, 'error' => $error] = fetchData(fn() => Player::all());
 
 // --- テンプレート変数 ---
-$pageTitle = '選手一覧 - 最強位戦';
-$pageDescription = '最強位戦に参加する選手の一覧です。';
+$pageTitle = '選手一覧 - ' . SITE_NAME;
+$pageDescription = '麻雀トーナメントに参加する選手の一覧です。';
+$pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .players-hero {
   text-align: center;
@@ -157,37 +158,7 @@ $pageStyle = <<<'CSS'
   }
 }
 
-.players-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  max-width: 600px;
-  margin: 0 auto 20px;
-  padding: 16px 24px;
-  border-radius: var(--radius);
-  font-size: 0.9rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, rgba(var(--mint-rgb),0.12), rgba(var(--mint-rgb),0.04));
-  color: var(--success);
-  border: 1px solid rgba(var(--mint-rgb),0.3);
-  box-shadow: 0 2px 12px rgba(var(--mint-rgb),0.1);
-  animation: msgIn 0.4s ease, msgOut 0.6s ease 3s forwards;
-}
-.players-message::before {
-  content: '\2714';
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-@keyframes msgIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes msgOut {
-  from { opacity: 1; max-height: 60px; margin-bottom: 20px; padding: 16px 24px; }
-  80% { opacity: 0; }
-  to { opacity: 0; max-height: 0; margin-bottom: 0; padding: 0 24px; overflow: hidden; }
-}
+.edit-message { max-width: 600px; margin-left: auto; margin-right: auto; }
 CSS;
 
 // --- 表示 ---
@@ -201,7 +172,7 @@ require __DIR__ . '/../templates/header.php';
 </div>
 
 <?php if ($flash): ?>
-  <div class="players-message"><?= h($flash) ?></div>
+  <div class="edit-message success"><?= h($flash) ?></div>
 <?php endif; ?>
 
 <?php if ($error): ?>

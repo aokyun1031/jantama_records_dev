@@ -31,7 +31,7 @@ test.describe('選手一覧ページ', () => {
   });
 
   test('トップページへの戻るリンクがある', async ({ page }) => {
-    await expect(page.locator('a[href="/"]')).toBeVisible();
+    await expect(page.locator('a.site-logo')).toBeVisible();
   });
 
   test('選手カードに画像またはプレースホルダーがある', async ({ page }) => {

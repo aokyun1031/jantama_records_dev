@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 // ID指定があればその大会、なければid=1にフォールバック
 $tournamentId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: 1;
 ['data' => $tournamentData] = fetchData(fn() => Tournament::find($tournamentId));
-$tournamentName = $tournamentData['name'] ?? '最強位戦';
+$tournamentName = $tournamentData['name'] ?? '';
 
 ['data' => $finalists] = fetchData(fn() => Standing::finalists($tournamentId));
 ['data' => $interviews] = fetchData(fn() => Interview::byTournament($tournamentId));

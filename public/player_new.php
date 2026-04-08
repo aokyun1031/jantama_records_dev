@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 startSecureSession();
 ensureCsrfToken();
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // --- テンプレート変数 ---
-$pageTitle = '選手登録 - 最強位戦';
+$pageTitle = '選手登録 - ' . SITE_NAME;
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .edit-form { max-width: 600px; }

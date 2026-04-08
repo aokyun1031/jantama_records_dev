@@ -1,5 +1,5 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestTournamentWithPlayers, deleteTestTournament, createOptimizedPage } from '../helpers/test-helpers';
+import { TEST_PREFIX, createTestTournamentWithPlayers, createOptimizedPage } from '../helpers/test-helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('卓管理', () => {
@@ -25,12 +25,6 @@ test.describe('卓管理', () => {
     const tableLink = page.locator('.td-table-card').first();
     const href = await tableLink.getAttribute('href');
     tableId = parseInt(href!.match(/id=(\d+)/)![1], 10);
-    await page.close();
-  });
-
-  test.afterAll(async ({ browser }) => {
-    const page = await createOptimizedPage(browser);
-    await deleteTestTournament(page, tournamentId);
     await page.close();
   });
 

@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/bootstrap.php';
 
 // --- バリデーション ---
 $playerId = filter_input(INPUT_GET, 'player_id', FILTER_VALIDATE_INT);
@@ -19,7 +19,7 @@ $ruleTags = buildRuleTags($meta);
 ['data' => $rounds, 'error' => $error] = fetchData(fn() => TableInfo::byPlayerAndTournament($tournamentId, $playerId));
 
 // --- テンプレート変数 ---
-$pageTitle = h($player['name']) . ' - ' . h($tournament['name']) . ' - 最強位戦';
+$pageTitle = h($player['name']) . ' - ' . h($tournament['name']) . ' - ' . SITE_NAME;
 $pageDescription = h($player['name']) . ' の ' . h($tournament['name']) . ' 戦績です。';
 $pageStyle = <<<'CSS'
 .result-hero {

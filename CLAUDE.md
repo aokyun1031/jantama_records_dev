@@ -1,4 +1,4 @@
-# 最強位戦 - 麻雀トーナメント戦績サイト
+# 雀魂部屋主催 - 麻雀トーナメント戦績サイト
 
 ## 技術スタック
 
@@ -15,7 +15,7 @@
 - `public/` - Webサーバー公開ディレクトリ（DocumentRoot）
 - `models/` - データアクセス層（SQLはここに集約）
 - `enums/` - PHP enum（定数定義・値オブジェクト）
-- `config/` - DB接続・ヘルパー関数
+- `config/` - アプリケーション設定（DB接続・ヘルパー・セキュリティ・リクエスト処理）
 - `templates/` - 共通ヘッダー・フッター
 - `db/migrations/` - Phinxマイグレーション
 - `db/seeds/` - Phinxシーダー
@@ -77,6 +77,9 @@ npx playwright test --ui                         # UIモード
 - POST成功後は `$_SESSION['flash']` にメッセージを設定 → `regenerateCsrfToken()` → PRGリダイレクト
 - フラッシュメッセージの読み取りは `consumeFlash()` を使う
 - `json_encode` には `JSON_UNESCAPED_UNICODE | JSON_HEX_TAG` を付ける
+- `<script>` タグには `nonce="<?= cspNonce() ?>"` を必ず付ける
+- インラインスクリプトは `$pageInlineScript` 変数を使い、直接 `<script>` タグを書かない
+- イベントハンドラ属性（`onclick`, `onsubmit` 等）は使わない。`addEventListener` または `data-confirm` パターンを使う
 - 大会スコープのデータ取得は `$tournamentId` を必ず指定する（`Player` を除く全モデル）
 - モデルやenum追加後は `composer dump-autoload` を実行する
 - `.env` の読み込みは phpdotenv (`Dotenv\Dotenv::createImmutable()`) を使う
@@ -105,7 +108,8 @@ npx playwright test --ui                         # UIモード
 
 ## 作業ルール
 
-- ファイルやディレクトリ構成を変更したら `README.md` のファイル構成セクションを更新する
+- 新しいディレクトリを追加したら `README.md` のディレクトリ構成セクションを更新する
+- 新しいページを追加したら `README.md` のページ遷移セクションを更新する
 - 新しいモデルやスキルを追加したら対応する `.claude/skills/` の SKILL.md を更新する
 - コーディング規約やコマンドが変わったら `CLAUDE.md` を更新する
 - 新しいページを追加したら `tests/e2e/pages/` にE2Eテストを追加する

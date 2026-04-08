@@ -1,5 +1,5 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestPlayer, cleanupTestPlayers , createOptimizedPage } from '../helpers/test-helpers';
+import { TEST_PREFIX, createTestPlayer, createOptimizedPage } from '../helpers/test-helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('選手編集・削除', () => {
@@ -10,13 +10,6 @@ test.describe('選手編集・削除', () => {
     testInfo.setTimeout(60000);
     const page = await createOptimizedPage(browser);
     testPlayerId = await createTestPlayer(page, testName, '編集前');
-    await page.close();
-  });
-
-  test.afterAll(async ({ browser }) => {
-    const page = await createOptimizedPage(browser);
-    // テスト名で検索して全て削除（beforeAll失敗時の孤立データも含む）
-    await cleanupTestPlayers(page);
     await page.close();
   });
 
@@ -75,10 +68,10 @@ test.describe('選手編集・削除', () => {
     await page.goto(`/player_edit?id=${testPlayerId}`);
     page.once('dialog', (dialog) => dialog.accept());
     await page.locator('button.btn-delete').click();
-    await expect(page).toHaveURL(/\/players/);
+    await page.waitForURL(/\/players/, { waitUntil: 'domcontentloaded' });
 
     // フラッシュメッセージ
-    await expect(page.locator('.players-message')).toContainText('削除しました');
+    await expect(page.locator('.edit-message.success')).toContainText('削除しました');
 
     // 削除後は404
     const response = await page.goto(`/player?id=${testPlayerId}`);
