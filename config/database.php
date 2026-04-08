@@ -11,6 +11,14 @@ if (file_exists($envFile . '/.env')) {
 }
 
 /**
+ * 本番環境かどうかを返す。
+ */
+function isProduction(): bool
+{
+    return ($_ENV['APP_ENV'] ?? getenv('APP_ENV')) === 'production';
+}
+
+/**
  * DB接続を返す。
  * Neon無料枠のスリープからの復帰を考慮し、リトライを行う。
  * 同一リクエスト内では同じPDOインスタンスを再利用する。

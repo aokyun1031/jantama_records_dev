@@ -20,6 +20,7 @@ if (!$table) {
 $tournamentId = (int) $table['tournament_id'];
 $tournament = requireTournamentWithMeta($tournamentId);
 $isDone = (bool) $table['done'];
+$isDev = !isProduction();
 
 
 // POST処理
@@ -105,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                     $validationError = 'スコアの保存に失敗しました。';
                 }
             }
-        } elseif ($action === 'bulk') {
+        } elseif ($action === 'bulk' && $isDev) {
             // 一括保存: 日時 + 牌譜URL + スコア + 完了
             $playedDate = sanitizeInput('played_date');
             $playedTime = sanitizeInput('played_time');
@@ -296,7 +297,7 @@ require __DIR__ . '/../templates/header.php';
   <div class="tb-section">
     <div class="tb-section-title" style="display:flex;align-items:center;gap:12px;">
       対局日
-      <?php if (!$isDone): ?>
+      <?php if (!$isDone && $isDev): ?>
         <button type="button" class="tb-btn-random" id="btn-random-schedule">&#x1F3B2; ランダム</button>
       <?php endif; ?>
     </div>
@@ -325,7 +326,7 @@ require __DIR__ . '/../templates/header.php';
   <div class="tb-section">
     <div class="tb-section-title" style="display:flex;align-items:center;gap:12px;">
       牌譜URL
-      <?php if (!$isDone): ?>
+      <?php if (!$isDone && $isDev): ?>
         <button type="button" class="tb-btn-random" id="btn-random-paifu">&#x1F3B2; ランダム</button>
       <?php endif; ?>
     </div>
@@ -351,7 +352,7 @@ require __DIR__ . '/../templates/header.php';
   <div class="tb-section">
     <div class="tb-section-title" style="display:flex;align-items:center;gap:12px;">
       対局結果
-      <?php if (!$isDone): ?>
+      <?php if (!$isDone && $isDev): ?>
         <button type="button" class="tb-btn-random" id="btn-random-score">&#x1F3B2; ランダム</button>
       <?php endif; ?>
     </div>
@@ -402,8 +403,8 @@ require __DIR__ . '/../templates/header.php';
         <?php endif; ?>
       </div>
     </div>
-  <?php if (!$isDone): ?>
-    <!-- 一括保存（デバッグ用） -->
+  <?php if (!$isDone && $isDev): ?>
+    <!-- 一括保存（開発環境のみ） -->
     <div class="tb-section" style="border-color: rgba(var(--gold-rgb), 0.3); background: rgba(var(--gold-rgb), 0.02);">
       <div class="tb-section-title" style="display:flex;align-items:center;gap:12px; border-color: rgba(var(--gold-rgb), 0.2);">
         一括保存
@@ -442,7 +443,7 @@ $jsReturnPoints = (int) ($meta['return_points'] ?? 30000);
 $jsPlayerMode = (int) ($meta['player_mode'] ?? 4);
 $jsPlayerCount = count($table['players']);
 
-$pageInlineScript = <<<JS
+$pageInlineScript = $isDev ? <<<JS
 (function() {
   // ランダム日時生成
   var btnRandSched = document.getElementById('btn-random-schedule');
@@ -576,7 +577,7 @@ $pageInlineScript = <<<JS
     });
   }
 })();
-JS;
+JS : '';
 
 require __DIR__ . '/../templates/footer.php';
 ?>
