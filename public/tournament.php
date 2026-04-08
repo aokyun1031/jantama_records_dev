@@ -81,6 +81,7 @@ if ($currentRound > 0) {
     if ($isFinalRound && $allCurrentDone) {
         $isFinalDone = true;
         $champion = Standing::champion($tournamentId);
+        $championId = $champion ? (int) $champion['player_id'] : null;
     }
 }
 
@@ -293,6 +294,14 @@ CSS;
 
 require __DIR__ . '/../templates/header.php';
 
+// 日付表示ヘルパー: "2026/4/11（土）21:00"
+function formatTableDate(array $t): string {
+    $date = date('Y/n/j', strtotime($t['played_date']));
+    $dow = $t['day_of_week'] ? mb_substr($t['day_of_week'], 0, 1) : '';
+    $time = $t['played_time'] ?? '';
+    return $date . ($dow !== '' ? '（' . $dow . '）' : '') . ($time !== '' ? ' ' . $time : '');
+}
+
 // ステータス表示ヘルパー
 $tsEnum = TournamentStatus::tryFrom($tournament['status']);
 $statusLabel = $tsEnum?->label() ?? $tournament['status'];
@@ -391,7 +400,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
     ?>
     <div class="td-round">
       <div class="td-round-header">
-        <?= $currentRound ?>回戦<?= $rIsFinal ? '（決勝）' : '' ?>（<?= $currentRoundTotal ?>卓）
+        <?= $currentRound ?>回戦<?= $rIsFinal ? '（決勝）' : '' ?>
         <?php if ($allCurrentDone): ?>
           <span class="td-round-progress complete">全卓完了</span>
         <?php else: ?>
@@ -422,13 +431,17 @@ $statusClass = $tsEnum?->cssClass() ?? '';
               <span class="td-table-status <?= $tableStatus ?>"><?= $tableStatusLabel ?></span>
             </div>
             <?php if ($t['played_date']): ?>
-              <div class="td-table-date"><?= h($t['played_date']) ?><?= $t['day_of_week'] ? '（' . h($t['day_of_week']) . '）' : '' ?></div>
+              <div class="td-table-date"><?= h(formatTableDate($t)) ?></div>
             <?php endif; ?>
             <ul class="td-table-players">
               <?php foreach ($t['players'] as $p):
                 $pClass = '';
                 if ($t['done'] && $p['score'] !== null) {
-                  $pClass = ($p['eliminated_round'] === $currentRound) ? ' eliminated' : ' advanced';
+                  if ($rIsFinal && !empty($championId)) {
+                    $pClass = ($p['player_id'] === $championId) ? ' advanced' : ' eliminated';
+                  } else {
+                    $pClass = ($p['eliminated_round'] === $currentRound) ? ' eliminated' : ' advanced';
+                  }
                 }
               ?>
                 <li class="td-table-player<?= $pClass ?>">
@@ -466,7 +479,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
           ?>
           <div class="td-round">
             <div class="td-round-header">
-              <?= $roundNumber ?>回戦<?= $prIsFinal ? '（決勝）' : '' ?>（<?= count($tables) ?>卓）
+              <?= $roundNumber ?>回戦<?= $prIsFinal ? '（決勝）' : '' ?>
               <span class="td-round-progress complete"><?= $doneCount ?>/<?= count($tables) ?>卓 完了</span>
             </div>
             <?php if ($prGameCount > 0 || $prAdvance > 0): ?>
@@ -522,44 +535,61 @@ $statusClass = $tsEnum?->cssClass() ?? '';
   <?php endif; ?>
 
   <!-- 登録選手一覧 -->
-  <?php if (!empty($standings)):
-    $activeList = array_filter($standings, fn($s) => (int) $s['eliminated_round'] === 0);
-    $eliminatedList = array_filter($standings, fn($s) => (int) $s['eliminated_round'] > 0);
-  ?>
+  <?php if (!empty($standings)): ?>
     <div class="td-standings">
       <div class="td-standings-title">登録選手一覧（<?= count($standings) ?>名）</div>
       <table class="td-standings-table">
         <thead><tr><th></th><th>選手</th><th>総合ポイント</th></tr></thead>
         <tbody>
-          <?php foreach ($activeList as $i => $s): ?>
-            <tr>
-              <td>
-                <?php if ($s['character_icon']): ?>
-                  <img src="img/chara_deformed/<?= h($s['character_icon']) ?>" alt="" width="28" height="28" style="border-radius:50%;vertical-align:middle;" loading="lazy">
-                <?php endif; ?>
-              </td>
-              <td><?= h($s['nickname'] ?? $s['name']) ?></td>
-              <td class="<?= (float) $s['total'] >= 0 ? 'score-plus' : 'score-minus' ?>">
-                <?= (float) $s['total'] >= 0 ? '+' : '' ?><?= h((string) $s['total']) ?>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-          <?php if (!empty($eliminatedList)): ?>
-            <tr class="td-standings-divider"><td colspan="3">敗退</td></tr>
-            <?php foreach ($eliminatedList as $s): ?>
-              <tr class="td-standings-eliminated">
+          <?php if ($isCompleted): ?>
+            <?php foreach ($standings as $s): ?>
+              <tr>
                 <td>
                   <?php if ($s['character_icon']): ?>
-                    <img src="img/chara_deformed/<?= h($s['character_icon']) ?>" alt="" width="24" height="24" style="border-radius:50%;vertical-align:middle;opacity:0.5;" loading="lazy">
+                    <img src="img/chara_deformed/<?= h($s['character_icon']) ?>" alt="" width="28" height="28" style="border-radius:50%;vertical-align:middle;" loading="lazy">
                   <?php endif; ?>
                 </td>
                 <td><?= h($s['nickname'] ?? $s['name']) ?></td>
                 <td class="<?= (float) $s['total'] >= 0 ? 'score-plus' : 'score-minus' ?>">
                   <?= (float) $s['total'] >= 0 ? '+' : '' ?><?= h((string) $s['total']) ?>
-                  <span class="td-elim-round"><?= (int) $s['eliminated_round'] ?>回戦敗退</span>
                 </td>
               </tr>
             <?php endforeach; ?>
+          <?php else: ?>
+            <?php
+              $activeList = array_filter($standings, fn($s) => (int) $s['eliminated_round'] === 0);
+              $eliminatedList = array_filter($standings, fn($s) => (int) $s['eliminated_round'] > 0);
+            ?>
+            <?php foreach ($activeList as $s): ?>
+              <tr>
+                <td>
+                  <?php if ($s['character_icon']): ?>
+                    <img src="img/chara_deformed/<?= h($s['character_icon']) ?>" alt="" width="28" height="28" style="border-radius:50%;vertical-align:middle;" loading="lazy">
+                  <?php endif; ?>
+                </td>
+                <td><?= h($s['nickname'] ?? $s['name']) ?></td>
+                <td class="<?= (float) $s['total'] >= 0 ? 'score-plus' : 'score-minus' ?>">
+                  <?= (float) $s['total'] >= 0 ? '+' : '' ?><?= h((string) $s['total']) ?>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+            <?php if (!empty($eliminatedList)): ?>
+              <tr class="td-standings-divider"><td colspan="3">敗退</td></tr>
+              <?php foreach ($eliminatedList as $s): ?>
+                <tr class="td-standings-eliminated">
+                  <td>
+                    <?php if ($s['character_icon']): ?>
+                      <img src="img/chara_deformed/<?= h($s['character_icon']) ?>" alt="" width="24" height="24" style="border-radius:50%;vertical-align:middle;opacity:0.5;" loading="lazy">
+                    <?php endif; ?>
+                  </td>
+                  <td><?= h($s['nickname'] ?? $s['name']) ?></td>
+                  <td class="<?= (float) $s['total'] >= 0 ? 'score-plus' : 'score-minus' ?>">
+                    <?= (float) $s['total'] >= 0 ? '+' : '' ?><?= h((string) $s['total']) ?>
+                    <span class="td-elim-round"><?= (int) $s['eliminated_round'] ?>回戦敗退</span>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
           <?php endif; ?>
         </tbody>
       </table>

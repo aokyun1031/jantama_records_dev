@@ -56,8 +56,8 @@ class TableInfo
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('
             SELECT t.id AS table_id, t.round_number, t.table_name,
-                   t.played_date, t.day_of_week, t.done, t.paifu_url,
-                   p.name AS player_name, p.nickname AS player_nickname,
+                   t.played_date, t.day_of_week, t.played_time, t.done, t.paifu_url,
+                   tp.player_id, p.name AS player_name, p.nickname AS player_nickname,
                    c.icon_filename AS player_icon, tp.seat_order,
                    s.eliminated_round, rr.score
             FROM tables_info t
@@ -86,12 +86,14 @@ class TableInfo
                     'table_name'  => $row['table_name'],
                     'played_date' => $row['played_date'],
                     'day_of_week' => $row['day_of_week'],
+                    'played_time' => $row['played_time'],
                     'done'        => $row['done'],
                     'paifu_url'   => $row['paifu_url'],
                     'players'     => [],
                 ];
             }
             $rounds[$rn][$key]['players'][] = [
+                'player_id' => (int) $row['player_id'],
                 'name' => $row['player_nickname'] ?? $row['player_name'],
                 'icon' => $row['player_icon'],
                 'eliminated_round' => (int) ($row['eliminated_round'] ?? 0),

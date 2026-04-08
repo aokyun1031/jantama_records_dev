@@ -123,7 +123,7 @@ class Standing
     {
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('
-            SELECT p.name, p.nickname, s.total, s.eliminated_round,
+            SELECT s.player_id, p.name, p.nickname, s.total, s.eliminated_round,
                    c.icon_filename AS character_icon
             FROM standings s
             JOIN players p ON p.id = s.player_id
