@@ -19,6 +19,7 @@
 - `templates/` - 共通ヘッダー・フッター
 - `db/migrations/` - Phinxマイグレーション
 - `db/seeds/` - Phinxシーダー
+- `cloudflare-worker/` - Cloudflare Workerリバースプロキシ（CDN）
 
 `public/` 外のファイルはWebからアクセスできない。新しいページは `public/` に作成する。
 
@@ -50,6 +51,11 @@ npx playwright test --ui                         # UIモード
 
 # git push 時に E2E テストが自動実行される（.claude/settings.json の hook で設定）
 # テスト失敗で push がブロックされる
+
+# Cloudflare Worker（CDNリバースプロキシ）
+cd cloudflare-worker && npm install
+npx wrangler login                       # 初回ログイン
+npx wrangler deploy                      # デプロイ
 ```
 
 ## 環境構成

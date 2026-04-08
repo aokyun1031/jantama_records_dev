@@ -29,3 +29,6 @@ tests/e2e/playwright-report/
 # Playwright MCP
 .playwright-mcp/
 
+# Cloudflare Worker
+cloudflare-worker/node_modules/
+
