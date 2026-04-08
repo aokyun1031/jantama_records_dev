@@ -22,6 +22,29 @@ class TournamentMeta
     }
 
     /**
+     * 複数大会のメタ情報を一括取得する。
+     *
+     * @param int[] $tournamentIds
+     * @return array<int, array<string, string>> tournament_id => [key => value]
+     */
+    public static function allByTournamentIds(array $tournamentIds): array
+    {
+        if (empty($tournamentIds)) {
+            return [];
+        }
+        $pdo = getDbConnection();
+        $placeholders = implode(',', array_fill(0, count($tournamentIds), '?'));
+        $stmt = $pdo->prepare("SELECT tournament_id, key, value FROM tournament_meta WHERE tournament_id IN ({$placeholders})");
+        $stmt->execute($tournamentIds);
+
+        $result = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $result[(int) $row['tournament_id']][$row['key']] = $row['value'];
+        }
+        return $result;
+    }
+
+    /**
      * 特定キーの値を設定（UPSERT）。
      */
     public static function set(int $tournamentId, string $key, string $value): void

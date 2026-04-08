@@ -12,13 +12,10 @@ $flash = consumeFlash();
 ['data' => $tournaments, 'error' => $error] = fetchData(fn() => Tournament::allWithDetails());
 
 // 各大会のメタ情報を一括取得
-$tournamentMetas = [];
-if (!empty($tournaments)) {
-    foreach ($tournaments as $t) {
-        ['data' => $meta] = fetchData(fn() => TournamentMeta::all((int) $t['id']));
-        $tournamentMetas[(int) $t['id']] = $meta ?? [];
-    }
-}
+$tournamentIds = array_map(fn($t) => (int) $t['id'], $tournaments ?? []);
+$tournamentMetas = !empty($tournamentIds)
+    ? TournamentMeta::allByTournamentIds($tournamentIds)
+    : [];
 
 // ステータスラベル
 

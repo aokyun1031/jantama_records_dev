@@ -17,22 +17,33 @@ class Tournament
     {
         $pdo = getDbConnection();
         return $pdo->query("
+            WITH player_counts AS (
+                SELECT tournament_id, COUNT(*) AS cnt
+                FROM standings GROUP BY tournament_id
+            ),
+            winner AS (
+                SELECT DISTINCT ON (s.tournament_id)
+                       s.tournament_id, COALESCE(p.nickname, p.name) AS winner_name
+                FROM standings s
+                JOIN players p ON p.id = s.player_id
+                WHERE s.eliminated_round = 0
+                ORDER BY s.tournament_id, s.total DESC
+            ),
+            date_range AS (
+                SELECT tournament_id,
+                       MIN(played_date) AS start_date, MAX(played_date) AS end_date
+                FROM tables_info WHERE played_date IS NOT NULL
+                GROUP BY tournament_id
+            )
             SELECT t.id, t.name, t.status, t.created_at,
                    COALESCE(tm.value, '') AS event_type,
-                   COUNT(s.player_id) AS player_count,
-                   (SELECT COALESCE(p.nickname, p.name) FROM standings sw
-                    JOIN players p ON p.id = sw.player_id
-                    WHERE sw.tournament_id = t.id AND sw.eliminated_round = 0
-                    ORDER BY sw.total DESC
-                    LIMIT 1) AS winner_name,
-                   (SELECT MIN(ti.played_date) FROM tables_info ti
-                    WHERE ti.tournament_id = t.id AND ti.played_date IS NOT NULL) AS start_date,
-                   (SELECT MAX(ti.played_date) FROM tables_info ti
-                    WHERE ti.tournament_id = t.id AND ti.played_date IS NOT NULL) AS end_date
+                   COALESCE(pc.cnt, 0) AS player_count,
+                   w.winner_name, dr.start_date, dr.end_date
             FROM tournaments t
             LEFT JOIN tournament_meta tm ON tm.tournament_id = t.id AND tm.key = 'event_type'
-            LEFT JOIN standings s ON s.tournament_id = t.id
-            GROUP BY t.id, t.name, t.status, t.created_at, tm.value
+            LEFT JOIN player_counts pc ON pc.tournament_id = t.id
+            LEFT JOIN winner w ON w.tournament_id = t.id
+            LEFT JOIN date_range dr ON dr.tournament_id = t.id
             ORDER BY t.created_at DESC
         ")->fetchAll();
     }
