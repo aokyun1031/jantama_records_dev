@@ -81,8 +81,8 @@ npx wrangler deploy                      # デプロイ
 - 配列形式のPOST入力は `preg_replace('/[\x00-\x1F\x7F]/u', '', trim(...))` で同等処理する
 - フォームページは `startSecureSession()` + `ensureCsrfToken()` を使う
 - POST検証は `validatePost()` を使う（CSRF + Turnstile を一括検証）
-- フォームHTMLに `<div class="cf-turnstile" data-sitekey="<?= h(turnstileSiteKey()) ?>"></div>` を送信ボタンの前に追加する
-- フォームページは `$pageTurnstile = true;` をヘッダーincludeの前に設定する
+- Turnstileは `footer.php` で一括管理。フォームページは `$pageTurnstile = true;` をヘッダーincludeの前に設定するだけでよい（個別フォームへのTurnstile div追加は不要）
+- Turnstile検証成功まで送信ボタンは無効化される（`ts-pending` クラスによるCSS制御）
 - POST成功後は `$_SESSION['flash']` にメッセージを設定 → `regenerateCsrfToken()` → PRGリダイレクト
 - フラッシュメッセージの読み取りは `consumeFlash()` を使う
 - `json_encode` には `JSON_UNESCAPED_UNICODE | JSON_HEX_TAG` を付ける
