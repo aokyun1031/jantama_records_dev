@@ -154,7 +154,6 @@ $pageStyle = <<<'CSS'
 .finalist-card img { display: block; margin: 0 auto 8px; }
 
 /* セクション間の余白統一 */
-.tile-divider { margin: 40px 0; }
 .progress-section { margin-bottom: 8px; }
 
 /* 対戦結果タブのスペーシング */

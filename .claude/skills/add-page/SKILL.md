@@ -166,8 +166,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 | `Player` | `all()`, `find($id)`, `create()`, `update()`, `delete()`, `existsByName()`, `hasTournaments()`, `count()` |
 | `Tournament` | `all()`, `allWithDetails()`, `find($id)`, `findWithMeta($id)`, `createWithDetails()`, `updateDetails()`, `playerIds()`, `playedPlayerIds()`, `updatePlayers()`, `start()`, `complete()`, `processRoundCompletion()`, `delete()`, `byPlayer()` |
 | `Standing` | `all($tid)`, `finalists($tid)`, `champion($tid)`, `findByPlayer()`, `activePlayerIds()`, `totalMap()`, `updateTotals()`, `processRoundAdvancement()` |
-| `RoundResult` | `byRound($tid, $round)`, `byPlayer($tid, $pid)`, `saveScores($tid, $round, $scores)` |
-| `TableInfo` | `find($id)`, `findWithPlayers($id)`, `byTournament($tid)`, `byRound()`, `byPlayerAndTournament()`, `playerGroupsByRound()`, `create()`, `createBatch()`, `updateSchedule()`, `updatePaifuUrl()`, `markDone()`, `delete()` |
+| `RoundResult` | `byRound($tid, $round)`, `byPlayer($tid, $pid)`, `byRoundGrouped($tid, $round)`, `saveScores($tid, $round, $scores, $gameNumber)` |
+| `TableInfo` | `find($id)`, `findWithPlayers($id)`, `byTournament($tid)`, `byRound()`, `byPlayerAndTournament()`, `playerGroupsByRound()`, `create()`, `createBatch()`, `updateSchedule()`, `markDone()`, `delete()` |
+| `TablePaifuUrl` | `byTable($tableId)`, `saveAll($tableId, $urls)` |
 | `TournamentMeta` | `all($tid)`, `get($tid, $key, $default)`, `set($tid, $key, $value)` |
 | `Interview` | `byTournament($tid)`, `save($tid, $items)` |
 | `PlayerAnalysis` | `summary($pid)`, `avgTableRank($pid)`, `headToHead($pid)`, `scoreHistory($pid)` |

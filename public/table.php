@@ -22,6 +22,17 @@ $tournament = requireTournamentWithMeta($tournamentId);
 $isDone = (bool) $table['done'];
 $isDev = !isProduction();
 
+$meta = $tournament['meta'];
+$rk = 'round_' . $table['round_number'];
+$gameCount = max(1, (int) ($meta[$rk . '_game_count'] ?? 1));
+
+// 牌譜URL取得
+$paifuUrls = TablePaifuUrl::byTable($tableId);
+$paifuUrlMap = [];
+foreach ($paifuUrls as $pu) {
+    $paifuUrlMap[(int) $pu['game_number']] = $pu['url'];
+}
+
 
 // POST処理
 $success = isset($_GET['saved']) && $_GET['saved'] === '1';
@@ -57,13 +68,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                     $validationError = '保存に失敗しました。';
                 }
             }
-        } elseif ($action === 'paifu') {
-            $paifuUrl = sanitizeInput('paifu_url');
-            if ($paifuUrl !== '' && !filter_var($paifuUrl, FILTER_VALIDATE_URL)) {
-                $validationError = '有効なURLを入力してください。';
-            } else {
+        } elseif ($action === 'game_data') {
+            $wantComplete = ($_POST['complete'] ?? '') === '1';
+
+            // 牌譜URL + スコアを一括保存
+            $urls = [];
+            $allGameScores = [];
+            $hasError = false;
+            for ($g = 1; $g <= $gameCount; $g++) {
+                // 牌譜URL
+                $raw = sanitizeInput('paifu_url_' . $g);
+                $url = $raw !== '' ? extractUrl($raw) : '';
+                if ($url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
+                    $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . '有効なURLを入力してください。';
+                    $hasError = true;
+                    break;
+                }
+                $urls[$g] = $url;
+
+                // スコア
+                $scores = [];
+                foreach ($table['players'] as $p) {
+                    $pid = (int) $p['player_id'];
+                    $rawScore = sanitizeInput('score_' . $g . '_' . $pid);
+                    if ($rawScore === '') {
+                        if ($wantComplete) {
+                            $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . h($p['nickname'] ?? $p['name']) . 'のスコアを入力してください。';
+                            $hasError = true;
+                            break 2;
+                        }
+                        $scores[] = null;
+                        continue;
+                    }
+                    $score = filter_var($rawScore, FILTER_VALIDATE_FLOAT);
+                    if ($score === false) {
+                        $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . h($p['nickname'] ?? $p['name']) . 'のスコアが不正です。';
+                        $hasError = true;
+                        break 2;
+                    }
+                    $scores[] = [
+                        'player_id' => $pid,
+                        'score' => $score,
+                        'is_above_cutoff' => true,
+                    ];
+                }
+                $allGameScores[$g] = $scores;
+            }
+            if (!$hasError) {
                 try {
-                    TableInfo::updatePaifuUrl($tableId, $paifuUrl);
+                    TablePaifuUrl::saveAll($tableId, $urls);
+                    foreach ($allGameScores as $g => $gameScores) {
+                        $validScores = array_filter($gameScores, fn($s) => $s !== null);
+                        if (!empty($validScores)) {
+                            RoundResult::saveScores($tournamentId, (int) $table['round_number'], $validScores, $g);
+                        }
+                    }
+
+                    if ($wantComplete) {
+                        TableInfo::markDone($tableId);
+                        Standing::updateTotals($tournamentId);
+                        $_SESSION['flash'] = Tournament::processRoundCompletion($tournamentId, (int) $table['round_number']);
+                        regenerateCsrfToken();
+                        header('Location: tournament?id=' . $tournamentId);
+                        exit;
+                    }
+
                     regenerateCsrfToken();
                     header('Location: table?id=' . $tableId . '&saved=1');
                     exit;
@@ -72,73 +141,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                     $validationError = '保存に失敗しました。';
                 }
             }
-        } elseif ($action === 'scores') {
-            $scores = [];
-            $hasError = false;
-            foreach ($table['players'] as $p) {
-                $pid = (int) $p['player_id'];
-                $raw = sanitizeInput('score_' . $pid);
-                if ($raw === '') {
-                    $validationError = h($p['nickname'] ?? $p['name']) . 'のスコアを入力してください。';
-                    $hasError = true;
-                    break;
-                }
-                $score = filter_var($raw, FILTER_VALIDATE_FLOAT);
-                if ($score === false) {
-                    $validationError = h($p['nickname'] ?? $p['name']) . 'のスコアが不正です。';
-                    $hasError = true;
-                    break;
-                }
-                $scores[] = [
-                    'player_id' => $pid,
-                    'score' => $score,
-                    'is_above_cutoff' => true,
-                ];
-            }
-            if (!$hasError) {
-                try {
-                    RoundResult::saveScores($tournamentId, (int) $table['round_number'], $scores);
-                    regenerateCsrfToken();
-                    header('Location: table?id=' . $tableId . '&saved=1');
-                    exit;
-                } catch (PDOException $e) {
-                    error_log('[DB] ' . $e->getMessage());
-                    $validationError = 'スコアの保存に失敗しました。';
-                }
-            }
         } elseif ($action === 'bulk' && $isDev) {
             // 一括保存: 日時 + 牌譜URL + スコア + 完了
             $playedDate = sanitizeInput('played_date');
             $playedTime = sanitizeInput('played_time');
-            $paifuUrl = sanitizeInput('paifu_url');
             $dayOfWeek = $playedDate !== '' ? DayOfWeek::fromDate($playedDate) : '';
 
-            $scores = [];
+            $allGameScores = [];
+            $bulkUrls = [];
             $hasError = false;
-            foreach ($table['players'] as $p) {
-                $pid = (int) $p['player_id'];
-                $raw = sanitizeInput('score_' . $pid);
-                if ($raw === '') {
-                    $validationError = h($p['nickname'] ?? $p['name']) . 'のスコアを入力してください。';
-                    $hasError = true;
-                    break;
+            for ($g = 1; $g <= $gameCount; $g++) {
+                $rawUrl = sanitizeInput('bulk_paifu_' . $g);
+                $bulkUrls[$g] = $rawUrl !== '' ? extractUrl($rawUrl) : '';
+                $scores = [];
+                foreach ($table['players'] as $p) {
+                    $pid = (int) $p['player_id'];
+                    $raw = sanitizeInput('score_' . $g . '_' . $pid);
+                    if ($raw === '') {
+                        $validationError = $g . '局目: ' . h($p['nickname'] ?? $p['name']) . 'のスコアを入力してください。';
+                        $hasError = true;
+                        break 2;
+                    }
+                    $score = filter_var($raw, FILTER_VALIDATE_FLOAT);
+                    if ($score === false) {
+                        $validationError = $g . '局目: ' . h($p['nickname'] ?? $p['name']) . 'のスコアが不正です。';
+                        $hasError = true;
+                        break 2;
+                    }
+                    $scores[] = ['player_id' => $pid, 'score' => $score, 'is_above_cutoff' => true];
                 }
-                $score = filter_var($raw, FILTER_VALIDATE_FLOAT);
-                if ($score === false) {
-                    $validationError = h($p['nickname'] ?? $p['name']) . 'のスコアが不正です。';
-                    $hasError = true;
-                    break;
-                }
-                $scores[] = ['player_id' => $pid, 'score' => $score, 'is_above_cutoff' => true];
+                $allGameScores[$g] = $scores;
             }
 
             if (!$hasError) {
                 try {
                     TableInfo::updateSchedule($tableId, $playedDate ?: null, $dayOfWeek, $playedTime);
-                    if ($paifuUrl !== '') {
-                        TableInfo::updatePaifuUrl($tableId, $paifuUrl);
+                    TablePaifuUrl::saveAll($tableId, $bulkUrls);
+                    foreach ($allGameScores as $g => $scores) {
+                        RoundResult::saveScores($tournamentId, (int) $table['round_number'], $scores, $g);
                     }
-                    RoundResult::saveScores($tournamentId, (int) $table['round_number'], $scores);
                     TableInfo::markDone($tableId);
                     Standing::updateTotals($tournamentId);
 
@@ -155,57 +196,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
             if ($validationError) {
                 ['data' => $table] = fetchData(fn() => TableInfo::findWithPlayers($tableId));
             }
-        } elseif ($action === 'done') {
-            // スコアが登録済みか確認
-            $hasScores = !empty(array_filter($table['players'], fn($p) => $p['score'] !== null));
-            if (!$hasScores) {
-                $validationError = '対局結果を先に登録してください。';
-            } else {
-                try {
-                    TableInfo::markDone($tableId);
-                    Standing::updateTotals($tournamentId);
-
-                    // 全卓完了チェック → 勝ち抜き判定
-                    $roundNum = (int) $table['round_number'];
-                    ['data' => $roundTables] = fetchData(fn() => TableInfo::byTournament($tournamentId));
-                    $currentRoundTables = $roundTables[$roundNum] ?? [];
-                    $allDone = !empty($currentRoundTables) && empty(array_filter($currentRoundTables, fn($t) => !$t['done']));
-
-                    $flashMsg = '卓を完了しました。';
-                    if ($allDone) {
-                        $rk = 'round_' . $roundNum;
-                        $isFinal = (TournamentMeta::get($tournamentId, $rk . '_is_final') === '1');
-                        $advanceCount = (int) TournamentMeta::get($tournamentId, $rk . '_advance_count', '0');
-
-                        if (!$isFinal && $advanceCount > 0) {
-                            Standing::processRoundAdvancement($tournamentId, $roundNum, $advanceCount);
-                            $flashMsg = $roundNum . '回戦が全卓完了しました。勝ち抜き判定を行いました。';
-                        } elseif ($isFinal) {
-                            $flashMsg = '決勝が完了しました！';
-                        } else {
-                            $flashMsg = $roundNum . '回戦が全卓完了しました。';
-                        }
-                    }
-
-                    $_SESSION['flash'] = $flashMsg;
-                    regenerateCsrfToken();
-                    header('Location: tournament?id=' . $tournamentId);
-                    exit;
-                } catch (PDOException $e) {
-                    error_log('[DB] ' . $e->getMessage());
-                    $validationError = '完了処理に失敗しました。';
-                }
-            }
         }
 
         // POST後にテーブル情報を再取得
         if ($validationError) {
             ['data' => $table] = fetchData(fn() => TableInfo::findWithPlayers($tableId));
+            $paifuUrls = TablePaifuUrl::byTable($tableId);
+            $paifuUrlMap = [];
+            foreach ($paifuUrls as $pu) {
+                $paifuUrlMap[(int) $pu['game_number']] = $pu['url'];
+            }
         }
     }
 }
 
-$hasScores = !empty(array_filter($table['players'], fn($p) => $p['score'] !== null));
 
 // --- テンプレート変数 ---
 $pageTitle = h($table['table_name']) . ' - ' . h($tournament['name']) . ' - 最強位戦';
@@ -252,6 +256,8 @@ $pageStyle = <<<'CSS'
 .tb-btn-done { padding: 12px 32px; background: var(--btn-secondary-bg); color: var(--btn-text-color); border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 16px rgba(var(--mint-rgb), 0.3); }
 .tb-btn-done:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(var(--mint-rgb), 0.4); }
 .tb-btn-done:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.tb-btn-save-draft { padding: 8px 20px; background: none; color: var(--text-sub); border: 1.5px solid var(--glass-border); border-radius: 8px; font-weight: 700; font-size: 0.8rem; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+.tb-btn-save-draft:hover { background: rgba(var(--accent-rgb), 0.06); border-color: rgba(var(--accent-rgb), 0.3); color: var(--text); }
 
 .tb-completed-badge { display: inline-block; background: rgba(var(--mint-rgb), 0.15); color: var(--success); font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; margin-bottom: 8px; }
 .tb-paifu-link { color: var(--purple); text-decoration: none; font-size: 0.8rem; word-break: break-all; }
@@ -316,114 +322,122 @@ require __DIR__ . '/../templates/header.php';
             <label class="tb-label" for="input-time">時間</label>
             <input type="time" id="input-time" name="played_time" class="tb-input" value="<?= h($table['played_time'] ?? '') ?>">
           </div>
-          <button type="submit" class="tb-btn-small">保存</button>
+          <button type="submit" class="tb-btn-small">対局日のみ保存</button>
         </div>
       </form>
     <?php endif; ?>
   </div>
 
-  <!-- 牌譜URL -->
-  <div class="tb-section">
-    <div class="tb-section-title" style="display:flex;align-items:center;gap:12px;">
-      牌譜URL
-      <?php if (!$isDone && $isDev): ?>
-        <button type="button" class="tb-btn-random" id="btn-random-paifu">&#x1F3B2; ランダム</button>
-      <?php endif; ?>
-    </div>
-    <?php if ($isDone && $table['paifu_url']): ?>
-      <a href="<?= h($table['paifu_url']) ?>" class="tb-paifu-link" target="_blank" rel="noopener noreferrer"><?= h($table['paifu_url']) ?></a>
-    <?php elseif ($isDone): ?>
-      <div style="color: var(--text-sub); font-size: 0.85rem;">未登録</div>
-    <?php else: ?>
-      <form method="post" action="table?id=<?= $tableId ?>">
-        <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
-        <input type="hidden" name="action" value="paifu">
-        <div class="tb-form-row">
-          <div style="flex: 1;">
-            <input type="url" name="paifu_url" class="tb-input" style="width: 100%;" value="<?= h($table['paifu_url'] ?? '') ?>" placeholder="https://game.mahjongsoul.com/...">
+  <!-- 対局結果（牌譜URL + スコアをゲームごとにまとめて表示） -->
+  <?php if ($isDone): ?>
+    <?php for ($g = 1; $g <= $gameCount; $g++): ?>
+      <div class="tb-section">
+        <div class="tb-section-title"><?= $gameCount > 1 ? $g . '局目' : '対局結果' ?></div>
+        <?php $url = $paifuUrlMap[$g] ?? ''; ?>
+        <?php if ($url !== ''): ?>
+          <div style="margin-bottom: 12px;">
+            <span class="tb-label">牌譜</span>
+            <a href="<?= h($url) ?>" class="tb-paifu-link" target="_blank" rel="noopener noreferrer"><?= h($url) ?></a>
           </div>
-          <button type="submit" class="tb-btn-small">保存</button>
-        </div>
-      </form>
-    <?php endif; ?>
-  </div>
-
-  <!-- 対局結果 -->
-  <div class="tb-section">
-    <div class="tb-section-title" style="display:flex;align-items:center;gap:12px;">
-      対局結果
-      <?php if (!$isDone && $isDev): ?>
-        <button type="button" class="tb-btn-random" id="btn-random-score">&#x1F3B2; ランダム</button>
-      <?php endif; ?>
-    </div>
-    <?php if ($isDone): ?>
-      <div class="tb-score-grid">
-        <?php
-          $sorted = $table['players'];
-          usort($sorted, fn($a, $b) => (float) $b['score'] <=> (float) $a['score']);
-          foreach ($sorted as $i => $p):
-            $score = (float) $p['score'];
-        ?>
-          <div class="tb-score-row">
-            <span class="tb-score-name"><?= $i + 1 ?>位 <?= h($p['nickname'] ?? $p['name']) ?></span>
-            <span class="tb-score-value <?= $score >= 0 ? 'plus' : 'minus' ?>"><?= $score >= 0 ? '+' : '' ?><?= h((string) $score) ?></span>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    <?php else: ?>
-      <form method="post" action="table?id=<?= $tableId ?>">
-        <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
-        <input type="hidden" name="action" value="scores">
+        <?php endif; ?>
         <div class="tb-score-grid">
-          <?php foreach ($table['players'] as $p): ?>
+          <?php
+            $gameData = [];
+            foreach ($table['players'] as $p) {
+                $s = $table['game_scores'][$g][(int) $p['player_id']] ?? null;
+                $gameData[] = ['name' => $p['nickname'] ?? $p['name'], 'score' => $s];
+            }
+            usort($gameData, fn($a, $b) => (float) ($b['score'] ?? 0) <=> (float) ($a['score'] ?? 0));
+            foreach ($gameData as $i => $gd):
+              $score = (float) ($gd['score'] ?? 0);
+          ?>
             <div class="tb-score-row">
-              <span class="tb-score-name"><?= h($p['nickname'] ?? $p['name']) ?></span>
-              <input type="number" name="score_<?= (int) $p['player_id'] ?>" class="tb-input tb-score-input" step="0.1" value="<?= $p['score'] !== null ? h((string) $p['score']) : '' ?>" placeholder="0.0">
+              <span class="tb-score-name"><?= $i + 1 ?>位 <?= h($gd['name']) ?></span>
+              <span class="tb-score-value <?= $score >= 0 ? 'plus' : 'minus' ?>"><?= $score >= 0 ? '+' : '' ?><?= h((string) $score) ?></span>
             </div>
           <?php endforeach; ?>
         </div>
-        <div style="margin-top: 16px; text-align: right;">
-          <button type="submit" class="tb-btn-small">保存</button>
+      </div>
+    <?php endfor; ?>
+    <?php if ($gameCount > 1): ?>
+      <div class="tb-section">
+        <div class="tb-section-title">合計</div>
+        <div class="tb-score-grid">
+          <?php
+            $sorted = $table['players'];
+            usort($sorted, fn($a, $b) => (float) ($b['score'] ?? 0) <=> (float) ($a['score'] ?? 0));
+            foreach ($sorted as $i => $p):
+              $score = (float) ($p['score'] ?? 0);
+          ?>
+            <div class="tb-score-row">
+              <span class="tb-score-name"><?= $i + 1 ?>位 <?= h($p['nickname'] ?? $p['name']) ?></span>
+              <span class="tb-score-value <?= $score >= 0 ? 'plus' : 'minus' ?>" style="font-size: 1rem;"><?= $score >= 0 ? '+' : '' ?><?= h((string) $score) ?></span>
+            </div>
+          <?php endforeach; ?>
         </div>
-      </form>
+      </div>
     <?php endif; ?>
-  </div>
-
-  <!-- 完了操作 -->
-  <?php if (!$isDone): ?>
-    <div class="tb-section">
+  <?php else: ?>
+    <form method="post" action="table?id=<?= $tableId ?>">
+      <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
+      <input type="hidden" name="action" value="game_data">
+      <?php for ($g = 1; $g <= $gameCount; $g++): ?>
+        <div class="tb-section">
+          <div class="tb-section-title" style="display:flex;align-items:center;gap:12px;">
+            <?= $gameCount > 1 ? $g . '局目' : '対局結果' ?>
+            <?php if ($isDev): ?>
+              <button type="button" class="tb-btn-random btn-random-game" data-game="<?= $g ?>">&#x1F3B2; ランダム</button>
+            <?php endif; ?>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <span class="tb-label">牌譜URL</span>
+            <input type="url" name="paifu_url_<?= $g ?>" class="tb-input tb-paifu-input" style="width: 100%; box-sizing: border-box;" value="<?= h($paifuUrlMap[$g] ?? '') ?>" placeholder="https://game.mahjongsoul.com/...">
+          </div>
+          <div class="tb-score-grid">
+            <?php foreach ($table['players'] as $p):
+              $existingScore = $table['game_scores'][$g][(int) $p['player_id']] ?? null;
+            ?>
+              <div class="tb-score-row">
+                <span class="tb-score-name"><?= h($p['nickname'] ?? $p['name']) ?></span>
+                <input type="number" name="score_<?= $g ?>_<?= (int) $p['player_id'] ?>" class="tb-input tb-score-input" step="0.1" value="<?= $existingScore !== null ? h((string) $existingScore) : '' ?>" placeholder="0.0">
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      <?php endfor; ?>
       <div class="tb-done-section">
-        <form method="post" action="table?id=<?= $tableId ?>" onsubmit="return confirm('この卓を完了にしますか？')">
+        <button type="submit" name="complete" value="1" class="tb-btn-done" onclick="return confirm('対局結果を保存して卓を完了にしますか？')">対局結果を保存して卓を完了にする</button>
+        <div style="margin-top: 10px;">
+          <button type="submit" class="tb-btn-save-draft">一時保存</button>
+        </div>
+      </div>
+    </form>
+
+    <?php if ($isDev): ?>
+      <!-- 一括保存（開発環境のみ） -->
+      <div class="tb-section" style="border-color: rgba(var(--gold-rgb), 0.3); background: rgba(var(--gold-rgb), 0.02);">
+        <div class="tb-section-title" style="display:flex;align-items:center;gap:12px; border-color: rgba(var(--gold-rgb), 0.2);">
+          一括保存
+          <button type="button" class="tb-btn-random" id="btn-random-all">&#x1F3B2; 全てランダム入力</button>
+        </div>
+        <div class="tn-hint" style="margin-bottom: 12px;">日時・牌譜URL・スコアをまとめて保存し、卓を完了にします。</div>
+        <form method="post" action="table?id=<?= $tableId ?>" id="bulk-form">
           <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
-          <input type="hidden" name="action" value="done">
-          <button type="submit" class="tb-btn-done" <?= $hasScores ? '' : 'disabled' ?>>卓を完了にする</button>
+          <input type="hidden" name="action" value="bulk">
+          <input type="hidden" name="played_date" id="bulk-date">
+          <input type="hidden" name="played_time" id="bulk-time">
+          <?php for ($g = 1; $g <= $gameCount; $g++): ?>
+            <input type="hidden" name="bulk_paifu_<?= $g ?>" class="bulk-paifu" data-game="<?= $g ?>">
+          <?php endfor; ?>
+          <?php for ($g = 1; $g <= $gameCount; $g++): ?>
+            <?php foreach ($table['players'] as $p): ?>
+              <input type="hidden" name="score_<?= $g ?>_<?= (int) $p['player_id'] ?>" class="bulk-score" data-game="<?= $g ?>" data-pid="<?= (int) $p['player_id'] ?>">
+            <?php endforeach; ?>
+          <?php endfor; ?>
+          <button type="submit" class="tb-btn-done" id="btn-bulk-save">まとめて保存 &amp; 完了</button>
         </form>
-        <?php if (!$hasScores): ?>
-          <div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-sub);">対局結果を登録すると完了にできます。</div>
-        <?php endif; ?>
       </div>
-    </div>
-  <?php if (!$isDone && $isDev): ?>
-    <!-- 一括保存（開発環境のみ） -->
-    <div class="tb-section" style="border-color: rgba(var(--gold-rgb), 0.3); background: rgba(var(--gold-rgb), 0.02);">
-      <div class="tb-section-title" style="display:flex;align-items:center;gap:12px; border-color: rgba(var(--gold-rgb), 0.2);">
-        一括保存
-        <button type="button" class="tb-btn-random" id="btn-random-all">&#x1F3B2; 全てランダム入力</button>
-      </div>
-      <div class="tn-hint" style="margin-bottom: 12px;">日時・牌譜URL・スコアをまとめて保存し、卓を完了にします。</div>
-      <form method="post" action="table?id=<?= $tableId ?>" id="bulk-form">
-        <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
-        <input type="hidden" name="action" value="bulk">
-        <input type="hidden" name="played_date" id="bulk-date">
-        <input type="hidden" name="played_time" id="bulk-time">
-        <input type="hidden" name="paifu_url" id="bulk-paifu">
-        <?php foreach ($table['players'] as $p): ?>
-          <input type="hidden" name="score_<?= (int) $p['player_id'] ?>" class="bulk-score" data-pid="<?= (int) $p['player_id'] ?>">
-        <?php endforeach; ?>
-        <button type="submit" class="tb-btn-done" id="btn-bulk-save">まとめて保存 &amp; 完了</button>
-      </form>
-    </div>
-  <?php endif; ?>
+    <?php endif; ?>
 
   <?php else: ?>
     <div class="tb-section" style="text-align: center;">
@@ -437,25 +451,65 @@ require __DIR__ . '/../templates/header.php';
 </div>
 
 <?php
-$meta = $tournament['meta'];
 $jsStartingPoints = (int) ($meta['starting_points'] ?? 25000);
 $jsReturnPoints = (int) ($meta['return_points'] ?? 30000);
 $jsPlayerMode = (int) ($meta['player_mode'] ?? 4);
 $jsPlayerCount = count($table['players']);
+$jsGameCount = $gameCount;
 
 $pageInlineScript = $isDev ? <<<JS
 (function() {
+  var gameCount = {$jsGameCount};
+  var startPt = {$jsStartingPoints};
+  var returnPt = {$jsReturnPoints};
+  var pMode = {$jsPlayerMode};
+  var pCount = {$jsPlayerCount};
+
+  function genRandomScores() {
+    var totalPool = startPt * pCount;
+    var rawPoints = [];
+    var remaining = totalPool;
+    for (var i = 0; i < pCount - 1; i++) {
+      var avg = remaining / (pCount - i);
+      var deviation = startPt * 0.6;
+      var pts = Math.round((avg + (Math.random() - 0.5) * 2 * deviation) / 100) * 100;
+      pts = Math.max(100, Math.min(remaining - (pCount - i - 1) * 100, pts));
+      rawPoints.push(pts);
+      remaining -= pts;
+    }
+    rawPoints.push(remaining);
+    rawPoints.sort(function(a, b) { return b - a; });
+    var uma = pMode === 3 ? [15, 0, -15] : [20, 10, -10, -20];
+    var scores = [];
+    for (var i = 0; i < pCount; i++) {
+      var diff = (rawPoints[i] - returnPt) / 1000;
+      var u = i < uma.length ? uma[i] : 0;
+      scores.push(Math.round((diff + u) * 10) / 10);
+    }
+    var sum = 0;
+    for (var i = 0; i < scores.length; i++) sum += scores[i];
+    scores[0] = Math.round((scores[0] - sum) * 10) / 10;
+    // シャッフル
+    var indices = [];
+    for (var i = 0; i < scores.length; i++) indices.push(i);
+    for (var i = indices.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = indices[i]; indices[i] = indices[j]; indices[j] = t;
+    }
+    return scores.map(function(_, idx) { return scores[indices[idx]]; });
+  }
+
   // ランダム日時生成
   var btnRandSched = document.getElementById('btn-random-schedule');
   if (btnRandSched) {
     btnRandSched.addEventListener('click', function() {
       var now = new Date();
-      var offset = Math.floor(Math.random() * 14) + 1; // 1〜14日後
+      var offset = Math.floor(Math.random() * 14) + 1;
       var d = new Date(now.getTime() + offset * 86400000);
       var y = d.getFullYear();
       var m = ('0' + (d.getMonth() + 1)).slice(-2);
       var day = ('0' + d.getDate()).slice(-2);
-      var h = Math.floor(Math.random() * 12) + 10; // 10〜21時
+      var h = Math.floor(Math.random() * 12) + 10;
       var min = [0, 30][Math.floor(Math.random() * 2)];
       var dateInput = document.getElementById('input-date');
       var timeInput = document.getElementById('input-time');
@@ -464,34 +518,45 @@ $pageInlineScript = $isDev ? <<<JS
     });
   }
 
-  // ランダム牌譜URL生成
-  var btnRandPaifu = document.getElementById('btn-random-paifu');
-  if (btnRandPaifu) {
-    btnRandPaifu.addEventListener('click', function() {
-      var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-      var id = '';
-      for (var i = 0; i < 12; i++) id += chars[Math.floor(Math.random() * chars.length)];
-      var input = document.querySelector('input[name="paifu_url"]');
-      if (input) input.value = 'https://example.com/paifu/' + id;
-    });
+  // ゲームごとのランダムボタン（牌譜URL + スコア）
+  function randomPaifuId() {
+    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var id = '';
+    for (var i = 0; i < 12; i++) id += chars[Math.floor(Math.random() * chars.length)];
+    return id;
   }
+  document.querySelectorAll('.btn-random-game').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var g = btn.getAttribute('data-game');
+      var paifuInput = document.querySelector('input[name="paifu_url_' + g + '"]');
+      if (paifuInput) paifuInput.value = 'https://example.com/paifu/' + randomPaifuId();
+      var scores = genRandomScores();
+      var inputs = document.querySelectorAll('input[name^="score_' + g + '_"]');
+      for (var i = 0; i < inputs.length && i < scores.length; i++) {
+        inputs[i].value = scores[i].toFixed(1);
+      }
+    });
+  });
 
   // 一括フォームの値を各入力欄から同期
   var bulkForm = document.getElementById('bulk-form');
   if (bulkForm) {
     bulkForm.addEventListener('submit', function(e) {
-      // 値コピーを先に実行
       var d = document.getElementById('input-date');
       var t = document.getElementById('input-time');
-      var p = document.querySelector('input[name="paifu_url"]');
       if (d) document.getElementById('bulk-date').value = d.value;
       if (t) document.getElementById('bulk-time').value = t.value;
-      if (p) document.getElementById('bulk-paifu').value = p.value;
-      document.querySelectorAll('.bulk-score').forEach(function(h) {
-        var src = document.querySelector('input[name="score_' + h.getAttribute('data-pid') + '"]:not(.bulk-score)');
+      document.querySelectorAll('.bulk-paifu').forEach(function(h) {
+        var g = h.getAttribute('data-game');
+        var src = document.querySelector('input[name="paifu_url_' + g + '"]:not(.bulk-paifu)');
         if (src) h.value = src.value;
       });
-      // 値コピー後に確認ダイアログ
+      document.querySelectorAll('.bulk-score').forEach(function(h) {
+        var g = h.getAttribute('data-game');
+        var pid = h.getAttribute('data-pid');
+        var src = document.querySelector('input[name="score_' + g + '_' + pid + '"]:not(.bulk-score)');
+        if (src) h.value = src.value;
+      });
       if (!confirm('全項目を保存して卓を完了にしますか？')) {
         e.preventDefault();
       }
@@ -503,77 +568,8 @@ $pageInlineScript = $isDev ? <<<JS
   if (btnAll) {
     btnAll.addEventListener('click', function() {
       var bs = document.getElementById('btn-random-schedule');
-      var bp = document.getElementById('btn-random-paifu');
-      var br = document.getElementById('btn-random-score');
       if (bs) bs.click();
-      if (bp) bp.click();
-      if (br) br.click();
-    });
-  }
-
-  // ランダムスコア生成
-  var btnRandom = document.getElementById('btn-random-score');
-  if (btnRandom) {
-    var startPt = {$jsStartingPoints};
-    var returnPt = {$jsReturnPoints};
-    var pMode = {$jsPlayerMode};
-    var pCount = {$jsPlayerCount};
-
-    btnRandom.addEventListener('click', function() {
-      // 現実的な最終持ち点を生成（配給原点ベース）
-      // 合計は startPt * pCount（持ち点の総和は不変）
-      var totalPool = startPt * pCount;
-      var rawPoints = [];
-      var remaining = totalPool;
-
-      // 各プレイヤーの最終持ち点をランダム生成
-      for (var i = 0; i < pCount - 1; i++) {
-        // 残りをざっくり分配（標準偏差を持たせる）
-        var avg = remaining / (pCount - i);
-        var deviation = startPt * 0.6;
-        var pts = Math.round((avg + (Math.random() - 0.5) * 2 * deviation) / 100) * 100;
-        // 最低100点は残す（トビなしの場合）
-        pts = Math.max(100, Math.min(remaining - (pCount - i - 1) * 100, pts));
-        rawPoints.push(pts);
-        remaining -= pts;
-      }
-      rawPoints.push(remaining);
-
-      // 降順ソート
-      rawPoints.sort(function(a, b) { return b - a; });
-
-      // 返し点からの差分を1000で割ってポイント化（順位ウマ付き）
-      var uma;
-      if (pMode === 3) {
-        uma = [15, 0, -15]; // 三麻ウマ
-      } else {
-        uma = [20, 10, -10, -20]; // 四麻ウマ
-      }
-
-      var scores = [];
-      for (var i = 0; i < pCount; i++) {
-        var diff = (rawPoints[i] - returnPt) / 1000;
-        var u = i < uma.length ? uma[i] : 0;
-        scores.push(Math.round((diff + u) * 10) / 10);
-      }
-
-      // 合計を0に補正（1位に端数を載せる）
-      var sum = 0;
-      for (var i = 0; i < scores.length; i++) sum += scores[i];
-      scores[0] = Math.round((scores[0] - sum) * 10) / 10;
-
-      // シャッフルして各入力欄にセット（順位はランダム）
-      var indices = [];
-      for (var i = 0; i < scores.length; i++) indices.push(i);
-      for (var i = indices.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var t = indices[i]; indices[i] = indices[j]; indices[j] = t;
-      }
-
-      var inputs = document.querySelectorAll('.tb-score-input');
-      for (var i = 0; i < inputs.length && i < scores.length; i++) {
-        inputs[i].value = scores[indices[i]].toFixed(1);
-      }
+      document.querySelectorAll('.btn-random-game').forEach(function(b) { b.click(); });
     });
   }
 })();

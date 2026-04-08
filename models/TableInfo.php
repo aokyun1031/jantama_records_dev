@@ -12,7 +12,7 @@ class TableInfo
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('
             SELECT t.id, t.tournament_id, t.round_number, t.table_name,
-                   t.played_date, t.day_of_week, t.played_time, t.done, t.paifu_url
+                   t.played_date, t.day_of_week, t.played_time, t.done
             FROM tables_info t
             WHERE t.id = ?
         ');
@@ -21,7 +21,7 @@ class TableInfo
     }
 
     /**
-     * 卓を選手一覧付きで取得する。既存スコアも含む。
+     * 卓を選手一覧付きで取得する。ゲーム別スコアも含む。
      */
     public static function findWithPlayers(int $id): ?array
     {
@@ -31,35 +31,56 @@ class TableInfo
         }
 
         $pdo = getDbConnection();
+        // 選手一覧（合計スコア付き）
         $stmt = $pdo->prepare('
             SELECT tp.player_id, p.name, p.nickname, tp.seat_order,
                    c.icon_filename AS character_icon,
-                   rr.score, rr.is_above_cutoff
+                   SUM(rr.score) AS score,
+                   BOOL_AND(rr.is_above_cutoff) AS is_above_cutoff
             FROM table_players tp
             JOIN players p ON p.id = tp.player_id
             LEFT JOIN characters c ON c.id = p.character_id
             LEFT JOIN round_results rr ON rr.player_id = tp.player_id
                   AND rr.tournament_id = ? AND rr.round_number = ?
             WHERE tp.table_id = ?
+            GROUP BY tp.player_id, p.name, p.nickname, tp.seat_order, c.icon_filename
             ORDER BY tp.seat_order
         ');
         $stmt->execute([$table['tournament_id'], $table['round_number'], $id]);
         $table['players'] = $stmt->fetchAll();
+
+        // ゲーム別スコア
+        $gameStmt = $pdo->prepare('
+            SELECT rr.game_number, rr.player_id, rr.score
+            FROM round_results rr
+            JOIN table_players tp ON tp.player_id = rr.player_id AND tp.table_id = ?
+            WHERE rr.tournament_id = ? AND rr.round_number = ?
+            ORDER BY rr.game_number, rr.player_id
+        ');
+        $gameStmt->execute([$id, $table['tournament_id'], $table['round_number']]);
+        $gameScores = [];
+        foreach ($gameStmt->fetchAll() as $row) {
+            $gn = (int) $row['game_number'];
+            $gameScores[$gn][(int) $row['player_id']] = (float) $row['score'];
+        }
+        $table['game_scores'] = $gameScores;
+
         return $table;
     }
 
     /**
-     * 大会の全卓をラウンド別に取得する。
+     * 大会の全卓をラウンド別に取得する。スコアはラウンド合計。
      */
     public static function byTournament(int $tournamentId): array
     {
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('
             SELECT t.id AS table_id, t.round_number, t.table_name,
-                   t.played_date, t.day_of_week, t.played_time, t.done, t.paifu_url,
+                   t.played_date, t.day_of_week, t.played_time, t.done,
                    tp.player_id, p.name AS player_name, p.nickname AS player_nickname,
                    c.icon_filename AS player_icon, tp.seat_order,
-                   s.eliminated_round, rr.score
+                   s.eliminated_round,
+                   SUM(rr.score) AS score
             FROM tables_info t
             JOIN table_players tp ON tp.table_id = t.id
             JOIN players p ON p.id = tp.player_id
@@ -68,7 +89,10 @@ class TableInfo
             LEFT JOIN round_results rr ON rr.player_id = tp.player_id
                   AND rr.tournament_id = t.tournament_id AND rr.round_number = t.round_number
             WHERE t.tournament_id = ?
-            ORDER BY t.round_number, t.table_name, rr.score DESC NULLS LAST, tp.seat_order
+            GROUP BY t.id, t.round_number, t.table_name, t.played_date, t.day_of_week,
+                     t.played_time, t.done, tp.player_id, p.name, p.nickname,
+                     c.icon_filename, tp.seat_order, s.eliminated_round
+            ORDER BY t.round_number, t.table_name, SUM(rr.score) DESC NULLS LAST, tp.seat_order
         ');
         $stmt->execute([$tournamentId]);
         $rows = $stmt->fetchAll();
@@ -88,7 +112,6 @@ class TableInfo
                     'day_of_week' => $row['day_of_week'],
                     'played_time' => $row['played_time'],
                     'done'        => $row['done'],
-                    'paifu_url'   => $row['paifu_url'],
                     'players'     => [],
                 ];
             }
@@ -209,16 +232,6 @@ class TableInfo
     }
 
     /**
-     * 牌譜URLを更新する。
-     */
-    public static function updatePaifuUrl(int $id, string $url): void
-    {
-        $pdo = getDbConnection();
-        $stmt = $pdo->prepare('UPDATE tables_info SET paifu_url = ? WHERE id = ?');
-        $stmt->execute([$url, $id]);
-    }
-
-    /**
      * 卓を完了にする。
      */
     public static function markDone(int $id): void
@@ -282,7 +295,7 @@ class TableInfo
 
     /**
      * 特定大会で特定選手が参加した卓情報をラウンドごとに取得。
-     * 同卓メンバーのスコア・通過判定を含む。
+     * 同卓メンバーのスコア（ラウンド合計）・通過判定を含む。
      */
     public static function byPlayerAndTournament(int $tournamentId, int $playerId): array
     {
@@ -290,7 +303,8 @@ class TableInfo
         $stmt = $pdo->prepare('
             SELECT ti.round_number, ti.table_name, ti.played_date, ti.day_of_week, ti.done,
                    p.id AS member_id, p.name AS member_name, tp2.seat_order,
-                   rr.score, rr.is_above_cutoff
+                   SUM(rr.score) AS score,
+                   BOOL_AND(rr.is_above_cutoff) AS is_above_cutoff
             FROM table_players tp
             JOIN tables_info ti ON ti.id = tp.table_id
             JOIN table_players tp2 ON tp2.table_id = tp.table_id
@@ -299,7 +313,9 @@ class TableInfo
                   AND rr.round_number = ti.round_number
                   AND rr.tournament_id = ti.tournament_id
             WHERE tp.player_id = ? AND ti.tournament_id = ?
-            ORDER BY ti.round_number, rr.score DESC NULLS LAST
+            GROUP BY ti.round_number, ti.table_name, ti.played_date, ti.day_of_week, ti.done,
+                     p.id, p.name, tp2.seat_order
+            ORDER BY ti.round_number, SUM(rr.score) DESC NULLS LAST
         ');
         $stmt->execute([$playerId, $tournamentId]);
         $rows = $stmt->fetchAll();

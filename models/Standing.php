@@ -37,13 +37,17 @@ class Standing
         $stmt = $pdo->prepare("
             SELECT p.name, p.nickname, s.total, c.icon_filename AS character_icon,
                    string_agg(
-                       CASE WHEN r.score >= 0 THEN '+' ELSE '' END || r.score::text,
-                       ' → ' ORDER BY r.round_number
+                       CASE WHEN round_sum >= 0 THEN '+' ELSE '' END || round_sum::text,
+                       ' → ' ORDER BY round_number
                    ) AS trend
             FROM standings s
             JOIN players p ON p.id = s.player_id
             LEFT JOIN characters c ON c.id = p.character_id
-            JOIN round_results r ON r.player_id = s.player_id AND r.tournament_id = s.tournament_id
+            JOIN (
+                SELECT player_id, tournament_id, round_number, SUM(score) AS round_sum
+                FROM round_results
+                GROUP BY player_id, tournament_id, round_number
+            ) r ON r.player_id = s.player_id AND r.tournament_id = s.tournament_id
             WHERE s.tournament_id = ? AND s.eliminated_round = 0
             GROUP BY p.name, p.nickname, s.total, c.icon_filename
             ORDER BY s.total DESC
@@ -79,15 +83,16 @@ class Standing
     {
         $pdo = getDbConnection();
 
-        // ラウンドの全卓と選手を取得
+        // ラウンドの全卓と選手を取得（ゲーム別スコアの合計）
         $stmt = $pdo->prepare('
-            SELECT ti.id AS table_id, tp.player_id, rr.score
+            SELECT ti.id AS table_id, tp.player_id, SUM(rr.score) AS score
             FROM tables_info ti
             JOIN table_players tp ON tp.table_id = ti.id
             LEFT JOIN round_results rr ON rr.player_id = tp.player_id
                   AND rr.tournament_id = ti.tournament_id AND rr.round_number = ti.round_number
             WHERE ti.tournament_id = ? AND ti.round_number = ?
-            ORDER BY ti.id, rr.score DESC NULLS LAST
+            GROUP BY ti.id, tp.player_id
+            ORDER BY ti.id, SUM(rr.score) DESC NULLS LAST
         ');
         $stmt->execute([$tournamentId, $roundNumber]);
         $rows = $stmt->fetchAll();

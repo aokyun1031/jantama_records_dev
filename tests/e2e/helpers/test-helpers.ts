@@ -84,8 +84,8 @@ export async function createTestTournamentWithPlayers(
  */
 export async function deleteTestTournament(page: Page, id: number): Promise<void> {
   try {
-    await page.goto(`/tournament_edit?id=${id}`);
-    const deleteBtn = page.locator('button.btn-delete');
+    await page.goto(`/tournament?id=${id}`);
+    const deleteBtn = page.locator('.td-btn-delete');
     if (await deleteBtn.isVisible({ timeout: 3000 })) {
       page.once('dialog', (dialog) => dialog.accept());
       await deleteBtn.click();

@@ -48,24 +48,23 @@ test.describe('卓管理', () => {
     await expect(page.locator('.edit-message.success')).toBeVisible();
   });
 
-  test('スコアを入力して保存できる', async ({ page }) => {
+  test('スコアを入力して一時保存できる', async ({ page }) => {
     await page.goto(`/table?id=${tableId}`);
-    const scoreInputs = page.locator('form:has(input[value="scores"]) input[name^="score_"]');
+    const scoreInputs = page.locator('form:has(input[value="game_data"]) input.tb-score-input');
     const count = await scoreInputs.count();
-    const scores = [25.0, 10.0, -5.0, -30.0];
+    const scorePool = [25.0, 10.0, -5.0, -30.0, 15.0, -15.0];
     for (let i = 0; i < count; i++) {
-      await scoreInputs.nth(i).fill(scores[i].toString());
+      await scoreInputs.nth(i).fill((scorePool[i % scorePool.length]).toString());
     }
-    await page.click('form:has(input[value="scores"]) .tb-btn-small');
+    await page.click('.tb-btn-save-draft');
     await page.waitForURL(/table\?id=\d+&saved=1/, { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.edit-message.success')).toBeVisible();
   });
 
-  test('卓を完了にできる', async ({ page }) => {
+  test('対局結果を保存して卓を完了にできる', async ({ page }) => {
     await page.goto(`/table?id=${tableId}`);
-    // スコアが保存済みなので完了ボタンが有効
-    const doneBtn = page.locator('form:has(input[value="done"]) .tb-btn-done');
-    await expect(doneBtn).toBeEnabled();
+    const doneBtn = page.locator('button[name="complete"]');
+    await expect(doneBtn).toBeVisible();
     page.once('dialog', (dialog) => dialog.accept());
     await doneBtn.click();
     // 大会ページにリダイレクト
@@ -79,7 +78,7 @@ test.describe('卓管理', () => {
     await expect(page.locator('.tb-completed-badge')).toBeVisible();
     // フォームが表示されない
     await expect(page.locator('.tb-btn-done')).toHaveCount(0);
-    await expect(page.locator('form:has(input[value="scores"])')).toHaveCount(0);
+    await expect(page.locator('form:has(input[value="game_data"])')).toHaveCount(0);
   });
 
   test('存在しないIDで404', async ({ page }) => {

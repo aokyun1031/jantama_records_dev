@@ -276,3 +276,15 @@ function consumeFlash(): ?string
     unset($_SESSION['flash']);
     return $flash;
 }
+
+/**
+ * 入力文字列からURLを抽出する。
+ * 「雀魂牌譜: https://...」のようなプレフィックス付きテキストからURLだけを取り出す。
+ */
+function extractUrl(string $input): string
+{
+    if (preg_match('/(https?:\/\/\S+)/', $input, $m)) {
+        return $m[1];
+    }
+    return $input;
+}
