@@ -1,29 +1,8 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, deleteTestTournament , createOptimizedPage } from '../helpers/test-helpers';
+import { TEST_PREFIX } from '../helpers/test-helpers';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('大会新規作成', () => {
-  const createdIds: number[] = [];
-
-  test.afterAll(async ({ browser }) => {
-    const page = await createOptimizedPage(browser);
-    // 作成された大会IDを収集
-    await page.goto('/tournaments');
-    const cards = page.locator('.tournament-card');
-    const count = await cards.count();
-    for (let i = 0; i < count; i++) {
-      const name = await cards.nth(i).locator('.tournament-name').textContent();
-      if (name?.startsWith(TEST_PREFIX)) {
-        const link = cards.nth(i).locator('a.tournament-link', { hasText: '管理ページ' });
-        const href = await link.getAttribute('href');
-        const match = href?.match(/id=(\d+)/);
-        if (match) createdIds.push(parseInt(match[1], 10));
-      }
-    }
-    for (const id of createdIds) {
-      await deleteTestTournament(page, id);
-    }
-    await page.close();
-  });
 
   test('フォームが正しく表示される', async ({ page }) => {
     await page.goto('/tournament_new');

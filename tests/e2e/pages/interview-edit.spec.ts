@@ -1,5 +1,5 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestTournamentWithPlayers, deleteTestTournament , createOptimizedPage } from '../helpers/test-helpers';
+import { TEST_PREFIX, createTestTournamentWithPlayers, createOptimizedPage } from '../helpers/test-helpers';
 
 test.describe('インタビュー編集', () => {
   test.describe.configure({ mode: 'serial' });
@@ -11,12 +11,6 @@ test.describe('インタビュー編集', () => {
       page,
       `${TEST_PREFIX}interview_edit_${Date.now()}`
     );
-    await page.close();
-  });
-
-  test.afterAll(async ({ browser }) => {
-    const page = await createOptimizedPage(browser);
-    await deleteTestTournament(page, tournamentId);
     await page.close();
   });
 

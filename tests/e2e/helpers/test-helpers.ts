@@ -3,7 +3,7 @@ import { type Page, type Browser, expect } from '@playwright/test';
 export const TEST_PREFIX = '__E2E_TEST_';
 
 /**
- * beforeAll/afterAll 用のページを作成する。
+ * beforeAll 用のページを作成する。
  * browser.newPage() だと config の use 設定が適用されないため、
  * リソースブロック・waitUntil 等を手動で設定する。
  */
@@ -34,42 +34,6 @@ export async function createTestPlayer(
 }
 
 /**
- * テスト用プレイヤーを削除する。大会参加済みの場合はスキップ。
- */
-async function deleteTestPlayer(page: Page, id: number): Promise<void> {
-  await page.goto(`/player_edit?id=${id}`, { waitUntil: 'domcontentloaded' });
-  const deleteBtn = page.locator('button.btn-delete');
-  if (await deleteBtn.isVisible()) {
-    page.once('dialog', (dialog) => dialog.accept());
-    await deleteBtn.click();
-    await page.waitForURL(/\/players/, { waitUntil: 'domcontentloaded' });
-  }
-}
-
-/**
- * テスト用プレイヤーを一括クリーンアップする。
- */
-export async function cleanupTestPlayers(page: Page): Promise<void> {
-  await page.goto('/players', { waitUntil: 'domcontentloaded' });
-  const cards = page.locator('.player-card');
-  const count = await cards.count();
-  const idsToDelete: number[] = [];
-
-  for (let i = 0; i < count; i++) {
-    const name = await cards.nth(i).locator('.player-name').textContent();
-    if (name?.startsWith(TEST_PREFIX)) {
-      const href = await cards.nth(i).getAttribute('href');
-      const match = href?.match(/id=(\d+)/);
-      if (match) idsToDelete.push(parseInt(match[1], 10));
-    }
-  }
-
-  for (const id of idsToDelete) {
-    await deleteTestPlayer(page, id);
-  }
-}
-
-/**
  * テスト用大会をフォーム経由で作成し、選手全員を登録してIDを返す。
  */
 export async function createTestTournamentWithPlayers(
@@ -88,23 +52,6 @@ export async function createTestTournamentWithPlayers(
   const link = card.locator('a.tournament-link', { hasText: '管理ページ' });
   const href = await link.getAttribute('href');
   return parseInt(href!.match(/id=(\d+)/)![1], 10);
-}
-
-/**
- * 指定IDの大会を削除する。エラーは無視する。
- */
-export async function deleteTestTournament(page: Page, id: number): Promise<void> {
-  try {
-    await page.goto(`/tournament?id=${id}`, { waitUntil: 'domcontentloaded' });
-    const deleteBtn = page.locator('.td-btn-delete');
-    if (await deleteBtn.isVisible({ timeout: 3000 })) {
-      page.once('dialog', (dialog) => dialog.accept());
-      await deleteBtn.click();
-      await page.waitForURL(/\/tournaments/, { waitUntil: 'domcontentloaded', timeout: 10000 });
-    }
-  } catch {
-    // 完了済みや既に削除済みの場合はスキップ
-  }
 }
 
 /**

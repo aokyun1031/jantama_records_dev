@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: '.',
   testMatch: ['pages/**/*.spec.ts', 'features/**/*.spec.ts'],
   globalSetup: './global-setup.ts',
+  globalTeardown: './global-teardown.ts',
   fullyParallel: true,
   workers: process.env.CI ? 2 : 4,
   retries: 1,

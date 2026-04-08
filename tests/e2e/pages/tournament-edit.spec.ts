@@ -1,5 +1,5 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, deleteTestTournament , createOptimizedPage } from '../helpers/test-helpers';
+import { TEST_PREFIX, createOptimizedPage } from '../helpers/test-helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('大会情報編集', () => {
@@ -19,12 +19,6 @@ test.describe('大会情報編集', () => {
     const link = card.locator('a.tournament-link', { hasText: '管理ページ' });
     const href = await link.getAttribute('href');
     tournamentId = parseInt(href!.match(/id=(\d+)/)![1], 10);
-    await page.close();
-  });
-
-  test.afterAll(async ({ browser }) => {
-    const page = await createOptimizedPage(browser);
-    await deleteTestTournament(page, tournamentId);
     await page.close();
   });
 
