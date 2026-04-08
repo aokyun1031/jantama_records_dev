@@ -294,6 +294,7 @@ require __DIR__ . '/../templates/header.php';
 </div>
 
 <?php
+$pageScripts = ['js/player-select.js'];
 $pageInlineScript = <<<'JS'
 (function() {
   var form = document.querySelector('form');
@@ -306,31 +307,6 @@ $pageInlineScript = <<<'JS'
         setTimeout(function() { form.reportValidity(); }, 400);
       }
     }
-  });
-
-  var grid = document.getElementById('player-grid');
-  var countEl = document.getElementById('selected-count');
-  var btnAll = document.getElementById('btn-select-all');
-  var btnNone = document.getElementById('btn-deselect-all');
-
-  function updateCount() {
-    var checked = grid.querySelectorAll('input[type="checkbox"]:checked').length;
-    countEl.textContent = checked + '人選択中';
-  }
-
-  grid.addEventListener('change', updateCount);
-  updateCount();
-
-  btnAll.addEventListener('click', function() {
-    var options = grid.querySelectorAll('.player-select-option input[type="checkbox"]');
-    for (var i = 0; i < options.length; i++) options[i].checked = true;
-    updateCount();
-  });
-
-  btnNone.addEventListener('click', function() {
-    var options = grid.querySelectorAll('input[type="checkbox"]');
-    for (var i = 0; i < options.length; i++) options[i].checked = false;
-    updateCount();
   });
 })();
 JS;
