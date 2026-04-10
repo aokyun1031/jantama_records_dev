@@ -24,6 +24,74 @@
 開発:  Codespaces / Docker ──→ Neon (devブランチ)
 ```
 
+```mermaid
+graph TB
+    %% スタイル定義（レイヤーごとに色分け）
+    classDef userStyle   fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef cfStyle     fill:#fff7ed,stroke:#f97316,color:#7c2d12
+    classDef serverStyle fill:#dcfce7,stroke:#22c55e,color:#14532d
+    classDef dbStyle     fill:#f0fdf4,stroke:#16a34a,color:#14532d
+    classDef devStyle    fill:#f5f5f5,stroke:#9ca3af,color:#374151
+    classDef deployStyle fill:#fefce8,stroke:#eab308,color:#713f12
+
+    %% ユーザー
+    Browser(["ブラウザ"]):::userStyle
+
+    %% Cloudflare エッジレイヤー
+    subgraph CF["Cloudflare エッジ"]
+        Workers["Workers\nCDN リバースプロキシ"]:::cfStyle
+        KV[("Workers KV\nフォールバックキャッシュ")]:::cfStyle
+        Cron(["Cron Triggers\n5分ごと ping"]):::cfStyle
+        Turnstile["Turnstile\nbot 対策"]:::cfStyle
+        Analytics["Web Analytics"]:::cfStyle
+    end
+
+    %% アプリケーションレイヤー
+    subgraph App["Render 本番サーバー"]
+        PHP["PHP 8.2 / Apache"]:::serverStyle
+    end
+
+    %% データレイヤー
+    subgraph DB["Neon PostgreSQL"]
+        Prod[("production")]:::dbStyle
+        Dev[("dev")]:::dbStyle
+    end
+
+    %% 開発環境
+    subgraph DevEnv["開発環境"]
+        Codespaces["GitHub Codespaces\n:8080"]:::devStyle
+        Docker["Docker Compose\n:8080"]:::devStyle
+        E2E(["Playwright E2E\ngit push 時に自動実行"]):::devStyle
+    end
+
+    %% デプロイ・監視
+    GitHub["GitHub\nmain ブランチ"]:::deployStyle
+    Monitor["UptimeRobot\n死活監視"]:::deployStyle
+
+    %% 本番リクエストフロー
+    Browser -->|"HTTPS"| Workers
+    Workers -->|"静的アセット (キャッシュ HIT)"| Browser
+    Workers -->|"PHP ページ (キャッシュ MISS)"| PHP
+    Workers <-->|"オリジンダウン時"| KV
+
+    %% Cloudflare サービス連携
+    Cron -->|"ping"| PHP
+    Analytics -. "ビーコン" .-> Browser
+    PHP -->|"サーバーサイド検証"| Turnstile
+
+    %% DB 接続
+    PHP -->|"クエリ (リトライ×3)"| Prod
+    Codespaces -->|"クエリ"| Dev
+    Docker -->|"クエリ"| Dev
+
+    %% デプロイ・監視
+    GitHub -->|"main マージ時\n自動デプロイ"| App
+    Monitor -->|"死活監視"| PHP
+
+    %% E2E テスト
+    E2E -. "Docker 起動中に実行" .-> Docker
+```
+
 Cloudflare Workers は CDN リバースプロキシとして動作し、静的アセット（CSS/JS/画像）をエッジにキャッシュします。
 - Workers URL: `https://jantama-records-proxy.aokyun1031.workers.dev/`
 - オリジン: `https://jantama-records.onrender.com/`
