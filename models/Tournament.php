@@ -280,7 +280,11 @@ class Tournament
                     (SELECT MAX(rr.round_number)
                      FROM round_results rr
                      WHERE rr.tournament_id = t.id AND rr.player_id = s.player_id
-                    ) AS last_round
+                    ) AS last_round,
+                    (SELECT MAX(rr2.round_number)
+                     FROM round_results rr2
+                     WHERE rr2.tournament_id = t.id
+                    ) AS max_round
              FROM tournaments t
              JOIN standings s ON s.tournament_id = t.id AND s.player_id = ?
              LEFT JOIN tournament_meta tm ON tm.tournament_id = t.id AND tm.key = 'event_type'
