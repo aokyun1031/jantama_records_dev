@@ -16,16 +16,6 @@
   overflow:hidden;
 }
 
-/* Corner decorations */
-.finals-corner{
-  position:absolute;width:40px;height:40px;
-  border-color:var(--finals-corner-color);border-style:solid;border-width:0;
-}
-.finals-corner.tl{top:10px;left:10px;border-top-width:3px;border-left-width:3px;border-radius:4px 0 0 0}
-.finals-corner.tr{top:10px;right:10px;border-top-width:3px;border-right-width:3px;border-radius:0 4px 0 0}
-.finals-corner.bl{bottom:10px;left:10px;border-bottom-width:3px;border-left-width:3px;border-radius:0 0 0 4px}
-.finals-corner.br{bottom:10px;right:10px;border-bottom-width:3px;border-right-width:3px;border-radius:0 0 4px 0}
-
 /* Header */
 .finals-header{text-align:center;position:relative;z-index:2;margin-bottom:28px}
 .finals-title{

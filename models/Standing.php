@@ -12,17 +12,13 @@ class Standing
     {
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('
-            SELECT s.rank, p.name, p.nickname, s.total, s.pending, s.eliminated_round,
+            SELECT s.rank, s.player_id, p.name, p.nickname, s.total, s.pending, s.eliminated_round,
                    c.icon_filename AS character_icon
             FROM standings s
             JOIN players p ON p.id = s.player_id
             LEFT JOIN characters c ON c.id = p.character_id
             WHERE s.tournament_id = ?
-            ORDER BY
-              CASE WHEN s.eliminated_round = 0 THEN 0 ELSE 1 END,
-              CASE WHEN s.eliminated_round = 0 THEN s.total END DESC,
-              s.eliminated_round DESC,
-              s.total DESC
+            ORDER BY s.total DESC
         ');
         $stmt->execute([$tournamentId]);
         return $stmt->fetchAll();

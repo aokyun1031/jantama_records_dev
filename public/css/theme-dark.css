@@ -145,7 +145,7 @@
 
   /* Records */
   --records-bg:rgba(255,255,255,0.03);
-  --records-border:1px solid rgba(212,168,76,0.12);
+  --records-border:1px solid rgba(212,168,76,0.25);
   --record-hl-bg:linear-gradient(135deg,rgba(212,168,76,0.1),rgba(212,168,76,0.03));
   --record-hl-border:1px solid rgba(212,168,76,0.2);
   --record-hl-hover-shadow:0 8px 32px rgba(212,168,76,0.12);
@@ -161,21 +161,14 @@
   --players-link-hover-shadow:0 8px 24px rgba(212,168,76,0.08);
 
   /* Tile & deco opacities */
-  --tile-opacity:0.08;
-  --tile-deco-opacity:0.06;
-  --tile-accent-opacity:0.08;
-  --tile-frame-opacity:0.07;
   --tile-footer-opacity:0.2;
-  --tile-scatter-opacity:0.04;
-  --tile-progress-opacity:0.06;
-  --tile-divider-opacity:0.3;
+  --tile-divider-opacity:0.5;
   --divider-line-color:rgba(212,168,76,0.3);
 
   /* Finals */
   --finals-stage-bg:linear-gradient(135deg,rgba(20,15,40,0.95),rgba(40,20,60,0.92),rgba(20,15,50,0.95));
   --finals-border-color:rgba(212,168,76,0.4);
   --finals-stage-shadow:0 0 60px rgba(212,168,76,0.15),0 0 120px rgba(155,140,232,0.08),0 20px 60px rgba(0,0,0,0.3);
-  --finals-corner-color:rgba(212,168,76,0.6);
   --finals-title-gradient:linear-gradient(135deg,#ffd700,#ffec80,#d4a84c,#ffec80,#ffd700);
   --finals-title-filter:drop-shadow(0 0 20px rgba(212,168,76,0.4));
   --finals-pretitle-color:rgba(212,168,76,0.7);

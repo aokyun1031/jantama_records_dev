@@ -401,7 +401,11 @@ require __DIR__ . '/../templates/header.php';
   <?php endif; ?>
 
   <div class="tb-actions">
-    <a href="tournament?id=<?= $tournamentId ?>" class="btn-cancel">&#x2190; 大会ページに戻る</a>
+    <?php if (filter_input(INPUT_GET, 'from') === 'view'): ?>
+      <a href="tournament_view?id=<?= $tournamentId ?>" class="btn-cancel">&#x2190; 大会閲覧ページに戻る</a>
+    <?php else: ?>
+      <a href="tournament?id=<?= $tournamentId ?>" class="btn-cancel">&#x2190; 大会管理ページに戻る</a>
+    <?php endif; ?>
   </div>
 </div>
 

@@ -121,18 +121,33 @@ $pageStyle = <<<'CSS'
 /* 未対戦卓の黄色背景を無効化 */
 .table-pending { border-color: var(--glass-border); background: var(--card); }
 .table-pending .table-card-name { color: var(--table-card-name-color); }
-.table-detail-pending { background: rgba(var(--accent-rgb), 0.03); border: 1px solid var(--glass-border); color: var(--text-sub); }
 
 /* 卓カードのリンク化 */
 a.table-card { text-decoration: none; color: inherit; display: block; }
 
+/* 選手カードのリンク化 */
+a.standing-item { text-decoration: none; color: inherit; }
+
+/* 卓カードヘッダー左側 */
+.table-card-head-left { display: flex; align-items: baseline; gap: 8px; }
+
 /* 卓カードの日時 */
 .table-card-schedule { font-size: 0.7rem; color: var(--text-sub); }
 
-/* 卓カードのプレイヤーリスト */
+/* 卓カードのプレイヤーリスト（未完了時） */
 .table-card-players li::before { content: none; }
 .table-card-players li { line-height: 1.4; padding: 4px 0; display: flex; align-items: center; gap: 6px; }
 .table-card-players { padding: 0; }
+
+/* 卓カード内結果表示（完了時） */
+.table-card-results { display: flex; flex-direction: column; gap: 2px; }
+.table-card-result-row { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 6px; padding: 3px 0; font-size: 0.8rem; }
+.table-card-pos { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.7rem; color: var(--text-light); text-align: center; }
+.table-card-pos.pos-1 { color: var(--gold); }
+.table-card-player { font-weight: 600; display: flex; align-items: center; gap: 4px; overflow: hidden; }
+.table-card-score { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.8rem; text-align: right; white-space: nowrap; }
+.table-card-score.plus { color: var(--plus-text); }
+.table-card-score.minus { color: var(--minus-text); }
 
 /* 全体順位のアイコン整列 */
 .standing-name { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
@@ -141,7 +156,6 @@ a.table-card { text-decoration: none; color: inherit; display: block; }
 /* 対戦結果のアイコン整列 */
 .result-name { display: flex; align-items: center; gap: 2px; }
 .result-name img, .result-name .chara-icon-none { flex-shrink: 0; }
-.table-detail-player img, .table-detail-player .chara-icon-none { flex-shrink: 0; }
 
 /* 勝ち抜けバッジ */
 .result-advance-badge { display: inline-block; font-size: 0.6rem; font-weight: 700; color: var(--success); background: rgba(var(--mint-rgb), 0.12); padding: 1px 8px; border-radius: 8px; margin-left: 8px; vertical-align: middle; }
@@ -151,14 +165,13 @@ a.table-card { text-decoration: none; color: inherit; display: block; }
 .finalist-card img { display: block; margin: 0 auto 8px; }
 
 /* セクション間の余白統一 */
-.progress-section { margin-bottom: 8px; }
+.progress-section { margin-bottom: 32px; }
+
+/* 卓カードグリッドを縦並びに */
+.table-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto 20px; }
 
 /* 対戦結果タブのスペーシング */
 .tab-content { padding-top: 8px; }
-
-/* 卓別結果のスペーシング改善 */
-.table-detail-row { padding: 8px 10px; }
-.table-detail-block { margin-bottom: 14px; }
 CSS;
 
 $pageInlineScript = <<<'JS'
@@ -192,15 +205,8 @@ foreach ($roundSettings as $rn => $rs) {
 }
 ?>
 
-<!-- Floating Tile Scatter (page-level) -->
-<div class="tile-scatter" id="tile-scatter"></div>
-
 <!-- Hero -->
 <section class="hero">
-  <span class="hero-tile-accent top-left">&#x1F004;</span>
-  <span class="hero-tile-accent top-right">&#x1F005;</span>
-  <span class="hero-tile-accent bot-left">&#x1F000;</span>
-  <span class="hero-tile-accent bot-right">&#x1F006;</span>
   <div class="hero-badge"><?= $eventLabel ? h($eventLabel) : '麻雀トーナメント' ?></div>
   <h1 class="hero-title"><?= h($tournamentName) ?></h1>
   <?php if (!$isCompleted): ?>
@@ -286,10 +292,6 @@ foreach ($roundSettings as $rn => $rs) {
 <!-- Finals Showdown -->
 <section class="finals-section reveal" id="finals-section">
   <div class="finals-stage">
-    <div class="finals-corner tl"></div>
-    <div class="finals-corner tr"></div>
-    <div class="finals-corner bl"></div>
-    <div class="finals-corner br"></div>
     <div class="finals-header">
       <h2 class="finals-title">決勝卓</h2>
       <div class="finals-subtitle">予選を勝ち抜いた<span><?= count($finalists) ?>名</span>が最強位の座を賭けて激突</div>
@@ -319,8 +321,7 @@ foreach ($roundSettings as $rn => $rs) {
 
 <!-- Round Details -->
 <?php if ($totalRounds > 0): ?>
-<section class="section section--decorated reveal">
-  <div class="section-tiles" id="section-tiles-rounds"></div>
+<section class="section reveal">
   <div class="section-header">
     <div class="section-title">&#x1F004; 対戦結果</div>
   </div>
@@ -384,51 +385,37 @@ foreach ($roundSettings as $rn => $rs) {
               }
           }
         ?>
-          <a href="table?id=<?= $t['table_id'] ?>" class="<?= $cardCls ?>">
+          <a href="table?id=<?= $t['table_id'] ?>&amp;from=view" class="<?= $cardCls ?>">
             <div class="table-card-head">
-              <span class="table-card-name"><?= h($t['table_name']) ?></span>
-              <?php if ($dateHtml): ?><span class="table-card-schedule"><?= $dateHtml ?></span><?php endif; ?>
+              <div class="table-card-head-left">
+                <span class="table-card-name"><?= h($t['table_name']) ?></span>
+                <?php if ($dateHtml): ?><span class="table-card-schedule"><?= $dateHtml ?></span><?php endif; ?>
+              </div>
               <?php if ($schedHtml): ?><span class="table-card-sched"><?= $schedHtml ?></span><?php endif; ?>
             </div>
-            <ul class="table-card-players">
-              <?php foreach ($t['players'] as $p): ?>
-                <li><?= charaIcon($p['icon'] ?? null, 22) ?><?= h($p['name']) ?></li>
-              <?php endforeach; ?>
-            </ul>
-          </a>
-        <?php endforeach; ?>
-      </div>
-
-      <!-- 卓別結果 -->
-      <div class="table-details">
-        <?php foreach ($tables as $t):
-          $isPending = ($showDone || $isFinal) && !$t['done'];
-        ?>
-          <div class="table-detail-block">
-            <div class="table-detail-head">
-              <span class="table-detail-name"><?= h($t['table_name']) ?> 結果</span>
-              <?php if ($isPending): ?>
-                <span class="table-detail-badge" style="background:rgba(var(--accent-rgb),0.06);color:var(--text-sub);border:1px solid var(--glass-border)">未対戦</span>
-              <?php endif; ?>
-            </div>
-            <?php if ($isPending): ?>
-              <div class="table-detail-pending"><?= implode('・', array_map(fn($p) => h($p['name']), $t['players'])) ?> の対戦待ち</div>
-            <?php else:
-              // スコア降順でソート
+            <?php if ($t['done']):
               $sorted = $t['players'];
               usort($sorted, fn($a, $b) => (float) ($b['score'] ?? 0) <=> (float) ($a['score'] ?? 0));
             ?>
-              <?php foreach ($sorted as $j => $p):
-                $score = (float) ($p['score'] ?? 0);
-              ?>
-                <div class="table-detail-row">
-                  <div class="table-detail-pos <?= $j === 0 ? 'pos-1' : '' ?>"><?= $posLabels[$j] ?? ($j + 1) ?></div>
-                  <div class="table-detail-player"><?= charaIcon($p['icon'] ?? null, 24) ?><?= h($p['name']) ?></div>
-                  <div class="table-detail-score <?= scoreCls($score) ?>"><?= fmtScore($score) ?></div>
-                </div>
-              <?php endforeach; ?>
+              <div class="table-card-results">
+                <?php foreach ($sorted as $j => $p):
+                  $score = (float) ($p['score'] ?? 0);
+                ?>
+                  <div class="table-card-result-row">
+                    <span class="table-card-pos <?= $j === 0 ? 'pos-1' : '' ?>"><?= $posLabels[$j] ?? ($j + 1) ?></span>
+                    <span class="table-card-player"><?= charaIcon($p['icon'] ?? null, 22) ?><?= h($p['name']) ?></span>
+                    <span class="table-card-score <?= scoreCls($score) ?>"><?= fmtScore($score) ?></span>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            <?php else: ?>
+              <ul class="table-card-players">
+                <?php foreach ($t['players'] as $p): ?>
+                  <li><?= charaIcon($p['icon'] ?? null, 22) ?><?= h($p['name']) ?></li>
+                <?php endforeach; ?>
+              </ul>
             <?php endif; ?>
-          </div>
+          </a>
         <?php endforeach; ?>
       </div>
 
@@ -477,8 +464,7 @@ foreach ($roundSettings as $rn => $rs) {
 </div>
 
 <!-- Cumulative Standings -->
-<section class="section section--decorated reveal" id="standings-section">
-  <div class="section-tiles" id="section-tiles-standings"></div>
+<section class="section reveal" id="standings-section">
   <div class="section-header">
     <div class="section-title">&#x1F005; 総合ポイント</div>
   </div>
@@ -499,15 +485,15 @@ foreach ($roundSettings as $rn => $rs) {
         $detail = implode(' → ', array_map(fn($v) => ($v >= 0 ? '+' : '') . number_format($v, 1), $scores));
         if ($elim > 0) $detail .= ' → ' . $elim . '回戦敗退';
 
-        $topCls = ($i < 3 && $elim === 0) ? ' top-' . ($i + 1) : '';
+        $topCls = $i < 3 ? ' top-' . ($i + 1) : '';
         $elimCls = $elim > 0 ? ' eliminated' : '';
     ?>
       <?php if ($elim === 0 && $total < 0 && !$shownDivider): $shownDivider = true; ?>
         <div class="standing-divider">&plusmn; 0</div>
       <?php endif; ?>
-      <div class="standing-item<?= $topCls . $elimCls ?>" data-delay="<?= $i * 0.08 ?>" data-bar="<?= $barW ?>">
+      <a href="player?id=<?= (int) $s['player_id'] ?>" class="standing-item<?= $topCls . $elimCls ?>" data-delay="<?= $i * 0.08 ?>" data-bar="<?= $barW ?>">
         <div class="standing-bar <?= scoreCls($total) ?>"></div>
-        <div class="standing-rank"><?php if ($rank > 0 && $rank <= 3): ?><span class="medal"><?= $medals[$rank - 1] ?></span><?php else: ?><?= $i + 1 ?><?php endif; ?></div>
+        <div class="standing-rank"><?php if ($i < 3): ?><span class="medal"><?= $medals[$i] ?></span><?php else: ?><?= $i + 1 ?><?php endif; ?></div>
         <div class="standing-info">
           <div class="standing-name">
             <?= charaIcon($icon ?: null, 28) ?>
@@ -521,7 +507,7 @@ foreach ($roundSettings as $rn => $rs) {
           <div class="standing-detail"><?= h($detail) ?></div>
         </div>
         <div class="standing-score <?= scoreCls($total) ?>" data-target="<?= $total ?>"><?= fmtScore($total) ?></div>
-      </div>
+      </a>
     <?php endforeach; ?>
   </div>
 </section>
@@ -540,7 +526,6 @@ foreach ($roundSettings as $rn => $rs) {
 
 <!-- Records -->
 <section class="records reveal">
-  <div class="records-tile-frame" id="records-tile-frame"></div>
   <div class="records-title">&#x1F000; トーナメントレコード &#x1F000;</div>
   <div class="record-highlight">
     <?php if ($recordScore !== ''): ?>
