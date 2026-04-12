@@ -342,12 +342,16 @@ require __DIR__ . '/../templates/header.php';
         <?php
           $elimRound  = (int)$t['eliminated_round'];
           $lastRound  = (int)$t['last_round'];
-          $isChampion = $elimRound === 0 && $t['status'] === TournamentStatus::Completed->value;
+          $isChampion = (int)$t['rank'] === 1 && $t['status'] === TournamentStatus::Completed->value;
           if ($isChampion):
         ?>
           <span class="tournament-progress progress-champion">優勝</span>
         <?php elseif ($elimRound > 0): ?>
           <span class="tournament-progress progress-eliminated"><?= $elimRound ?>回戦敗退</span>
+        <?php elseif ($t['last_round'] === null): ?>
+          <span class="tournament-progress progress-finals">参加予定</span>
+        <?php elseif ($t['max_round'] !== null && $lastRound === (int) $t['max_round']): ?>
+          <span class="tournament-progress progress-finals">決勝進出</span>
         <?php else: ?>
           <span class="tournament-progress progress-finals"><?= $lastRound ?>回戦進出</span>
         <?php endif; ?>
