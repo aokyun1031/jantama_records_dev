@@ -350,6 +350,8 @@ require __DIR__ . '/../templates/header.php';
           <span class="tournament-progress progress-eliminated"><?= $elimRound ?>回戦敗退</span>
         <?php elseif ($t['last_round'] === null): ?>
           <span class="tournament-progress progress-finals">参加予定</span>
+        <?php elseif ($t['max_round'] !== null && $lastRound === (int) $t['max_round'] && $t['status'] === TournamentStatus::Completed->value): ?>
+          <span class="tournament-progress progress-eliminated">決勝敗退</span>
         <?php elseif ($t['max_round'] !== null && $lastRound === (int) $t['max_round']): ?>
           <span class="tournament-progress progress-finals">決勝進出</span>
         <?php else: ?>
