@@ -180,6 +180,26 @@ $pageStyle = <<<'CSS'
   font-size: 0.8rem;
   color: var(--text-sub);
 }
+.lp-champion-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.lp-champion-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: rgba(var(--accent-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  color: var(--text-sub);
+}
+.lp-champion-tag.point {
+  background: rgba(var(--gold-rgb), 0.12);
+  border-color: rgba(var(--gold-rgb), 0.35);
+  color: var(--gold);
+}
 .lp-champion-link {
   flex-shrink: 0;
 }
@@ -339,6 +359,13 @@ require __DIR__ . '/../templates/header.php';
       <div class="lp-champion-label">CHAMPION</div>
       <div class="lp-champion-name"><?= h($latestChampion['nickname'] ?? $latestChampion['name']) ?></div>
       <div class="lp-champion-tournament"><?= h($latestCompleted['name']) ?></div>
+      <?php $championEventType = EventType::tryFrom($latestCompleted['event_type'] ?? ''); ?>
+      <div class="lp-champion-meta">
+        <?php if ($championEventType): ?>
+          <span class="lp-champion-tag"><?= h($championEventType->label()) ?></span>
+        <?php endif; ?>
+        <span class="lp-champion-tag point"><?= number_format((float) $latestChampion['total'], 1) ?>pt</span>
+      </div>
     </div>
     <div class="lp-champion-link">
       <a href="tournament_view?id=<?= (int) $latestCompleted['id'] ?>" class="lp-btn lp-btn-secondary">大会結果を見る &#x203A;</a>
