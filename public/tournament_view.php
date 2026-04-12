@@ -123,6 +123,9 @@ $pageStyle = <<<'CSS'
 .table-pending .table-card-name { color: var(--table-card-name-color); }
 .table-detail-pending { background: rgba(var(--accent-rgb), 0.03); border: 1px solid var(--glass-border); color: var(--text-sub); }
 
+/* 卓カードの日時 */
+.table-card-schedule { font-size: 0.7rem; color: var(--text-sub); }
+
 /* 卓カードのプレイヤーリスト */
 .table-card-players li::before { content: none; }
 .table-card-players li { line-height: 1.4; padding: 4px 0; display: flex; align-items: center; gap: 6px; }
@@ -365,10 +368,23 @@ foreach ($roundSettings as $rn => $rs) {
           } elseif (!empty($t['day_of_week'])) {
               $schedHtml = h($t['day_of_week']);
           }
+          $dateHtml = '';
+          if (!empty($t['played_date'])) {
+              $d = new DateTime($t['played_date']);
+              $dow = !empty($t['day_of_week']) ? mb_substr($t['day_of_week'], 0, 1) : '';
+              $dateHtml = (int) $d->format('n') . '/' . (int) $d->format('j');
+              if ($dow !== '') {
+                  $dateHtml .= '(' . h($dow) . ')';
+              }
+              if (!empty($t['played_time'])) {
+                  $dateHtml .= ' ' . h($t['played_time']);
+              }
+          }
         ?>
           <div class="<?= $cardCls ?>">
             <div class="table-card-head">
               <span class="table-card-name"><?= h($t['table_name']) ?></span>
+              <?php if ($dateHtml): ?><span class="table-card-schedule"><?= $dateHtml ?></span><?php endif; ?>
               <?php if ($schedHtml): ?><span class="table-card-sched"><?= $schedHtml ?></span><?php endif; ?>
             </div>
             <ul class="table-card-players">
