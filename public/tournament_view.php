@@ -123,6 +123,9 @@ $pageStyle = <<<'CSS'
 .table-pending .table-card-name { color: var(--table-card-name-color); }
 .table-detail-pending { background: rgba(var(--accent-rgb), 0.03); border: 1px solid var(--glass-border); color: var(--text-sub); }
 
+/* 卓カードのリンク化 */
+a.table-card { text-decoration: none; color: inherit; display: block; }
+
 /* 卓カードの日時 */
 .table-card-schedule { font-size: 0.7rem; color: var(--text-sub); }
 
@@ -381,7 +384,7 @@ foreach ($roundSettings as $rn => $rs) {
               }
           }
         ?>
-          <div class="<?= $cardCls ?>">
+          <a href="table?id=<?= $t['table_id'] ?>" class="<?= $cardCls ?>">
             <div class="table-card-head">
               <span class="table-card-name"><?= h($t['table_name']) ?></span>
               <?php if ($dateHtml): ?><span class="table-card-schedule"><?= $dateHtml ?></span><?php endif; ?>
@@ -392,7 +395,7 @@ foreach ($roundSettings as $rn => $rs) {
                 <li><?= charaIcon($p['icon'] ?? null, 22) ?><?= h($p['name']) ?></li>
               <?php endforeach; ?>
             </ul>
-          </div>
+          </a>
         <?php endforeach; ?>
       </div>
 
