@@ -6,6 +6,7 @@ require __DIR__ . '/../config/bootstrap.php';
 $tournamentId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: 1;
 ['data' => $tournamentData] = fetchData(fn() => Tournament::find($tournamentId));
 $tournamentName = $tournamentData['name'] ?? '';
+$eventType = EventType::tryFrom(TournamentMeta::get($tournamentId, 'event_type'));
 
 ['data' => $finalists] = fetchData(fn() => Standing::finalists($tournamentId));
 ['data' => $interviews] = fetchData(fn() => Interview::byTournament($tournamentId));
@@ -118,6 +119,18 @@ $pageStyle = <<<'CSS'
   font-size: 0.75rem;
   color: var(--gold);
   font-weight: 700;
+}
+
+.interview-profile-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: rgba(var(--accent-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  color: var(--text-sub);
+  margin-top: 4px;
 }
 
 .interview-list {
@@ -247,6 +260,9 @@ require __DIR__ . '/../templates/header.php';
     <div class="interview-profile-info">
       <div class="interview-profile-label">&#x1F3C6; <?= h($tournamentName) ?> 優勝</div>
       <div class="interview-profile-name"><?= $champion ? h($champion['nickname'] ?? $champion['name']) : '' ?></div>
+      <?php if ($eventType): ?>
+        <span class="interview-profile-tag"><?= h($eventType->label()) ?></span>
+      <?php endif; ?>
     </div>
   </div>
 
