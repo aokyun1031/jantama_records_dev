@@ -301,28 +301,40 @@ $pageStyle = <<<'CSS'
   text-align: left;
 }
 
-/* スコア: 数値 → 右寄せ */
+/* 日時: 右寄せ */
 .history-table th:nth-child(2),
 .history-table td:nth-child(2) {
   text-align: right;
 }
 
-/* バー: 中央 */
+/* スコア: 数値 → 右寄せ */
 .history-table th:nth-child(3),
 .history-table td:nth-child(3) {
+  text-align: right;
+}
+
+/* バー: 中央 */
+.history-table th:nth-child(4),
+.history-table td:nth-child(4) {
   text-align: center;
   width: 100px;
 }
 
 /* 結果: 中央 */
-.history-table th:nth-child(4),
-.history-table td:nth-child(4) {
+.history-table th:nth-child(5),
+.history-table td:nth-child(5) {
   text-align: center;
 }
 
 .history-round {
   font-weight: 600;
   color: var(--text);
+}
+
+.history-date {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  white-space: nowrap;
 }
 
 .history-score {
@@ -359,6 +371,7 @@ $pageStyle = <<<'CSS'
   padding: 2px 8px;
   border-radius: 6px;
   display: inline-block;
+  white-space: nowrap;
 }
 
 .tag-pass {
@@ -554,6 +567,7 @@ if ($scoreHistory) {
       <thead>
         <tr>
           <th>回戦</th>
+          <th>日時</th>
           <th>スコア</th>
           <th></th>
           <th>結果</th>
@@ -567,6 +581,16 @@ if ($scoreHistory) {
       ?>
         <tr>
           <td class="history-round"><?= h($sh['tournament_name']) ?> <?= (int)$sh['round_number'] ?>回戦</td>
+          <td class="history-date"><?php
+            if ($sh['played_date']) {
+                $d = date('Y/n/j', strtotime($sh['played_date']));
+                $dow = $sh['day_of_week'] ? mb_substr($sh['day_of_week'], 0, 1) : '';
+                $time = $sh['played_time'] ?? '';
+                echo h($d . ($dow !== '' ? '（' . $dow . '）' : '') . ($time !== '' ? ' ' . $time : ''));
+            } else {
+                echo '-';
+            }
+          ?></td>
           <td class="history-score <?= $score >= 0 ? 'score-plus' : 'score-minus' ?>">
             <?= $score >= 0 ? '+' : '' ?><?= number_format($score, 1) ?>
           </td>

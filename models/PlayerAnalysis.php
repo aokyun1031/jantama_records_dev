@@ -109,17 +109,27 @@ class PlayerAnalysis
     }
 
     /**
-     * スコア推移（全大会、時系列順）。
+     * スコア推移（全大会、新しい大会��）。
      */
     public static function scoreHistory(int $playerId): array
     {
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('
-            SELECT t.name AS tournament_name, rr.round_number, rr.score, rr.is_above_cutoff
+            SELECT t.name AS tournament_name, rr.round_number, rr.score, rr.is_above_cutoff,
+                   tbl.played_date, tbl.day_of_week, tbl.played_time
             FROM round_results rr
             JOIN tournaments t ON t.id = rr.tournament_id
+            LEFT JOIN LATERAL (
+                SELECT ti.played_date, ti.day_of_week, ti.played_time
+                FROM table_players tp
+                JOIN tables_info ti ON ti.id = tp.table_id
+                WHERE tp.player_id = rr.player_id
+                  AND ti.tournament_id = rr.tournament_id
+                  AND ti.round_number = rr.round_number
+                LIMIT 1
+            ) tbl ON true
             WHERE rr.player_id = ?
-            ORDER BY t.created_at, rr.round_number
+            ORDER BY t.created_at DESC, rr.round_number
         ');
         $stmt->execute([$playerId]);
         return $stmt->fetchAll();
