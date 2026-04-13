@@ -368,7 +368,7 @@ foreach ($roundSettings as $rn => $rs) {
           $schedHtml = '';
           if ($showDone || $isFinal) {
               $cardCls .= $t['done'] ? ' table-done' : ' table-pending';
-              $schedHtml = $t['done'] ? '&#10003; 完了' : '未対戦';
+              $schedHtml = $t['done'] ? '&#10003; 完了' : (!empty($t['played_date']) ? '対戦待ち' : '未対戦');
           } elseif (!empty($t['day_of_week'])) {
               $schedHtml = h($t['day_of_week']);
           }
