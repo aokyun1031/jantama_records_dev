@@ -112,7 +112,7 @@ $pageStyle = <<<'CSS'
 .iv-section { background: var(--card); border: 1px solid rgba(var(--accent-rgb), 0.25); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .iv-section-title { font-weight: 800; font-size: 0.95rem; color: var(--text); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid rgba(var(--accent-rgb), 0.15); display: flex; align-items: center; gap: 12px; }
 
-.iv-qa-list { display: flex; flex-direction: column; gap: 16px; }
+.iv-qa-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; }
 .iv-qa-item { background: rgba(var(--accent-rgb), 0.02); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 16px; position: relative; }
 .iv-qa-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .iv-qa-number { font-size: 0.75rem; font-weight: 800; color: var(--purple); background: rgba(var(--accent-rgb), 0.1); padding: 2px 10px; border-radius: 10px; }
