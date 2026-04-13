@@ -100,7 +100,7 @@
       </div>
 
       <div class="edit-field">
-        <div class="edit-label">喰いタン</div>
+        <div class="edit-label">食い断</div>
         <div class="edit-radio-group">
           <label class="edit-radio-option">
             <input type="radio" name="open_tanyao" value="1" <?= $postOpenTanyao === '1' ? 'checked' : '' ?>>

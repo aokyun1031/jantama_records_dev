@@ -62,7 +62,7 @@ function buildRuleTags(array $meta): array
     if (isset($meta['red_dora'])) {
         $tags[] = '赤' . $meta['red_dora'];
     }
-    $tags[] = (ToggleRule::tryFrom($meta['open_tanyao'] ?? '1'))?->label('喰いタン') ?? '';
+    $tags[] = (ToggleRule::tryFrom($meta['open_tanyao'] ?? '1'))?->label('食い断') ?? '';
     $hanLabel = (HanRestriction::tryFrom($meta['han_restriction'] ?? ''))?->label();
     if ($hanLabel) {
         $tags[] = $hanLabel;
