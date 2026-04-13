@@ -76,8 +76,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
             for ($g = 1; $g <= $gameCount; $g++) {
                 // 牌譜URL
                 $raw = sanitizeInput('paifu_url_' . $g);
-                $url = $raw !== '' ? extractUrl($raw) : '';
-                if ($url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
+                if ($raw === '') {
+                    $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . '牌譜URLを入力してください。';
+                    $hasError = true;
+                    break;
+                }
+                $url = extractUrl($raw);
+                if (!filter_var($url, FILTER_VALIDATE_URL)) {
                     $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . '有効なURLを入力してください。';
                     $hasError = true;
                     break;
@@ -366,7 +371,7 @@ require __DIR__ . '/../templates/header.php';
           </div>
           <div style="margin-bottom: 12px;">
             <span class="tb-label">牌譜URL</span>
-            <input type="url" name="paifu_url_<?= $g ?>" class="tb-input tb-paifu-input" style="width: 100%; box-sizing: border-box;" value="<?= h($paifuUrlMap[$g] ?? '') ?>" placeholder="https://game.mahjongsoul.com/...">
+            <input type="url" name="paifu_url_<?= $g ?>" class="tb-input tb-paifu-input" style="width: 100%; box-sizing: border-box;" value="<?= h($paifuUrlMap[$g] ?? '') ?>" placeholder="https://game.mahjongsoul.com/..." required>
           </div>
           <div class="tb-score-grid">
             <?php foreach ($table['players'] as $p):
