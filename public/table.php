@@ -216,6 +216,8 @@ $pageStyle = <<<'CSS'
 .tb-players { display: flex; flex-wrap: wrap; gap: 12px; }
 .tb-player { display: flex; align-items: center; gap: 8px; }
 .tb-player-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.tb-player-sub .tb-player-name { color: var(--gold); font-style: italic; }
+.tb-player-sub-icon { width: 32px; height: 32px; border-radius: 50%; border: 1.5px dashed rgba(var(--gold-rgb), 0.5); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--gold); flex-shrink: 0; }
 
 .tb-label { font-weight: 700; font-size: 0.85rem; color: var(--text); margin-bottom: 8px; display: block; }
 .tb-input { padding: 10px 14px; border: 1.5px solid var(--input-border); border-radius: var(--radius-sm); font-size: 1rem; font-family: 'Noto Sans JP', sans-serif; background: var(--input-bg); color: var(--text); box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
@@ -269,6 +271,8 @@ require __DIR__ . '/../templates/header.php';
   <?php endif; ?>
 
   <!-- 参加選手 -->
+  <?php $playerMode = (int) ($meta['player_mode'] ?? 4); ?>
+  <?php $subCount = max(0, $playerMode - count($table['players'])); ?>
   <div class="tb-section">
     <div class="tb-section-title">参加選手</div>
     <div class="tb-players">
@@ -278,6 +282,12 @@ require __DIR__ . '/../templates/header.php';
           <span class="tb-player-name"><?= h($p['nickname'] ?? $p['name']) ?></span>
         </div>
       <?php endforeach; ?>
+      <?php for ($s = 0; $s < $subCount; $s++): ?>
+        <div class="tb-player tb-player-sub">
+          <span class="tb-player-sub-icon">?</span>
+          <span class="tb-player-name">代打ち</span>
+        </div>
+      <?php endfor; ?>
     </div>
   </div>
 

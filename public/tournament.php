@@ -265,6 +265,8 @@ $pageStyle = <<<'CSS'
 .td-table-player::before { content: none; }
 .td-table-player.advanced { color: var(--text); font-weight: 700; }
 .td-table-player.eliminated { opacity: 0.45; }
+.td-table-player.sub .td-table-player-name { color: var(--gold); font-style: italic; }
+.td-table-sub-icon { width: 28px; height: 28px; border-radius: 50%; border: 1.5px dashed rgba(var(--gold-rgb), 0.5); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--gold); flex-shrink: 0; }
 
 /* --- 順位表 --- */
 .td-standings { margin-top: 32px; }
@@ -450,6 +452,13 @@ $statusClass = $tsEnum?->cssClass() ?? '';
                   <?php endif; ?>
                 </li>
               <?php endforeach; ?>
+              <?php $subCount = max(0, (int) ($meta['player_mode'] ?? 4) - count($t['players'])); ?>
+              <?php for ($s = 0; $s < $subCount; $s++): ?>
+                <li class="td-table-player sub">
+                  <span class="td-table-sub-icon">?</span>
+                  <span class="td-table-player-name">代打ち</span>
+                </li>
+              <?php endfor; ?>
             </ul>
           </a>
         <?php endforeach; ?>
@@ -515,6 +524,13 @@ $statusClass = $tsEnum?->cssClass() ?? '';
                         <?php endif; ?>
                       </li>
                     <?php endforeach; ?>
+                    <?php $subCount = max(0, (int) ($meta['player_mode'] ?? 4) - count($t['players'])); ?>
+                    <?php for ($s = 0; $s < $subCount; $s++): ?>
+                      <li class="td-table-player sub">
+                        <span class="td-table-sub-icon">?</span>
+                        <span class="td-table-player-name">代打ち</span>
+                      </li>
+                    <?php endfor; ?>
                   </ul>
                 </a>
               <?php endforeach; ?>
