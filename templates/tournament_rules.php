@@ -58,17 +58,13 @@
       </div>
 
       <div class="edit-field">
-        <div class="edit-label">配給原点 / 返し点</div>
-        <div class="points-row">
-          <div class="points-field">
-            <input type="number" name="starting_points" class="edit-input" value="<?= h($postStartingPoints) ?>" min="100" max="200000" step="100" required>
-            <div class="edit-hint">配給原点</div>
-          </div>
-          <div class="points-field">
-            <input type="number" name="return_points" class="edit-input" value="<?= h($postReturnPoints) ?>" min="100" max="200000" step="100" required>
-            <div class="edit-hint">返し点</div>
-          </div>
-        </div>
+        <label class="edit-label" for="input-starting-points">配給原点</label>
+        <input type="number" id="input-starting-points" name="starting_points" class="edit-input" value="<?= h($postStartingPoints) ?>" min="100" max="200000" step="100" required>
+      </div>
+
+      <div class="edit-field">
+        <label class="edit-label" for="input-return-points">1位必要点数</label>
+        <input type="number" id="input-return-points" name="return_points" class="edit-input" value="<?= h($postReturnPoints) ?>" min="100" max="200000" step="100" required>
       </div>
 
       <div class="edit-field">

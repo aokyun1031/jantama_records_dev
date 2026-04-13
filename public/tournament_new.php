@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($startingPoints === false || $startingPoints < 100 || $startingPoints > 200000) {
             $validationError = '配給原点は100〜200,000の範囲で入力してください。';
         } elseif ($returnPoints === false || $returnPoints < 100 || $returnPoints > 200000) {
-            $validationError = '返し点は100〜200,000の範囲で入力してください。';
+            $validationError = '1位必要点数は100〜200,000の範囲で入力してください。';
         } elseif (!in_array($postRedDora, $validRedDora, true)) {
             $validationError = '不正な赤ドラ設定です。';
         } elseif (!in_array($postOpenTanyao, ['0', '1'], true)) {
