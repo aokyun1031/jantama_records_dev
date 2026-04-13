@@ -47,7 +47,7 @@
       </div>
 
       <div class="edit-field">
-        <label class="edit-label" for="select-thinking-time">持ち時間</label>
+        <label class="edit-label" for="select-thinking-time">長考時間</label>
         <select id="select-thinking-time" name="thinking_time" class="edit-select">
           <option value="3+5" <?= $postThinkingTime === '3+5' ? 'selected' : '' ?>>3+5秒</option>
           <option value="5+10" <?= $postThinkingTime === '5+10' ? 'selected' : '' ?>>5+10秒</option>

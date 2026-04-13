@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!in_array($postRoundType, $validRoundTypes, true)) {
             $validationError = '不正な局数設定です。';
         } elseif (!in_array($postThinkingTime, $validThinkingTimes, true)) {
-            $validationError = '不正な持ち時間です。';
+            $validationError = '不正な長考時間です。';
         } elseif ($startingPoints === false || $startingPoints < 100 || $startingPoints > 200000) {
             $validationError = '配給原点は100〜200,000の範囲で入力してください。';
         } elseif ($returnPoints === false || $returnPoints < 100 || $returnPoints > 200000) {
