@@ -130,7 +130,8 @@ $pageStyle = <<<'CSS'
   background: rgba(var(--accent-rgb), 0.08);
   border: 1px solid rgba(var(--accent-rgb), 0.25);
   color: var(--text-sub);
-  margin-top: 4px;
+  margin-bottom: 8px;
+  animation: fadeUp 1s ease 0.15s both;
 }
 
 .interview-list {
@@ -247,6 +248,9 @@ require __DIR__ . '/../templates/header.php';
 <div class="interview-hero">
   <div class="interview-badge">CHAMPION INTERVIEW</div>
   <h1 class="interview-title">優勝インタビュー</h1>
+  <?php if ($eventType): ?>
+    <span class="interview-profile-tag"><?= h($eventType->label()) ?></span>
+  <?php endif; ?>
   <div class="interview-subtitle"><?= h($tournamentName) ?> チャンピオンに聞く</div>
 </div>
 
@@ -260,9 +264,6 @@ require __DIR__ . '/../templates/header.php';
     <div class="interview-profile-info">
       <div class="interview-profile-label">&#x1F3C6; <?= h($tournamentName) ?> 優勝</div>
       <div class="interview-profile-name"><?= $champion ? h($champion['nickname'] ?? $champion['name']) : '' ?></div>
-      <?php if ($eventType): ?>
-        <span class="interview-profile-tag"><?= h($eventType->label()) ?></span>
-      <?php endif; ?>
     </div>
   </div>
 
