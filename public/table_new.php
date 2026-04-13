@@ -172,9 +172,9 @@ $pageStyle = <<<'CSS'
 .tn-select { padding: 6px 12px; border: 1.5px solid var(--input-border); border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; font-family: 'Noto Sans JP', sans-serif; background: var(--input-bg); color: var(--text); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
 .tn-select:hover:not(:focus) { border-color: var(--input-border-hover); }
 .tn-select:focus { outline: none; border-color: var(--input-border-focus); box-shadow: var(--input-focus-ring); }
-.tn-advance-preview { font-size: 0.8rem; font-weight: 600; line-height: 1.6; padding: 10px 14px; border-radius: var(--radius-sm); margin-left: 80px; }
-.tn-advance-preview.ok { background: rgba(var(--mint-rgb), 0.08); color: var(--success); border: 1px solid rgba(var(--mint-rgb), 0.2); }
-.tn-advance-preview.warn { background: rgba(var(--gold-rgb), 0.08); color: var(--gold); border: 1px solid rgba(var(--gold-rgb), 0.2); }
+.tn-advance-preview { font-size: 0.8rem; font-weight: 600; line-height: 1.6; padding: 8px 10px; border-radius: var(--radius-sm); }
+.tn-advance-preview.ok { background: rgba(var(--mint-rgb), 0.08); color: var(--success); }
+.tn-advance-preview.warn { background: rgba(var(--gold-rgb), 0.08); color: var(--gold); }
 .tn-advance-step { display: flex; align-items: center; gap: 6px; }
 .tn-advance-arrow { color: var(--text-light); font-size: 0.7rem; }
 .tn-section-title { font-weight: 800; font-size: 0.9rem; color: var(--text); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid rgba(var(--accent-rgb), 0.15); }
@@ -184,7 +184,8 @@ $pageStyle = <<<'CSS'
 .tn-btn-generate { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--btn-secondary-bg); color: var(--btn-text-color); border: none; border-radius: 10px; font-weight: 700; font-size: 0.9rem; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 3px 12px rgba(var(--mint-rgb), 0.25); }
 .tn-btn-generate:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(var(--mint-rgb), 0.35); }
 .tn-btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-.tn-generate-info { font-size: 0.8rem; color: var(--text-sub); }
+.tn-generate-summary { padding: 12px 16px; background: var(--card); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+.tn-generate-info { font-size: 0.85rem; font-weight: 700; color: var(--text-sub); }
 
 /* 卓グリッド */
 .tn-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 20px; }
@@ -296,7 +297,6 @@ require __DIR__ . '/../templates/header.php';
               <?php endfor; ?>
             </select>
           </div>
-          <div id="advance-preview" class="tn-advance-preview" style="display:none;"></div>
         <?php endif; ?>
         <div class="tn-option-group">
           <span class="tn-option-label">対局数</span>
@@ -326,7 +326,6 @@ require __DIR__ . '/../templates/header.php';
         <button type="button" class="tn-btn-generate" id="btn-generate" <?= empty($tournamentPlayers) || count($tournamentPlayers) < $playerMode ? 'disabled' : '' ?>>
           &#x1F3B2; ランダムに卓を作成
         </button>
-        <span class="tn-generate-info" id="generate-info"></span>
       </div>
       <div class="tn-hint">ボタンを押すと選手をランダムに卓へ振り分けます。何度でも押し直せます。</div>
 
@@ -353,6 +352,12 @@ require __DIR__ . '/../templates/header.php';
       </div>
     </div>
     <?php endif; ?>
+
+    <!-- 生成情報 -->
+    <div class="tn-generate-summary" id="generate-summary" style="display:none;">
+      <div class="tn-generate-info" id="generate-info"></div>
+      <div id="advance-preview" class="tn-advance-preview"></div>
+    </div>
 
     <!-- 卓表示エリア -->
     <div id="tables-area">
@@ -657,6 +662,7 @@ $pageInlineScript = <<<JS
     if (tags.length) info += '（' + tags.join('・') + '）';
     if (subCount > 0) info += ' / 代打ち' + subCount + '名必要';
     infoEl.textContent = info;
+    document.getElementById('generate-summary').style.display = '';
 
     render();
     updateData();
