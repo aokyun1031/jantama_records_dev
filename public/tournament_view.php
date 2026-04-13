@@ -491,7 +491,7 @@ foreach ($roundSettings as $rn => $rs) {
       <?php if ($elim === 0 && $total < 0 && !$shownDivider): $shownDivider = true; ?>
         <div class="standing-divider">&plusmn; 0</div>
       <?php endif; ?>
-      <a href="player?id=<?= (int) $s['player_id'] ?>" class="standing-item<?= $topCls . $elimCls ?>" data-delay="<?= $i * 0.08 ?>" data-bar="<?= $barW ?>">
+      <a href="player?id=<?= (int) $s['player_id'] ?>&amp;from=tournament_view&amp;tournament_id=<?= $tournamentId ?>" class="standing-item<?= $topCls . $elimCls ?>" data-delay="<?= $i * 0.08 ?>" data-bar="<?= $barW ?>">
         <div class="standing-bar <?= scoreCls($total) ?>"></div>
         <div class="standing-rank"><?php if ($i < 3): ?><span class="medal"><?= $medals[$i] ?></span><?php else: ?><?= $i + 1 ?><?php endif; ?></div>
         <div class="standing-info">

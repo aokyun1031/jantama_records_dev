@@ -373,7 +373,11 @@ require __DIR__ . '/../templates/header.php';
 <?php endif; ?>
 
 <div style="text-align: center;">
-  <a href="players" class="btn-cancel" style="margin-bottom: 40px;">&#x2190; 選手一覧に戻る</a>
+  <?php if (filter_input(INPUT_GET, 'from') === 'tournament_view' && filter_input(INPUT_GET, 'tournament_id', FILTER_VALIDATE_INT)): ?>
+    <a href="tournament_view?id=<?= (int) filter_input(INPUT_GET, 'tournament_id', FILTER_VALIDATE_INT) ?>" class="btn-cancel" style="margin-bottom: 40px;">&#x2190; 大会閲覧ページに戻る</a>
+  <?php else: ?>
+    <a href="players" class="btn-cancel" style="margin-bottom: 40px;">&#x2190; 選手一覧に戻る</a>
+  <?php endif; ?>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>
