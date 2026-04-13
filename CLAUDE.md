@@ -100,7 +100,7 @@ npx wrangler deploy                      # デプロイ
 - `PlayerMode`: 対局人数（3/4）。`label()`（三麻/四麻） + `fullLabel()`（三人麻雀/四人麻雀）
 - `RoundType`: 局数（hanchan/tonpu/ikkyoku）
 - `HanRestriction`: 翻縛り（1/2/4）
-- `ToggleRule`: ON/OFF設定（1/0）。`label('喰いタン')` → 喰いタン有/無
+- `ToggleRule`: ON/OFF設定（1/0）。`label('食い断')` → 食い断有/無
 - `DayOfWeek`: 曜日（0-6）。`fromDate('2026-04-07')` で日付から曜日ラベルを取得
 
 ### CSS
