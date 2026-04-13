@@ -67,7 +67,7 @@ function buildRuleTags(array $meta): array
     if ($hanLabel) {
         $tags[] = $hanLabel;
     }
-    $tags[] = (ToggleRule::tryFrom($meta['bust'] ?? '0'))?->label('トビ') ?? '';
+    $tags[] = (ToggleRule::tryFrom($meta['bust'] ?? '0'))?->label('飛び') ?? '';
     return array_filter($tags, fn($t) => $t !== '');
 }
 

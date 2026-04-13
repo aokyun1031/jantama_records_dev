@@ -68,6 +68,20 @@
       </div>
 
       <div class="edit-field">
+        <div class="edit-label">飛び</div>
+        <div class="edit-radio-group">
+          <label class="edit-radio-option">
+            <input type="radio" name="bust" value="1" <?= $postBust === '1' ? 'checked' : '' ?>>
+            <span class="edit-radio-label">あり</span>
+          </label>
+          <label class="edit-radio-option">
+            <input type="radio" name="bust" value="0" <?= $postBust === '0' ? 'checked' : '' ?>>
+            <span class="edit-radio-label">なし</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="edit-field">
         <div class="edit-label">赤ドラ</div>
         <div class="edit-radio-group">
           <label class="edit-radio-option">
@@ -111,17 +125,4 @@
         </div>
       </div>
 
-      <div class="edit-field">
-        <div class="edit-label">トビ</div>
-        <div class="edit-radio-group">
-          <label class="edit-radio-option">
-            <input type="radio" name="bust" value="1" <?= $postBust === '1' ? 'checked' : '' ?>>
-            <span class="edit-radio-label">あり</span>
-          </label>
-          <label class="edit-radio-option">
-            <input type="radio" name="bust" value="0" <?= $postBust === '0' ? 'checked' : '' ?>>
-            <span class="edit-radio-label">なし</span>
-          </label>
-        </div>
-      </div>
     </div>

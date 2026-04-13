@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!in_array($postHanRestriction, $validHanRestrictions, true)) {
             $validationError = '不正な翻縛り設定です。';
         } elseif (!in_array($postBust, ['0', '1'], true)) {
-            $validationError = '不正なトビ設定です。';
+            $validationError = '不正な飛び設定です。';
         } elseif (!empty($postPlayerIds) && array_diff($postPlayerIds, $allPlayerIds)) {
             $validationError = '不正な選手が含まれています。';
         } else {
