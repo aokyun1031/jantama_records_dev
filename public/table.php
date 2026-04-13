@@ -53,9 +53,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
             if ($playedDate !== '') {
                 $dayOfWeek = DayOfWeek::fromDate($playedDate);
             }
-            if ($playedDate !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $playedDate)) {
+            if ($playedDate === '') {
+                $validationError = '日付を入力してください。';
+            } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $playedDate)) {
                 $validationError = '日付の形式が不正です。';
-            } elseif ($playedTime !== '' && !preg_match('/^\d{2}:\d{2}$/', $playedTime)) {
+            } elseif ($playedTime === '') {
+                $validationError = '時間を入力してください。';
+            } elseif (!preg_match('/^\d{2}:\d{2}$/', $playedTime)) {
                 $validationError = '時間の形式が不正です。';
             } else {
                 try {
@@ -381,7 +385,7 @@ require __DIR__ . '/../templates/header.php';
           </div>
           <div style="margin-bottom: 12px;">
             <span class="tb-label">牌譜URL</span>
-            <input type="url" name="paifu_url_<?= $g ?>" class="tb-input tb-paifu-input" style="width: 100%; box-sizing: border-box;" value="<?= h($paifuUrlMap[$g] ?? '') ?>" placeholder="https://game.mahjongsoul.com/..." required>
+            <input type="url" name="paifu_url_<?= $g ?>" class="tb-input tb-paifu-input" style="width: 100%; box-sizing: border-box;" value="<?= h($paifuUrlMap[$g] ?? '') ?>" placeholder="https://game.mahjongsoul.com/...">
           </div>
           <div class="tb-score-grid">
             <?php foreach ($table['players'] as $p):
