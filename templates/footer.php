@@ -1,6 +1,6 @@
 
 <div class="footer">
-  <?php if (!empty($pageTurnstile)): ?>
+  <?php if (!empty($pageTurnstile) && isProduction()): ?>
   <div class="turnstile-footer" id="turnstile-container"></div>
   <?php endif; ?>
   <div class="footer-copyright">当サイトは非公式のファンサイトです。使用しているゲーム画像の著作権は、Soul Games, Inc. および株式会社Yostarに帰属します。<br>&copy;2019 Soul Games, Inc. &copy;2019 Yostar, Inc. All Rights Reserved.</div>
@@ -34,7 +34,7 @@
 </script>
 <script src="<?= asset('js/confirm-dialog.js') ?>" nonce="<?= cspNonce() ?>"></script>
 <script src="<?= asset('js/theme-toggle.js') ?>" nonce="<?= cspNonce() ?>" defer></script>
-<?php if (!empty($pageTurnstile)): ?>
+<?php if (!empty($pageTurnstile) && isProduction()): ?>
 <script nonce="<?= cspNonce() ?>">
 (function(){
   document.documentElement.classList.add('ts-pending');

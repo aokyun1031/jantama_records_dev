@@ -79,9 +79,14 @@ function cspNonce(): string
 
 /**
  * Turnstile レスポンストークンを検証する。
+ * ローカル環境ではスキップする。
  */
 function validateTurnstile(): bool
 {
+    if (!isProduction()) {
+        return true;
+    }
+
     $token = $_POST['cf-turnstile-response'] ?? '';
     $secret = $_ENV['TURNSTILE_SECRET_KEY'] ?? getenv('TURNSTILE_SECRET_KEY');
 
