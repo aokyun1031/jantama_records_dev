@@ -163,13 +163,6 @@ $pageStyle = <<<'CSS'
   flex-shrink: 0;
 }
 .lp-champion-info { flex: 1; }
-.lp-champion-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 1px;
-  margin-bottom: 4px;
-}
 .lp-champion-name {
   font-size: 1.2rem;
   font-weight: 900;
@@ -184,7 +177,7 @@ $pageStyle = <<<'CSS'
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 8px;
+  margin-bottom: 8px;
 }
 .lp-champion-tag {
   font-size: 0.7rem;
@@ -356,9 +349,6 @@ require __DIR__ . '/../templates/header.php';
       <img src="img/chara_deformed/<?= h($latestChampion['character_icon']) ?>" alt="" class="lp-champion-icon" width="72" height="72" loading="lazy">
     <?php endif; ?>
     <div class="lp-champion-info">
-      <div class="lp-champion-label">CHAMPION</div>
-      <div class="lp-champion-name"><?= h($latestChampion['nickname'] ?? $latestChampion['name']) ?></div>
-      <div class="lp-champion-tournament"><?= h($latestCompleted['name']) ?></div>
       <?php $championEventType = EventType::tryFrom($latestCompleted['event_type'] ?? ''); ?>
       <div class="lp-champion-meta">
         <?php if ($championEventType): ?>
@@ -366,6 +356,8 @@ require __DIR__ . '/../templates/header.php';
         <?php endif; ?>
         <span class="lp-champion-tag point"><?= number_format((float) $latestChampion['total'], 1) ?>pt</span>
       </div>
+      <div class="lp-champion-name"><?= h($latestChampion['nickname'] ?? $latestChampion['name']) ?></div>
+      <div class="lp-champion-tournament"><?= h($latestCompleted['name']) ?></div>
     </div>
     <div class="lp-champion-link">
       <a href="tournament_view?id=<?= (int) $latestCompleted['id'] ?>" class="lp-btn lp-btn-secondary">大会結果を見る &#x203A;</a>
