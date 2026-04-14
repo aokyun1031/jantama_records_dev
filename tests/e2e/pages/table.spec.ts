@@ -42,8 +42,29 @@ test.describe('卓管理', () => {
     await expect(page.locator('.edit-message.success')).toBeVisible();
   });
 
+  test('未入力・合計不一致では送信ボタンが無効', async ({ page }) => {
+    await page.goto(`/table?id=${tableId}`);
+    const doneBtn = page.locator('form:has(input[value="game_data"]) .tb-btn-done');
+    // 初期状態: 未入力なので無効
+    await expect(doneBtn).toBeDisabled();
+
+    const scoreInputs = page.locator('form:has(input[value="game_data"]) input.tb-score-input');
+    const count = await scoreInputs.count();
+    // 合計が 0 にならない値を入れる → NG
+    for (let i = 0; i < count; i++) {
+      await scoreInputs.nth(i).fill('10');
+    }
+    await expect(page.locator('[data-sum-box]').first()).toHaveClass(/tb-sum-ng/);
+    await expect(doneBtn).toBeDisabled();
+  });
+
   test('対局結果を保存して卓を完了にできる', async ({ page }) => {
     await page.goto(`/table?id=${tableId}`);
+    const paifuInputs = page.locator('form:has(input[value="game_data"]) input.tb-paifu-input');
+    const paifuCount = await paifuInputs.count();
+    for (let i = 0; i < paifuCount; i++) {
+      await paifuInputs.nth(i).fill(`https://example.com/paifu/test-${i + 1}`);
+    }
     const scoreInputs = page.locator('form:has(input[value="game_data"]) input.tb-score-input');
     const count = await scoreInputs.count();
     const scorePool = [25.0, 10.0, -5.0, -30.0];
@@ -52,6 +73,8 @@ test.describe('卓管理', () => {
     }
     const doneBtn = page.locator('form:has(input[value="game_data"]) .tb-btn-done');
     await expect(doneBtn).toBeVisible();
+    await expect(page.locator('[data-sum-box]').first()).toHaveClass(/tb-sum-ok/);
+    await expect(doneBtn).toBeEnabled();
     page.once('dialog', (dialog) => dialog.accept());
     await doneBtn.click();
     // 大会ページにリダイレクト

@@ -254,6 +254,12 @@ $pageStyle = <<<'CSS'
 .tb-paifu-link { color: var(--purple); text-decoration: none; font-size: 0.8rem; word-break: break-all; }
 .tb-paifu-link:hover { text-decoration: underline; }
 
+.tb-sum-box { margin-top: 12px; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.tb-sum-box.tb-sum-pending { background: rgba(var(--accent-rgb), 0.04); color: var(--text-sub); border: 1px solid rgba(var(--accent-rgb), 0.12); }
+.tb-sum-box.tb-sum-ok { background: rgba(var(--mint-rgb), 0.1); color: var(--success); border: 1px solid rgba(var(--mint-rgb), 0.3); }
+.tb-sum-box.tb-sum-ng { background: rgba(var(--coral-rgb), 0.08); color: var(--danger); border: 1px solid rgba(var(--coral-rgb), 0.3); }
+.tb-sum-box.tb-sum-skip { background: rgba(var(--gold-rgb), 0.08); color: var(--text-sub); border: 1px solid rgba(var(--gold-rgb), 0.2); font-weight: 600; font-size: 0.78rem; }
+
 .tb-actions { text-align: center; margin-top: 24px; }
 CSS;
 
@@ -393,10 +399,11 @@ require __DIR__ . '/../templates/header.php';
             ?>
               <div class="tb-score-row">
                 <span class="tb-score-name"><?= h($p['nickname'] ?? $p['name']) ?></span>
-                <input type="number" name="score_<?= $g ?>_<?= (int) $p['player_id'] ?>" class="tb-input tb-score-input" step="0.1" value="<?= $existingScore !== null ? h((string) $existingScore) : '' ?>" placeholder="0.0">
+                <input type="number" name="score_<?= $g ?>_<?= (int) $p['player_id'] ?>" class="tb-input tb-score-input" step="0.1" inputmode="decimal" value="<?= $existingScore !== null ? h((string) $existingScore) : '' ?>" placeholder="0.0">
               </div>
             <?php endforeach; ?>
           </div>
+          <div class="tb-sum-box tb-sum-pending" data-sum-box="<?= $g ?>">合計: -</div>
         </div>
       <?php endfor; ?>
       <div class="tb-done-section">
@@ -434,14 +441,110 @@ $jsReturnPoints = (int) ($meta['return_points'] ?? 30000);
 $jsPlayerMode = (int) ($meta['player_mode'] ?? 4);
 $jsPlayerCount = count($table['players']);
 $jsGameCount = $gameCount;
+$jsHasSub = $subCount > 0 ? 'true' : 'false';
+$jsIsDev = $isDev ? 'true' : 'false';
 
-$pageInlineScript = $isDev ? <<<JS
+$pageInlineScript = !$isDone ? <<<JS
 (function() {
+  var form = document.getElementById('table-form');
+  if (!form) return;
+
   var gameCount = {$jsGameCount};
   var startPt = {$jsStartingPoints};
   var returnPt = {$jsReturnPoints};
   var pMode = {$jsPlayerMode};
   var pCount = {$jsPlayerCount};
+  var hasSub = {$jsHasSub};
+  var isDev = {$jsIsDev};
+  var SUM_TOLERANCE = 0.05;
+
+  function fmtSigned(n) {
+    var r = Math.round(n * 10) / 10;
+    return (r > 0 ? '+' : r < 0 ? '' : '') + r.toFixed(1);
+  }
+
+  function updateGameSum(g) {
+    var box = form.querySelector('[data-sum-box="' + g + '"]');
+    if (!box) return;
+    var inputs = form.querySelectorAll('input[name^="score_' + g + '_"]');
+    var sum = 0;
+    var hasEmpty = false;
+    inputs.forEach(function(inp) {
+      var v = inp.value.trim();
+      if (v === '') { hasEmpty = true; return; }
+      var n = parseFloat(v);
+      if (!isNaN(n)) sum += n;
+    });
+    box.className = 'tb-sum-box';
+    if (hasSub) {
+      box.textContent = '代打ちを含むため自動検算は行いません';
+      box.classList.add('tb-sum-skip');
+    } else if (hasEmpty) {
+      box.textContent = '（すべてのスコアを入力すると自動で検算します）';
+      box.classList.add('tb-sum-pending');
+    } else if (Math.abs(sum) < SUM_TOLERANCE) {
+      box.textContent = '✓ OK';
+      box.classList.add('tb-sum-ok');
+    } else {
+      box.textContent = '合計: ' + fmtSigned(sum) + '（0.0 になるように調整してください）';
+      box.classList.add('tb-sum-ng');
+    }
+  }
+
+  function validateForm() {
+    var btn = form.querySelector('button[value="game_data"]');
+    if (!btn) return;
+
+    var ok = true;
+    for (var g = 1; g <= gameCount; g++) {
+      var u = form.querySelector('input[name="paifu_url_' + g + '"]');
+      if (u && u.value.trim() === '') { ok = false; break; }
+      var inputs = form.querySelectorAll('input[name^="score_' + g + '_"]');
+      var sum = 0, empty = false;
+      inputs.forEach(function(inp) {
+        var v = inp.value.trim();
+        if (v === '') empty = true;
+        else sum += parseFloat(v) || 0;
+      });
+      if (empty) { ok = false; break; }
+      if (!hasSub && Math.abs(sum) >= SUM_TOLERANCE) { ok = false; break; }
+    }
+    btn.disabled = !ok;
+  }
+
+  function refreshAll() {
+    for (var g = 1; g <= gameCount; g++) updateGameSum(g);
+    validateForm();
+  }
+
+  form.addEventListener('input', function(e) {
+    if (!e.target.matches) return;
+    if (e.target.matches('.tb-score-input, .tb-paifu-input')) {
+      var m = e.target.name.match(/^score_(\d+)_/);
+      if (m) updateGameSum(parseInt(m[1], 10));
+      validateForm();
+    }
+  });
+
+  form.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    if (!e.target.matches) return;
+    if (!e.target.matches('.tb-score-input, .tb-paifu-input')) return;
+    e.preventDefault();
+    var nav = Array.prototype.slice.call(form.querySelectorAll('.tb-paifu-input, .tb-score-input'));
+    var idx = nav.indexOf(e.target);
+    if (idx >= 0 && idx + 1 < nav.length) {
+      nav[idx + 1].focus();
+      if (nav[idx + 1].select) nav[idx + 1].select();
+    } else {
+      var btn = form.querySelector('button[value="game_data"]');
+      if (btn && !btn.disabled) btn.focus();
+    }
+  });
+
+  refreshAll();
+
+  if (!isDev) return;
 
   function genRandomScores() {
     var totalPool = startPt * pCount;
@@ -513,6 +616,7 @@ $pageInlineScript = $isDev ? <<<JS
       for (var i = 0; i < inputs.length && i < scores.length; i++) {
         inputs[i].value = scores[i].toFixed(1);
       }
+      refreshAll();
     });
   });
 
@@ -527,6 +631,7 @@ $pageInlineScript = $isDev ? <<<JS
   }
 })();
 JS : '';
+unset($jsHasSub, $jsIsDev);
 
 require __DIR__ . '/../templates/footer.php';
 ?>
