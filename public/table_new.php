@@ -91,7 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$validationError) {
                 // ラウンド設定
-                $isFinal = isset($_POST['is_final']) && $_POST['is_final'] === '1';
+                // 決勝ラウンドは残り選手が1卓に収まる場合に自動判定
+                $isFinal = count($tournamentPlayers) <= $playerMode;
                 $advanceCount = (int) ($_POST['advance_count'] ?? 2);
                 $advanceMode = sanitizeInput('advance_mode');
                 if (!in_array($advanceMode, ['per_table', 'overall'], true)) {
@@ -165,11 +166,13 @@ $pageStyle = <<<'CSS'
 .tn-option-label { font-size: 0.8rem; font-weight: 700; color: var(--text); min-width: 80px; flex-shrink: 0; }
 .tn-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.8rem; color: var(--text-sub); font-weight: 600; }
 .tn-toggle input { display: none; }
-.tn-toggle-track { width: 36px; height: 20px; border-radius: 10px; background: var(--glass-border); position: relative; transition: background 0.2s; flex-shrink: 0; }
-.tn-toggle input:checked + .tn-toggle-track { background: var(--purple); }
-.tn-toggle-track::after { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: transform 0.2s; }
-.tn-toggle input:checked + .tn-toggle-track::after { transform: translateX(16px); }
+.tn-toggle-track { width: 36px; height: 20px; border-radius: 10px; background: var(--input-bg); border: 1.5px solid var(--input-border); box-sizing: border-box; position: relative; transition: background 0.2s, border-color 0.2s; flex-shrink: 0; }
+.tn-toggle:hover .tn-toggle-track { border-color: var(--input-border-hover); }
+.tn-toggle input:checked + .tn-toggle-track { background: var(--purple); border-color: var(--purple); }
+.tn-toggle-track::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--text-sub); top: 1.5px; left: 1.5px; transition: transform 0.2s, background 0.2s; }
+.tn-toggle input:checked + .tn-toggle-track::after { transform: translateX(16px); background: #fff; }
 .tn-toggle input:disabled + .tn-toggle-track { opacity: 0.4; cursor: not-allowed; }
+.tn-final-badge { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; background: rgba(var(--gold-rgb), 0.15); color: var(--gold); }
 .tn-radio-group { display: flex; gap: 6px; flex-wrap: wrap; }
 .tn-radio { display: none; }
 .tn-radio-label { display: inline-block; padding: 6px 14px; border: 2px solid var(--input-border); border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 700; color: var(--text-sub); cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; }
@@ -271,24 +274,11 @@ require __DIR__ . '/../templates/header.php';
       <div class="tn-section-title"><?= $nextRound ?>回戦 ラウンド設定</div>
       <div class="tn-options">
         <?php if ($isForcedFinal): ?>
-          <input type="hidden" name="is_final" value="1">
           <div class="tn-option-group">
-            <span class="tn-option-label">決勝卓</span>
-            <label class="tn-toggle">
-              <input type="checkbox" checked disabled id="opt-final">
-              <span class="tn-toggle-track"></span>
-              決勝（残り<?= count($tournamentPlayers) ?>名）
-            </label>
+            <span class="tn-option-label">決勝</span>
+            <span class="tn-final-badge">決勝ラウンド（残り<?= count($tournamentPlayers) ?>名）</span>
           </div>
         <?php else: ?>
-          <div class="tn-option-group">
-            <span class="tn-option-label">決勝卓</span>
-            <label class="tn-toggle">
-              <input type="checkbox" name="is_final" value="1" id="opt-final">
-              <span class="tn-toggle-track"></span>
-              このラウンドで優勝者を決定する
-            </label>
-          </div>
           <div class="tn-option-group" id="advance-group">
             <span class="tn-option-label">勝ち抜け</span>
             <div class="tn-radio-group">
@@ -394,17 +384,8 @@ $pageInlineScript = <<<JS
   var tables = [];
   var dragSrc = null;
 
-  // 決勝トグルで勝ち抜け欄の表示切替
-  var optFinal = document.getElementById('opt-final');
-  var advanceGroup = document.getElementById('advance-group');
   var advancePreview = document.getElementById('advance-preview');
   var selectAdvance = document.getElementById('select-advance');
-  if (optFinal && advanceGroup && !optFinal.disabled) {
-    optFinal.addEventListener('change', function() {
-      advanceGroup.style.display = this.checked ? 'none' : '';
-      updateAdvancePreview();
-    });
-  }
   if (selectAdvance) {
     selectAdvance.addEventListener('change', updateAdvancePreview);
   }
@@ -459,11 +440,6 @@ $pageInlineScript = <<<JS
 
   function updateAdvancePreview() {
     if (!advancePreview) return;
-    // 決勝チェック時は非表示
-    if (optFinal && optFinal.checked) {
-      advancePreview.style.display = 'none';
-      return;
-    }
     var tableCount = tables.length;
     if (tableCount === 0) {
       advancePreview.style.display = 'none';
