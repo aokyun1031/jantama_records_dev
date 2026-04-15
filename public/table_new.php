@@ -106,23 +106,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($advanceCount < 1) $advanceCount = 1;
                 if ($gameCount < 1) $gameCount = 1;
 
-                try {
-                    TableInfo::createBatch($tournamentId, $roundNumber, $tablesData);
-                    Tournament::start($tournamentId);
-                    // ラウンド設定を保存
-                    $rk = 'round_' . $roundNumber;
-                    TournamentMeta::set($tournamentId, $rk . '_is_final', $isFinal ? '1' : '0');
-                    TournamentMeta::set($tournamentId, $rk . '_advance_count', (string) $advanceCount);
-                    TournamentMeta::set($tournamentId, $rk . '_advance_mode', $advanceMode);
-                    TournamentMeta::set($tournamentId, $rk . '_game_count', (string) $gameCount);
-                    TournamentMeta::set($tournamentId, $rk . '_game_type', $gameType);
-                    $_SESSION['flash'] = count($tablesData) . '卓を作成しました。';
-                    regenerateCsrfToken();
-                    header('Location: tournament?id=' . $tournamentId);
-                    exit;
-                } catch (PDOException $e) {
-                    error_log('[DB] ' . $e->getMessage());
-                    $validationError = '卓の作成に失敗しました。';
+                if ($advanceMode === 'overall' && $advanceCount % $playerMode !== 0) {
+                    $validationError = '全体モードの勝ち抜け人数は対局人数の倍数で指定してください。';
+                }
+
+                if (!$validationError) {
+                    try {
+                        TableInfo::createBatch($tournamentId, $roundNumber, $tablesData);
+                        Tournament::start($tournamentId);
+                        // ラウンド設定を保存
+                        $rk = 'round_' . $roundNumber;
+                        TournamentMeta::set($tournamentId, $rk . '_is_final', $isFinal ? '1' : '0');
+                        TournamentMeta::set($tournamentId, $rk . '_advance_count', (string) $advanceCount);
+                        TournamentMeta::set($tournamentId, $rk . '_advance_mode', $advanceMode);
+                        TournamentMeta::set($tournamentId, $rk . '_game_count', (string) $gameCount);
+                        TournamentMeta::set($tournamentId, $rk . '_game_type', $gameType);
+                        $_SESSION['flash'] = count($tablesData) . '卓を作成しました。';
+                        regenerateCsrfToken();
+                        header('Location: tournament?id=' . $tournamentId);
+                        exit;
+                    } catch (PDOException $e) {
+                        error_log('[DB] ' . $e->getMessage());
+                        $validationError = '卓の作成に失敗しました。';
+                    }
                 }
             }
         }
@@ -382,6 +388,7 @@ $pageInlineScript = <<<JS
 (function() {
   var players = {$jsPlayersJson};
   var playerMode = {$playerMode};
+  var nextRound = {$nextRound};
   var prevGroups = {$jsPrevGroupsJson};
   var standings = {$jsStandingsJson};
   var tables = [];
@@ -420,21 +427,34 @@ $pageInlineScript = <<<JS
     if (!selectAdvance) return;
     var mode = getAdvanceMode();
     var totalPlayers = players.length;
-    var max = mode === 'overall' ? totalPlayers - 1 : playerMode - 1;
     var oldVal = parseInt(selectAdvance.value);
     selectAdvance.innerHTML = '';
-    for (var i = 1; i <= max; i++) {
-      var opt = document.createElement('option');
-      opt.value = i;
-      opt.textContent = '上位' + i + '名';
-      selectAdvance.appendChild(opt);
-    }
+
+    var values = [];
     if (mode === 'overall') {
-      var defaultVal = Math.ceil(totalPlayers / 2);
-      selectAdvance.value = (oldVal > 0 && oldVal <= max) ? oldVal : defaultVal;
+      for (var k = 1; k <= 4; k++) {
+        var v = k * playerMode;
+        if (v > totalPlayers - 1) break;
+        values.push(v);
+      }
     } else {
-      selectAdvance.value = (oldVal > 0 && oldVal <= max) ? oldVal : 2;
+      for (var i = 1; i <= playerMode - 1; i++) values.push(i);
     }
+
+    values.forEach(function(v) {
+      var opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = '上位' + v + '名';
+      selectAdvance.appendChild(opt);
+    });
+
+    var defaultVal;
+    if (mode === 'overall') {
+      defaultVal = values.length >= 2 ? values[1] : (values[0] || 0);
+    } else {
+      defaultVal = 2;
+    }
+    selectAdvance.value = values.indexOf(oldVal) !== -1 ? oldVal : defaultVal;
   }
 
   function updateAdvancePreview() {
@@ -451,24 +471,33 @@ $pageInlineScript = <<<JS
     }
     var advance = selectAdvance ? parseInt(selectAdvance.value) : 2;
     var mode = getAdvanceMode();
-    // シミュレーション: 決勝まで追う
     var steps = [];
-    var cur = mode === 'overall' ? advance : tableCount * advance;
     var hasWarn = false;
-    for (var round = 0; round < 10; round++) {
+    if (mode === 'overall') {
+      // 全体モード: 次ラウンド以降の設定は未定なので、このラウンドの結果のみ表示
+      var cur = advance;
       var tc = Math.ceil(cur / playerMode);
       var subs = tc * playerMode - cur;
-      var isFinal = tc === 1;
-      steps.push({ players: cur, tables: tc, subs: subs, final: isFinal });
       if (subs > 0) hasWarn = true;
-      if (isFinal) break;
-      cur = tc * advance;
+      steps.push({ players: cur, tables: tc, subs: subs, final: tc === 1 });
+    } else {
+      // 各卓モード: 同じ配分で決勝まで追う
+      var cur = tableCount * advance;
+      for (var round = 0; round < 10; round++) {
+        var tc = Math.ceil(cur / playerMode);
+        var subs = tc * playerMode - cur;
+        var isFinal = tc === 1;
+        steps.push({ players: cur, tables: tc, subs: subs, final: isFinal });
+        if (subs > 0) hasWarn = true;
+        if (isFinal) break;
+        cur = tc * advance;
+      }
     }
     // 描画
     var html = '';
     for (var i = 0; i < steps.length; i++) {
       var s = steps[i];
-      var label = s.final ? '決勝' : (i + 1) + '回戦後';
+      var label = s.final ? '決勝' : (nextRound + i) + '回戦後';
       html += '<div class="tn-advance-step">';
       if (i > 0) html += '<span class="tn-advance-arrow">\u2192</span>';
       html += '<span>' + label + ' ' + s.players + '名（' + s.tables + '卓）';
