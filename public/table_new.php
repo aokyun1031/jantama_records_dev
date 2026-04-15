@@ -178,6 +178,9 @@ $pageStyle = <<<'CSS'
 .tn-radio-label { display: inline-block; padding: 6px 14px; border: 2px solid var(--input-border); border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 700; color: var(--text-sub); cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; }
 .tn-radio:checked + .tn-radio-label { border-color: var(--purple); background: rgba(var(--accent-rgb), 0.08); color: var(--text); }
 .tn-radio-label:hover { border-color: var(--input-border-hover); }
+.tn-radio:disabled + .tn-radio-label { opacity: 0.4; cursor: not-allowed; }
+.tn-radio:disabled + .tn-radio-label:hover { border-color: var(--input-border); }
+.tn-option-note { font-size: 0.72rem; color: var(--text-sub); }
 .tn-select { padding: 6px 12px; border: 1.5px solid var(--input-border); border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; font-family: 'Noto Sans JP', sans-serif; background: var(--input-bg); color: var(--text); cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
 .tn-select:hover:not(:focus) { border-color: var(--input-border-hover); }
 .tn-select:focus { outline: none; border-color: var(--input-border-focus); box-shadow: var(--input-focus-ring); }
@@ -331,17 +334,17 @@ require __DIR__ . '/../templates/header.php';
           <label class="tn-toggle" id="toggle-avoid">
             <input type="checkbox" id="opt-avoid" <?= $prevRound < 1 ? 'disabled' : '' ?>>
             <span class="tn-toggle-track"></span>
-            <?= $prevRound >= 1 ? '前回戦の同卓を避ける' : '（前回戦データなし）' ?>
           </label>
         </div>
+        <?php $rankingDisabled = $nextRound <= 1; ?>
         <div class="tn-option-group">
           <span class="tn-option-label">成績考慮</span>
           <div class="tn-radio-group">
-            <input type="radio" name="ranking_mode" value="none" id="rank-none" class="tn-radio" checked>
+            <input type="radio" name="ranking_mode" value="none" id="rank-none" class="tn-radio" checked <?= $rankingDisabled ? 'disabled' : '' ?>>
             <label for="rank-none" class="tn-radio-label">なし</label>
-            <input type="radio" name="ranking_mode" value="swiss" id="rank-swiss" class="tn-radio">
+            <input type="radio" name="ranking_mode" value="swiss" id="rank-swiss" class="tn-radio" <?= $rankingDisabled ? 'disabled' : '' ?>>
             <label for="rank-swiss" class="tn-radio-label">スイスドロー</label>
-            <input type="radio" name="ranking_mode" value="pot" id="rank-pot" class="tn-radio">
+            <input type="radio" name="ranking_mode" value="pot" id="rank-pot" class="tn-radio" <?= $rankingDisabled ? 'disabled' : '' ?>>
             <label for="rank-pot" class="tn-radio-label">ポット分け</label>
           </div>
         </div>
@@ -642,7 +645,8 @@ $pageInlineScript = <<<JS
 
   // --- メイン生成 ---
   function generate() {
-    var rankMode = document.querySelector('input[name="ranking_mode"]:checked').value;
+    var rankModeEl = document.querySelector('input[name="ranking_mode"]:checked');
+    var rankMode = rankModeEl ? rankModeEl.value : 'none';
     var useAvoid = optAvoid.checked && !optAvoid.disabled;
 
     if (rankMode === 'swiss') {
