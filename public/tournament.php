@@ -329,6 +329,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
   <?php endif; ?>
 
   <?php if ($phase === 'tournament_complete' && !$isCompleted): ?>
+    <a href="tournament_view?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F441; 閲覧ページ</a>
     <div class="td-cta" style="border-color: rgba(var(--gold-rgb), 0.4);">
       <span class="td-cta-icon gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
       <div class="td-cta-body">
@@ -361,6 +362,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
 
     <?php elseif ($phase === 'round_complete'): ?>
       <a href="tournament_players?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F465; 選手登録（<?= $playerCount ?>名）</a>
+      <a href="tournament_view?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F441; 閲覧ページ</a>
       <div class="td-cta">
         <span class="td-cta-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
         <div class="td-cta-body">
@@ -372,10 +374,12 @@ $statusClass = $tsEnum?->cssClass() ?? '';
 
     <?php elseif ($phase === 'current_round'): ?>
       <a href="tournament_players?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F465; 選手登録（<?= $playerCount ?>名）</a>
+      <a href="tournament_view?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F441; 閲覧ページ</a>
     <?php endif; ?>
   <?php endif; ?>
 
   <?php if ($isCompleted): ?>
+    <a href="tournament_view?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F441; 閲覧ページ</a>
     <div class="td-cta" style="border-color: rgba(var(--gold-rgb), 0.3); background: linear-gradient(135deg, rgba(var(--gold-rgb), 0.06), rgba(var(--accent-rgb), 0.02));">
       <span class="td-cta-icon gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
       <div class="td-cta-body">
