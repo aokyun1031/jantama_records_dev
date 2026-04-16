@@ -170,7 +170,7 @@ $pageStyle = <<<'CSS'
 .tn-toggle:hover .tn-toggle-track { border-color: var(--input-border-hover); }
 .tn-toggle input:checked + .tn-toggle-track { background: var(--purple); border-color: var(--purple); }
 .tn-toggle-track::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--text-sub); top: 1.5px; left: 1.5px; transition: transform 0.2s, background 0.2s; }
-.tn-toggle input:checked + .tn-toggle-track::after { transform: translateX(16px); background: #fff; }
+.tn-toggle input:checked + .tn-toggle-track::after { transform: translateX(16px); background: var(--toggle-knob); }
 .tn-toggle input:disabled + .tn-toggle-track { opacity: 0.4; cursor: not-allowed; }
 .tn-final-badge { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; background: rgba(var(--gold-rgb), 0.15); color: var(--gold); }
 .tn-radio-group { display: flex; gap: 6px; flex-wrap: wrap; }

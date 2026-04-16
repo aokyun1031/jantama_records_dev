@@ -47,6 +47,9 @@
   --btn-secondary-shadow:0 4px 16px rgba(var(--mint-rgb),0.3);
   --btn-text-color:#fff;
 
+  /* Toggle */
+  --toggle-knob:#fff;
+
   /* Form inputs */
   --input-bg:#fff;
   --input-border:rgba(45,43,85,0.22);
