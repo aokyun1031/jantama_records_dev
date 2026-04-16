@@ -28,7 +28,7 @@ test.describe('トップページ', () => {
   });
 
   test('選手一覧へのリンクが機能する', async ({ page }) => {
-    await page.click('a[href="players"]');
+    await page.locator('a[href="players"]').first().click();
     await expect(page).toHaveURL(/\/players/);
   });
 

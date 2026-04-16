@@ -69,6 +69,35 @@ test.describe('インタビュー編集', () => {
     await expect(page.locator('.iv-qa-item')).toHaveCount(initialCount);
   });
 
+  test('インタビュー保存後に大会を完了できる', async ({ page }) => {
+    await page.goto(`/interview_edit?id=${tournamentId}`);
+    // 1件以上の質問・回答を確実に保存
+    const items = await page.locator('.iv-qa-item').count();
+    if (items === 0) {
+      await page.click('#btn-add-qa');
+    }
+    await page.locator('.iv-qa-input').first().fill('完了テスト質問');
+    await page.locator('.iv-qa-input.answer').first().fill('完了テスト回答');
+    await page.click('.iv-btn-save');
+    await page.waitForURL(/interview_edit\?id=\d+&saved=1/, { waitUntil: 'domcontentloaded' });
+
+    // 完了ボタンで大会を完了
+    const completeBtn = page.locator('.iv-btn-complete');
+    await expect(completeBtn).toBeVisible();
+    page.once('dialog', (dialog) => dialog.accept());
+    await completeBtn.click();
+    await page.waitForURL(/\/tournament\?id=\d+/, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.edit-message.success')).toContainText('完了しました');
+  });
+
+  test('完了済み大会では完了セクションが非表示', async ({ page }) => {
+    await page.goto(`/interview_edit?id=${tournamentId}`);
+    // 前テストで大会を完了済みなので、完了セクションは無い
+    await expect(page.locator('.iv-complete-section')).toHaveCount(0);
+    // インタビュー保存フォームは引き続き利用可能
+    await expect(page.locator('.iv-btn-save')).toBeVisible();
+  });
+
   test('存在しないIDで404', async ({ page }) => {
     const response = await page.goto('/interview_edit?id=999999');
     expect(response?.status()).toBe(404);

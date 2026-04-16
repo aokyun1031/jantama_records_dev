@@ -13,7 +13,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.E2E_BASE_URL || 'http://localhost:8080',
     locale: 'ja-JP',
-    navigationTimeout: 20000,
+    navigationTimeout: 60000,
     waitUntil: 'domcontentloaded',
     reducedMotion: 'reduce',
     screenshot: 'only-on-failure',

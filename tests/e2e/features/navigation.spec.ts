@@ -6,8 +6,8 @@ test.describe('ページ間ナビゲーション', () => {
     // トップページ
     await page.goto('/');
 
-    // 選手一覧へ
-    await page.click('a[href="players"]');
+    // 選手一覧へ（index.php には複数リンクがあるので first を使用）
+    await page.locator('a[href="players"]').first().click();
     await expect(page).toHaveURL(/\/players/);
     await expect(page.locator('.players-badge')).toBeVisible();
 

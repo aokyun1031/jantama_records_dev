@@ -34,17 +34,24 @@ export async function createTestPlayer(
 }
 
 /**
- * テスト用大会をフォーム経由で作成し、選手全員を登録してIDを返す。
+ * テスト用大会をフォーム経由で作成し、先頭 N 人の選手を登録してIDを返す。
+ * 既定値 8 人は 4 人卓 × 2 分をまかない、かつ Neon への大量 INSERT を回避する設計。
  */
 export async function createTestTournamentWithPlayers(
   page: Page,
-  name: string
+  name: string,
+  playerCount = 8
 ): Promise<number> {
   await page.goto('/tournament_new', { waitUntil: 'domcontentloaded' });
   await page.fill('input[name="name"]', name);
-  await page.click('#btn-select-all');
+  const checkboxes = page.locator('.player-select-option input[type="checkbox"]');
+  const total = await checkboxes.count();
+  const take = Math.min(playerCount, total);
+  for (let i = 0; i < take; i++) {
+    await checkboxes.nth(i).check({ force: true });
+  }
   await page.click('button.btn-save');
-  await page.waitForURL(/\/tournaments(\?.*)?$/, { waitUntil: 'domcontentloaded' });
+  await page.waitForURL(/\/tournaments(\?.*)?$/, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
   // IDを取得
   await page.goto('/tournaments', { waitUntil: 'domcontentloaded' });

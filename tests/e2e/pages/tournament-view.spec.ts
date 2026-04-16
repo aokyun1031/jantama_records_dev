@@ -49,6 +49,24 @@ test.describe('大会ビュー（公開ページ）', () => {
     await expect(page.locator('.tab-btn')).not.toHaveCount(0);
   });
 
+  test('タブをクリックするとコンテンツが切り替わる', async ({ page }) => {
+    await page.goto('/tournament_view?id=1');
+    const tabs = page.locator('.tab-btn[data-tab-index]');
+    const count = await tabs.count();
+    test.skip(count < 2, 'タブが1つしか無いためスキップ');
+
+    // 先頭タブをクリック
+    await tabs.nth(0).click();
+    await expect(tabs.nth(0)).toHaveClass(/active/);
+    await expect(page.locator('.tab-content').nth(0)).toHaveClass(/active/);
+
+    // 末尾タブをクリック
+    const lastIdx = count - 1;
+    await tabs.nth(lastIdx).click();
+    await expect(tabs.nth(lastIdx)).toHaveClass(/active/);
+    await expect(page.locator('.tab-content').nth(lastIdx)).toHaveClass(/active/);
+  });
+
   test('大会一覧への戻るリンクがある', async ({ page }) => {
     await page.goto('/tournament_view?id=1');
     await expect(page.locator('a.btn-cancel[href="tournaments"]')).toBeVisible();

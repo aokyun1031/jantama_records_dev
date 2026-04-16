@@ -1,7 +1,7 @@
 import { test, expect } from '../helpers/fixtures';
 import { TEST_PREFIX, createTestTournamentWithPlayers, createOptimizedPage } from '../helpers/test-helpers';
 
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'serial', timeout: 90000 });
 test.describe('卓作成', () => {
   let tournamentId: number;
 
