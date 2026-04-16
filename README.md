@@ -279,6 +279,48 @@ npx playwright test features/    # 機能テストのみ
 | `tests/e2e/features/` | 機能テスト（テーマ切替・クリーンURL・セキュリティ・ナビゲーション） |
 | `tests/e2e/helpers/` | 共通ユーティリティ（カスタムfixture・テストプレイヤー管理） |
 
+## リファクタリング
+
+Claude 主導で開発を進めると、会話ごとに微妙な不整合（ドリフト）が積み上がる。
+`/refactor` コマンドは CLAUDE.md 規約からのドリフトを検出・修正するための仕組み。
+
+### 使い方
+
+```bash
+# Claude Code のスラッシュコマンド
+/refactor                            # ヘルスチェック（読み取り専用）
+/refactor public/player.php          # 指定ファイルのドリフトを修正
+/refactor public/css/                # 指定ディレクトリ配下を修正
+
+# スクリプト単体（CI や手動確認で使える）
+bash .claude/skills/refactor/scripts/scan.sh             # 全体レポート
+bash .claude/skills/refactor/scripts/scan.sh --summary   # 件数のみ
+bash .claude/skills/refactor/scripts/scan.sh --target public/player.php
+```
+
+### 出力の読み方
+
+| 深刻度 | 意味 | 対応 |
+|---|---|---|
+| 🔴 CRITICAL | セキュリティ / 規約の根幹に関わる | 即修正 |
+| 🟡 WARNING | スタイル / 一貫性のドリフト | まとめて修正推奨 |
+| 🔵 INFO | 検討余地あり（dead code・大きすぎるページ等） | 状況を見て判断 |
+
+引数なしの `/refactor` はファイルを一切変更しない。修正は引数で対象を指定した時のみ実施される。
+1 回の修正は **1 PR = 1 テーマ** に絞る（型キャスト修正とロジック変更を混ぜない）。
+
+### 運用タイミング
+
+- 大きな機能追加後（PR マージ前）
+- 月次の整備タイミング
+- 新規ページ作成後、既存ページとの一貫性を確認したい時
+
+### 詳細
+
+- 検出ルール一覧: `.claude/skills/refactor/conventions.md`
+- スキル実装: `.claude/skills/refactor/SKILL.md`
+- コーディング規約の正本: `CLAUDE.md`
+
 ## Cloudflare Workers（CDNリバースプロキシ）
 
 静的アセット（CSS/JS/画像）をCloudflareのエッジにキャッシュするリバースプロキシ。
