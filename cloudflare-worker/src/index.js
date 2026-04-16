@@ -38,15 +38,20 @@ export default {
     }
   },
 
-  // 5分ごとにオリジンをピング＋トップページをKVにキャッシュ
+  // cron: */5 * * * * → Render起こし（/health, DB非依存）
+  // cron: 0 18 * * * → JST 3:00にトップページHTMLをKVにキャッシュ更新
   async scheduled(event, env, ctx) {
     try {
-      const res = await fetch(env.ORIGIN + "/", {
-        headers: { Accept: "text/html" },
-      });
-      if (res.ok) {
-        const html = await res.text();
-        await env.TOP_PAGE_CACHE.put("index", html, { expirationTtl: 3600 });
+      if (event.cron === "0 18 * * *") {
+        const res = await fetch(env.ORIGIN + "/", {
+          headers: { Accept: "text/html" },
+        });
+        if (res.ok) {
+          const html = await res.text();
+          await env.TOP_PAGE_CACHE.put("index", html, { expirationTtl: 60 * 60 * 48 });
+        }
+      } else {
+        await fetch(env.ORIGIN + "/health");
       }
     } catch (e) {
       // オリジン到達不可 — キャッシュは上書きしない

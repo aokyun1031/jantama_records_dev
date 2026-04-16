@@ -5,7 +5,7 @@ services:
     dockerfilePath: ./Dockerfile
     region: singapore
     autoDeploy: true
-    healthCheckPath: /
+    healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
         sync: false

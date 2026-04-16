@@ -41,7 +41,7 @@ graph TB
     subgraph CF["Cloudflare エッジ"]
         Workers["Workers\nCDN リバースプロキシ"]:::cfStyle
         KV[("Workers KV\nフォールバックキャッシュ")]:::cfStyle
-        Cron(["Cron Triggers\n5分ごと ping"]):::cfStyle
+        Cron(["Cron Triggers\n5分ごと /health\n1日1回 KV更新"]):::cfStyle
         Turnstile["Turnstile\nbot 対策"]:::cfStyle
         Analytics["Web Analytics"]:::cfStyle
     end
@@ -347,7 +347,7 @@ npx wrangler deploy   # デプロイ
 
 - 静的アセット → Cloudflareエッジにキャッシュ（`CF-Cache-Status: HIT`）
 - PHPページ → キャッシュせずRenderに転送（`Cache-Control: no-store`）
-- Cron Triggers → 5分ごとにオリジンをピング（Renderスリープ防止）+ トップページHTMLをKVにキャッシュ
+- Cron Triggers → 5分ごとに `/health` へping（Renderスリープ防止・DB非依存でNeon compute消費なし）+ JST 3:00にトップページHTMLをKVにキャッシュ更新
 - Workers KV → オリジンダウン時にトップページのフォールバック表示
 - 無料枠: 10万リクエスト/日
 
