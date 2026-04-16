@@ -15,7 +15,7 @@ Thumbs.db
 docker-compose.override.yml
 
 # PHP
-vendor/
+/vendor/
 
 # Phinx
 phinx.php
