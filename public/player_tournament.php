@@ -319,8 +319,8 @@ require __DIR__ . '/../templates/header.php';
     <h1 class="result-title"><?= h($player['nickname'] ?? $player['name']) ?></h1>
   </div>
   <?php if ($standing):
-    $isChampion = (int)$standing['rank'] === 1 && $tournament['status'] === TournamentStatus::Completed->value;
-    $elimRound  = (int)$standing['eliminated_round'];
+    $isChampion = (int) $standing['rank'] === 1 && $tournament['status'] === TournamentStatus::Completed->value;
+    $elimRound  = (int) $standing['eliminated_round'];
   ?>
     <?php if ($isChampion): ?>
       <div class="result-outcome outcome-champion">優勝</div>
@@ -331,7 +331,7 @@ require __DIR__ . '/../templates/header.php';
     <?php endif; ?>
     <div class="result-standing">
       <div class="result-standing-label">総合ポイント</div>
-      <div class="result-standing-value"><?= number_format((float)$standing['total'], 1) ?>pt</div>
+      <div class="result-standing-value"><?= number_format((float) $standing['total'], 1) ?>pt</div>
     </div>
   <?php endif; ?>
 </div>
@@ -349,11 +349,11 @@ require __DIR__ . '/../templates/header.php';
     ['data' => $finalRoundStr] = fetchData(fn() => TournamentMeta::get($tournamentId, 'current_round', '0'));
     $tournamentFinalRound = (int)($finalRoundStr ?? '0');
     foreach ($rounds as $ri => $round):
-      $isFinal = (int)$round['round_number'] === $tournamentFinalRound && $tournament['status'] === TournamentStatus::Completed->value;
+      $isFinal = (int) $round['round_number'] === $tournamentFinalRound && $tournament['status'] === TournamentStatus::Completed->value;
   ?>
     <div class="round-section" style="animation-delay: <?= $ri * 0.1 ?>s">
       <div class="round-header">
-        <span class="round-label"><?= (int)$round['round_number'] ?>回戦</span>
+        <span class="round-label"><?= (int) $round['round_number'] ?>回戦</span>
         <span class="round-table-name"><?= h($round['table_name']) ?></span>
       </div>
       <?php
@@ -365,8 +365,8 @@ require __DIR__ . '/../templates/header.php';
           <?php if ($member['score'] !== null):
             $aboveCutoff = $member['is_above_cutoff'] !== false && $member['is_above_cutoff'] !== 'f';
           ?>
-            <div class="member-score <?= (float)$member['score'] >= 0 ? 'score-plus' : 'score-minus' ?>">
-              <?= (float)$member['score'] >= 0 ? '+' : '' ?><?= number_format((float)$member['score'], 1) ?>
+            <div class="member-score <?= (float) $member['score'] >= 0 ? 'score-plus' : 'score-minus' ?>">
+              <?= (float) $member['score'] >= 0 ? '+' : '' ?><?= number_format((float) $member['score'], 1) ?>
             </div>
             <?php if ($isFinal && !$championShown): $championShown = true; ?>
               <div class="member-tag tag-champion">優勝</div>

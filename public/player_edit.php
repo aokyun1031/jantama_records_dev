@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $validationError = '呼称を入力してください。';
         } elseif (mb_strlen($nickname) > 50) {
             $validationError = '呼称は50文字以内で入力してください。';
-        } elseif ($characterId && !array_filter($characters ?? [], fn($c) => (int)$c['id'] === $characterId)) {
+        } elseif ($characterId && !array_filter($characters ?? [], fn($c) => (int) $c['id'] === $characterId)) {
             $validationError = '不正なキャラクター選択です。';
         } else {
             try {
@@ -103,7 +103,7 @@ require __DIR__ . '/../templates/header.php';
       <div class="chara-grid">
         <?php foreach ($characters ?? [] as $c): ?>
           <label class="chara-option">
-            <input type="radio" name="character_id" value="<?= (int)$c['id'] ?>" <?= (int)($player['character_id'] ?? 0) === (int)$c['id'] ? 'checked' : '' ?>>
+            <input type="radio" name="character_id" value="<?= (int) $c['id'] ?>" <?= (int)($player['character_id'] ?? 0) === (int) $c['id'] ? 'checked' : '' ?>>
             <div class="chara-option-inner">
               <?php if ($c['icon_filename']): ?>
                 <img src="img/chara_deformed/<?= h($c['icon_filename']) ?>" alt="<?= h($c['name']) ?>" class="chara-option-icon" width="48" height="48" loading="lazy">

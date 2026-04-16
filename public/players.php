@@ -183,7 +183,7 @@ require __DIR__ . '/../templates/header.php';
 <?php else: ?>
   <div class="players-grid">
   <?php foreach ($players as $i => $player): ?>
-    <a href="player?id=<?= (int)$player['id'] ?>" class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
+    <a href="player?id=<?= (int) $player['id'] ?>" class="player-card" style="animation-delay: <?= $i * 0.05 ?>s">
       <?php if ($player['character_icon']): ?>
         <img src="img/chara_deformed/<?= h($player['character_icon']) ?>" alt="<?= h($player['name']) ?>" class="player-icon" width="44" height="44" loading="lazy">
       <?php else: ?>

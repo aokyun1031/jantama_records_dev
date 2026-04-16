@@ -441,7 +441,7 @@ require __DIR__ . '/../templates/header.php';
 $maxAbsScore = 1;
 if ($scoreHistory) {
     foreach ($scoreHistory as $sh) {
-        $abs = abs((float)$sh['score']);
+        $abs = abs((float) $sh['score']);
         if ($abs > $maxAbsScore) $maxAbsScore = $abs;
     }
 }
@@ -462,32 +462,32 @@ if ($scoreHistory) {
   <div class="analysis-error">
     データベース接続エラー。しばらくしてから再度お試しください。
   </div>
-<?php elseif (!$summary || (int)$summary['total_rounds'] === 0): ?>
+<?php elseif (!$summary || (int) $summary['total_rounds'] === 0): ?>
   <div class="analysis-error">
     参加した大会はまだありません。戦績データが登録されると分析結果が表示されます。
   </div>
 <?php else: ?>
 
   <!-- 通算成績サマリー -->
-  <?php if ($summary && (int)$summary['total_rounds'] > 0):
-    $qualifyingRounds = (int)$summary['qualifying_rounds'];
-    $qualifyingPasses = (int)$summary['qualifying_passes'];
+  <?php if ($summary && (int) $summary['total_rounds'] > 0):
+    $qualifyingRounds = (int) $summary['qualifying_rounds'];
+    $qualifyingPasses = (int) $summary['qualifying_passes'];
     $passRate = $qualifyingRounds > 0 ? round($qualifyingPasses / $qualifyingRounds * 100) : 0;
   ?>
   <div class="summary-grid">
     <div class="summary-card">
       <div class="summary-label">参加大会</div>
-      <div class="summary-value"><?= (int)$summary['total_tournaments'] ?></div>
+      <div class="summary-value"><?= (int) $summary['total_tournaments'] ?></div>
       <div class="summary-sub">大会</div>
     </div>
     <div class="summary-card">
       <div class="summary-label">平均スコア</div>
-      <div class="summary-value"><?= number_format((float)$summary['avg_score'], 1) ?></div>
+      <div class="summary-value"><?= number_format((float) $summary['avg_score'], 1) ?></div>
       <div class="summary-sub">pt/回戦</div>
     </div>
     <div class="summary-card">
       <div class="summary-label">卓内平均着順</div>
-      <div class="summary-value"><?= $avgRank ? number_format((float)$avgRank, 2) : '-' ?></div>
+      <div class="summary-value"><?= $avgRank ? number_format((float) $avgRank, 2) : '-' ?></div>
       <div class="summary-sub">/4人中</div>
     </div>
     <div class="summary-card">
@@ -497,11 +497,11 @@ if ($scoreHistory) {
     </div>
     <div class="summary-card">
       <div class="summary-label">最高スコア</div>
-      <div class="summary-value"><?= number_format((float)$summary['best_score'], 1) ?></div>
+      <div class="summary-value"><?= number_format((float) $summary['best_score'], 1) ?></div>
     </div>
     <div class="summary-card">
       <div class="summary-label">最低スコア</div>
-      <div class="summary-value"><?= number_format((float)$summary['worst_score'], 1) ?></div>
+      <div class="summary-value"><?= number_format((float) $summary['worst_score'], 1) ?></div>
     </div>
   </div>
   <?php endif; ?>
@@ -523,21 +523,21 @@ if ($scoreHistory) {
       </thead>
       <tbody>
       <?php foreach ($headToHead as $h):
-        $games = (int)$h['games'];
+        $games = (int) $h['games'];
         $hasPlayed = $games > 0;
-        $scoreDiff = $hasPlayed ? (float)$h['avg_my_score'] - (float)$h['avg_opp_score'] : 0;
+        $scoreDiff = $hasPlayed ? (float) $h['avg_my_score'] - (float) $h['avg_opp_score'] : 0;
       ?>
         <tr<?= !$hasPlayed ? ' class="h2h-none"' : '' ?>>
           <td class="<?= $hasPlayed ? 'h2h-name' : '' ?>" data-sort-value="<?= h($h['opponent_name']) ?>"><?= h($h['opponent_name']) ?></td>
           <?php if ($hasPlayed):
-            $winRate = $games > 0 ? (int)$h['wins'] / $games : 0;
-            $myRank = (float)$h['avg_my_rank'];
-            $oppRank = (float)$h['avg_opp_rank'];
+            $winRate = $games > 0 ? (int) $h['wins'] / $games : 0;
+            $myRank = (float) $h['avg_my_rank'];
+            $oppRank = (float) $h['avg_opp_rank'];
           ?>
             <td class="h2h-record" data-sort-value="<?= number_format($winRate, 4) ?>">
-              <span class="h2h-wins"><?= (int)$h['wins'] ?></span>
+              <span class="h2h-wins"><?= (int) $h['wins'] ?></span>
               <span style="color:var(--text-light)"> - </span>
-              <span class="h2h-losses"><?= (int)$h['losses'] ?></span>
+              <span class="h2h-losses"><?= (int) $h['losses'] ?></span>
             </td>
             <td class="h2h-games" data-sort-value="<?= $games ?>"><?= $games ?>回</td>
             <td class="h2h-rank" data-sort-value="<?= number_format($myRank, 4) ?>"><?= number_format($myRank, 1) ?>位</td>
@@ -575,12 +575,12 @@ if ($scoreHistory) {
       </thead>
       <tbody>
       <?php foreach ($scoreHistory as $sh):
-        $score = (float)$sh['score'];
+        $score = (float) $sh['score'];
         $barWidth = round(abs($score) / $maxAbsScore * 100);
         $aboveCutoff = $sh['is_above_cutoff'] === true || $sh['is_above_cutoff'] === 't' || $sh['is_above_cutoff'] === '1';
       ?>
         <tr>
-          <td class="history-round"><?= h($sh['tournament_name']) ?> <?= (int)$sh['round_number'] ?>回戦</td>
+          <td class="history-round"><?= h($sh['tournament_name']) ?> <?= (int) $sh['round_number'] ?>回戦</td>
           <td class="history-date"><?php
             if ($sh['played_date']) {
                 $d = date('Y/n/j', strtotime($sh['played_date']));

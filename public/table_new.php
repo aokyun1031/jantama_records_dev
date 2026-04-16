@@ -93,12 +93,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // ラウンド設定
                 // 決勝ラウンドは残り選手が1卓に収まる場合に自動判定
                 $isFinal = count($tournamentPlayers) <= $playerMode;
-                $advanceCount = (int) ($_POST['advance_count'] ?? 2);
+                $advanceCount = (int) (sanitizeInput('advance_count') ?: 2);
                 $advanceMode = sanitizeInput('advance_mode');
                 if (!in_array($advanceMode, ['per_table', 'overall'], true)) {
                     $advanceMode = 'per_table';
                 }
-                $gameCount = (int) ($_POST['game_count'] ?? 2);
+                $gameCount = (int) (sanitizeInput('game_count') ?: 2);
                 $gameType = sanitizeInput('game_type');
                 $validGameTypes = ['hanchan', 'tonpu', 'ikkyoku'];
                 if (!in_array($gameType, $validGameTypes, true)) {

@@ -340,9 +340,9 @@ require __DIR__ . '/../templates/header.php';
           <div class="tournament-event-type"><?= h($eventType->label()) ?></div>
         <?php endif; ?>
         <?php
-          $elimRound  = (int)$t['eliminated_round'];
-          $lastRound  = (int)$t['last_round'];
-          $isChampion = (int)$t['rank'] === 1 && $t['status'] === TournamentStatus::Completed->value;
+          $elimRound  = (int) $t['eliminated_round'];
+          $lastRound  = (int) $t['last_round'];
+          $isChampion = (int) $t['rank'] === 1 && $t['status'] === TournamentStatus::Completed->value;
           if ($isChampion):
         ?>
           <span class="tournament-progress progress-champion">優勝</span>
@@ -357,14 +357,14 @@ require __DIR__ . '/../templates/header.php';
         <?php else: ?>
           <span class="tournament-progress progress-finals"><?= $lastRound ?>回戦進出</span>
         <?php endif; ?>
-        <span class="tournament-total"><?= number_format((float)$t['total'], 1) ?>pt</span>
+        <span class="tournament-total"><?= number_format((float) $t['total'], 1) ?>pt</span>
       </div>
       <div class="tournament-links">
-        <a href="player_tournament?player_id=<?= $playerId ?>&amp;tournament_id=<?= (int)$t['id'] ?>" class="tournament-link">個人戦績 <span class="link-arrow">&#x203A;</span></a>
+        <a href="player_tournament?player_id=<?= $playerId ?>&amp;tournament_id=<?= (int) $t['id'] ?>" class="tournament-link">個人戦績 <span class="link-arrow">&#x203A;</span></a>
         <?php if ($t['status'] === TournamentStatus::Preparing->value): ?>
           <span class="tournament-link disabled">大会閲覧ページ</span>
         <?php else: ?>
-          <a href="tournament_view?id=<?= (int)$t['id'] ?>" class="tournament-link">大会閲覧ページ <span class="link-arrow">&#x203A;</span></a>
+          <a href="tournament_view?id=<?= (int) $t['id'] ?>" class="tournament-link">大会閲覧ページ <span class="link-arrow">&#x203A;</span></a>
         <?php endif; ?>
       </div>
     </div>
