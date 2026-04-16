@@ -319,7 +319,8 @@ require __DIR__ . '/../templates/header.php';
     <h1 class="result-title"><?= h($player['nickname'] ?? $player['name']) ?></h1>
   </div>
   <?php if ($standing):
-    $isChampion = (int) $standing['rank'] === 1 && $tournament['status'] === TournamentStatus::Completed->value;
+    $isChampion = ($standing['is_champion'] === true || $standing['is_champion'] === 't' || $standing['is_champion'] === '1')
+                  && $tournament['status'] === TournamentStatus::Completed->value;
     $elimRound  = (int) $standing['eliminated_round'];
   ?>
     <?php if ($isChampion): ?>

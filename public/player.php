@@ -342,7 +342,8 @@ require __DIR__ . '/../templates/header.php';
         <?php
           $elimRound  = (int) $t['eliminated_round'];
           $lastRound  = (int) $t['last_round'];
-          $isChampion = (int) $t['rank'] === 1 && $t['status'] === TournamentStatus::Completed->value;
+          $isChampion = ($t['is_champion'] === true || $t['is_champion'] === 't' || $t['is_champion'] === '1')
+                        && $t['status'] === TournamentStatus::Completed->value;
           if ($isChampion):
         ?>
           <span class="tournament-progress progress-champion">優勝</span>

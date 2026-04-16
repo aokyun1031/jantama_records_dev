@@ -275,7 +275,7 @@ class Tournament
         $pdo = getDbConnection();
         $stmt = $pdo->prepare(
             "SELECT t.id, t.name, t.status, t.created_at,
-                    s.rank, s.total, s.eliminated_round,
+                    s.total, s.eliminated_round,
                     COALESCE(tm.value, '') AS event_type,
                     (SELECT MAX(rr.round_number)
                      FROM round_results rr
@@ -284,7 +284,11 @@ class Tournament
                     (SELECT MAX(rr2.round_number)
                      FROM round_results rr2
                      WHERE rr2.tournament_id = t.id
-                    ) AS max_round
+                    ) AS max_round,
+                    (s.eliminated_round = 0 AND s.total = (
+                        SELECT MAX(s2.total) FROM standings s2
+                        WHERE s2.tournament_id = t.id AND s2.eliminated_round = 0
+                    )) AS is_champion
              FROM tournaments t
              JOIN standings s ON s.tournament_id = t.id AND s.player_id = ?
              LEFT JOIN tournament_meta tm ON tm.tournament_id = t.id AND tm.key = 'event_type'

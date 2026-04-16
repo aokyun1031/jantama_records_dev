@@ -176,7 +176,11 @@ class Standing
     {
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('
-            SELECT s.rank, p.name, s.total, s.pending, s.eliminated_round
+            SELECT p.name, s.total, s.pending, s.eliminated_round,
+                   (s.eliminated_round = 0 AND s.total = (
+                       SELECT MAX(s2.total) FROM standings s2
+                       WHERE s2.tournament_id = s.tournament_id AND s2.eliminated_round = 0
+                   )) AS is_champion
             FROM standings s
             JOIN players p ON p.id = s.player_id
             WHERE s.tournament_id = ? AND s.player_id = ?
