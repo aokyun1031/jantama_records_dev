@@ -60,6 +60,7 @@
 }
 
 .summary-card {
+  position: relative;
   background: var(--card);
   backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
@@ -67,6 +68,81 @@
   padding: 16px;
   text-align: center;
   box-shadow: var(--shadow-sm);
+}
+
+/* --- サマリーカード ヒント --- */
+.summary-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.18);
+  color: var(--text-sub);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  cursor: help;
+}
+
+.summary-card:hover .summary-info,
+.summary-card.hint-open .summary-info {
+  opacity: 1;
+}
+
+.summary-card[data-hint]::after {
+  content: attr(data-hint);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(240px, 80vw);
+  padding: 8px 10px;
+  background: rgba(45, 43, 85, 0.95);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.3px;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+  z-index: 20;
+}
+
+.summary-card[data-hint]::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(45, 43, 85, 0.95);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.summary-card[data-hint]:hover::after,
+.summary-card[data-hint]:hover::before,
+.summary-card.hint-open[data-hint]::after,
+.summary-card.hint-open[data-hint]::before {
+  opacity: 1;
+  visibility: visible;
 }
 
 .summary-label {
@@ -101,6 +177,45 @@
   margin-bottom: 12px;
   padding-left: 12px;
   border-left: 3px solid var(--purple);
+}
+
+/* --- チャートセクション --- */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: sectionIn 0.6s ease 0.3s forwards;
+}
+
+.chart-card {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-card-small { grid-column: span 4; }
+.chart-card-wide  { grid-column: span 8; }
+.chart-card-full  { grid-column: span 12; }
+
+.chart-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+
+.chart-card-full .chart-canvas-wrap {
+  height: clamp(240px, 32vw, 360px);
+}
+
+@media (max-width: 768px) {
+  .chart-card-small,
+  .chart-card-wide,
+  .chart-card-full { grid-column: span 12; }
 }
 
 /* --- 対戦成績テーブル --- */
