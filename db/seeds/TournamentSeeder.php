@@ -169,8 +169,6 @@ class TournamentSeeder extends AbstractSeed
 
         // 大会メタ情報
         $this->table('tournament_meta')->insert([
-            ['tournament_id' => $tournamentId, 'key' => 'record_score',      'value' => '65400'],
-            ['tournament_id' => $tournamentId, 'key' => 'record_player',     'value' => 'xするがx'],
             ['tournament_id' => $tournamentId, 'key' => 'total_players',     'value' => '20'],
             ['tournament_id' => $tournamentId, 'key' => 'current_round',     'value' => '4'],
             ['tournament_id' => $tournamentId, 'key' => 'remaining_players', 'value' => '1'],

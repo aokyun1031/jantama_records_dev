@@ -17,6 +17,7 @@ $isCompleted = $tournamentData['status'] === TournamentStatus::Completed->value;
 ['data' => $allStandings] = fetchData(fn() => Standing::all($tournamentId));
 ['data' => $roundsData] = fetchData(fn() => TableInfo::byTournament($tournamentId));
 ['data' => $interviews] = fetchData(fn() => Interview::byTournament($tournamentId));
+['data' => $tournamentRecords] = fetchData(fn() => TournamentRecords::all($tournamentId));
 
 $champion = Standing::champion($tournamentId);
 
@@ -514,9 +515,10 @@ foreach ($roundSettings as $rn => $rs) {
 <?php endif; ?>
 
 <?php
-  $recordScore = $meta['record_score'] ?? '';
-  $recordPlayer = $meta['record_player'] ?? '';
-  if ($recordScore !== '' || $recordPlayer !== ''):
+  $recHigh = $tournamentRecords['highest_score'] ?? null;
+  $recTops = $tournamentRecords['most_tops'] ?? null;
+  $recSpread = $tournamentRecords['largest_spread'] ?? null;
+  if ($recHigh || $recTops || $recSpread):
 ?>
 <div class="tile-divider">
   <div class="tile-divider-line"></div>
@@ -527,13 +529,47 @@ foreach ($roundSettings as $rn => $rs) {
 <!-- Records -->
 <section class="records reveal">
   <div class="records-title">&#x1F000; トーナメントレコード &#x1F000;</div>
+
+  <?php if ($recHigh): ?>
   <div class="record-highlight">
-    <?php if ($recordScore !== ''): ?>
-      <span class="record-label">大会最高得点</span>
-      <span class="record-score" data-count="<?= h($recordScore) ?>">0</span>
+    <span class="record-label">大会最高得点</span>
+    <span class="record-score" data-count="<?= h((string) $recHigh['score']) ?>">0</span>
+    <span class="record-player">
+      <?php if (!empty($recHigh['character_icon'])): ?>
+        <img src="img/chara_deformed/<?= h($recHigh['character_icon']) ?>" alt="" class="record-player-icon" width="24" height="24" loading="lazy">
+      <?php endif; ?>
+      <?= h($recHigh['player_name']) ?>
+      <span class="record-sub"><?= (int) $recHigh['round_number'] ?>回戦</span>
+    </span>
+  </div>
+  <?php endif; ?>
+
+  <div class="record-sub-grid">
+    <?php if ($recTops): ?>
+    <div class="record-card">
+      <span class="record-label">最多トップ</span>
+      <span class="record-card-value"><?= (int) $recTops['top_count'] ?><span class="record-card-unit">卓</span></span>
+      <span class="record-player">
+        <?php if (!empty($recTops['character_icon'])): ?>
+          <img src="img/chara_deformed/<?= h($recTops['character_icon']) ?>" alt="" class="record-player-icon" width="22" height="22" loading="lazy">
+        <?php endif; ?>
+        <?= h($recTops['player_name']) ?>
+      </span>
+    </div>
     <?php endif; ?>
-    <?php if ($recordPlayer !== ''): ?>
-      <span class="record-player"><?= h($recordPlayer) ?></span>
+
+    <?php if ($recSpread): ?>
+    <div class="record-card">
+      <span class="record-label">単卓最大得点差</span>
+      <span class="record-card-value"><?= number_format((float) $recSpread['spread'], 0) ?><span class="record-card-unit">pt</span></span>
+      <span class="record-player">
+        <?php if (!empty($recSpread['character_icon'])): ?>
+          <img src="img/chara_deformed/<?= h($recSpread['character_icon']) ?>" alt="" class="record-player-icon" width="22" height="22" loading="lazy">
+        <?php endif; ?>
+        <?= h($recSpread['player_name']) ?>
+        <span class="record-sub"><?= (int) $recSpread['round_number'] ?>回戦</span>
+      </span>
+    </div>
     <?php endif; ?>
   </div>
 </section>

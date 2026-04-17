@@ -71,4 +71,31 @@ test.describe('大会ビュー（公開ページ）', () => {
     await page.goto('/tournament_view?id=1');
     await expect(page.locator('a.btn-cancel[href="tournaments"]')).toBeVisible();
   });
+
+  test.describe('トーナメントレコード', () => {
+    test('最高得点カード（看板）が表示される', async ({ page }) => {
+      await page.goto('/tournament_view?id=1');
+      const highlight = page.locator('.record-highlight');
+      await expect(highlight).toBeVisible();
+      await expect(highlight.locator('.record-label')).toContainText('大会最高得点');
+      await expect(highlight.locator('.record-score')).toBeVisible();
+      await expect(highlight.locator('.record-player')).not.toBeEmpty();
+    });
+
+    test('最多トップ・単卓最大得点差のサブカードが表示される', async ({ page }) => {
+      await page.goto('/tournament_view?id=1');
+      const subGrid = page.locator('.record-sub-grid');
+      await expect(subGrid).toBeVisible();
+      const labels = subGrid.locator('.record-label');
+      await expect(labels.filter({ hasText: '最多トップ' })).toBeVisible();
+      await expect(labels.filter({ hasText: '単卓最大得点差' })).toBeVisible();
+    });
+
+    test('各レコードに選手名が付随する', async ({ page }) => {
+      await page.goto('/tournament_view?id=1');
+      const players = page.locator('.record-highlight .record-player, .record-card .record-player');
+      const count = await players.count();
+      expect(count).toBeGreaterThanOrEqual(1);
+    });
+  });
 });

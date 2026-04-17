@@ -99,6 +99,17 @@ TournamentMeta::get($tournamentId, $key, $default);        // 特定キーの値
 TournamentMeta::set($tournamentId, $key, $value);          // 値を設定（UPSERT）
 ```
 
+### TournamentRecords
+round_results / table_players から算出するトーナメントレコード群。
+tournament_view の「トーナメントレコード」セクション向け。
+
+```php
+TournamentRecords::all($tournamentId);                     // 下記3つをまとめて取得
+TournamentRecords::highestRoundScore($tournamentId);       // 1回戦単体の最高得点
+TournamentRecords::mostTopFinishes($tournamentId);         // 卓内1位を最も多く取った選手
+TournamentRecords::largestTableSpread($tournamentId);      // 単卓内の最大得点差
+```
+
 ### Interview
 ```php
 Interview::byTournament($tournamentId);             // インタビューQ&A一覧
