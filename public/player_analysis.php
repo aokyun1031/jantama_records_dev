@@ -23,14 +23,12 @@ $isFiltered = !empty($selectedEventTypes);
 ['data' => $avgRank, 'error' => $e3]          = fetchData(fn() => PlayerAnalysis::avgTableRank($playerId, $selectedEventTypes));
 ['data' => $headToHead, 'error' => $e4]       = fetchData(fn() => PlayerAnalysis::headToHead($playerId, $selectedEventTypes));
 ['data' => $scoreHistory, 'error' => $e5]     = fetchData(fn() => PlayerAnalysis::scoreHistory($playerId, $selectedEventTypes));
-['data' => $rankStats, 'error' => $e6]        = fetchData(fn() => PlayerAnalysis::rankStats($playerId, $selectedEventTypes));
 ['data' => $rankDist, 'error' => $e7]         = fetchData(fn() => PlayerAnalysis::rankDistribution($playerId, $selectedEventTypes));
 ['data' => $timeline, 'error' => $e8]         = fetchData(fn() => PlayerAnalysis::scoreTimeline($playerId, $selectedEventTypes));
 ['data' => $bestFinalRank, 'error' => $e9]    = fetchData(fn() => PlayerAnalysis::bestFinalRank($playerId, $selectedEventTypes));
 ['data' => $roundPerf, 'error' => $e10]       = fetchData(fn() => PlayerAnalysis::roundPerformance($playerId, $selectedEventTypes));
 ['data' => $eventStats, 'error' => $e11]      = fetchData(fn() => PlayerAnalysis::eventTypeStats($playerId, $selectedEventTypes));
-['data' => $elimDist, 'error' => $e12]        = fetchData(fn() => PlayerAnalysis::eliminationDistribution($playerId, $selectedEventTypes));
-$error = $e2 || $e3 || $e4 || $e5 || $e6 || $e7 || $e8 || $e9 || $e10 || $e11 || $e12;
+$error = $e2 || $e3 || $e4 || $e5 || $e7 || $e8 || $e9 || $e10 || $e11;
 
 // --- テンプレート変数 ---
 $pageTitle = h($player['name']) . ' 戦績分析 - ' . SITE_NAME;
@@ -65,9 +63,31 @@ if ($scoreHistory) {
 
 <?php if (!$error): ?>
 <div class="event-filter-wrap" role="region" aria-label="大会種別で絞り込み">
-  <form method="get" id="event-filter-form" class="event-filter-form">
+  <form method="get" id="event-filter-form" class="event-filter-form<?= $isFiltered ? ' is-active' : '' ?>">
     <input type="hidden" name="id" value="<?= $playerId ?>">
-    <div class="event-filter-label">大会種別で絞り込み<span class="event-filter-hint">（未選択で全て）</span></div>
+    <div class="event-filter-header">
+      <svg class="event-filter-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      <span class="event-filter-title">フィルタ</span>
+      <span class="event-filter-sub">大会種別</span>
+      <?php if ($isFiltered): ?>
+        <span class="event-filter-badge" aria-label="<?= count($selectedEventTypes) ?>件選択中"><?= count($selectedEventTypes) ?></span>
+      <?php endif; ?>
+      <div class="event-filter-actions">
+        <?php if ($isFiltered): ?>
+          <a href="player_analysis?id=<?= $playerId ?>" class="event-filter-clear" aria-label="フィルタをクリア">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            クリア
+          </a>
+        <?php endif; ?>
+        <button type="submit" class="event-filter-submit" data-pending-count="0" hidden>
+          適用<span class="event-filter-submit-count" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
     <div class="event-filter-chips" role="group" aria-label="大会種別">
       <?php foreach (EventType::cases() as $type):
         $checked = in_array($type->value, $selectedEventTypes, true);
@@ -78,10 +98,6 @@ if ($scoreHistory) {
       </label>
       <?php endforeach; ?>
     </div>
-    <?php if ($isFiltered): ?>
-    <a href="player_analysis?id=<?= $playerId ?>" class="event-filter-clear">クリア</a>
-    <?php endif; ?>
-    <noscript><button type="submit" class="event-filter-submit">適用</button></noscript>
   </form>
 </div>
 <?php endif; ?>
@@ -96,20 +112,32 @@ if ($scoreHistory) {
   </div>
 <?php else: ?>
 
+  <?php if ($isFiltered): ?>
+  <div class="filter-context" role="status" aria-live="polite">
+    <span class="filter-context-label">集計対象</span>
+    <span class="filter-context-types">
+      <?php foreach ($selectedEventTypes as $v): ?>
+        <span class="filter-context-tag"><?= h(EventType::from($v)->label()) ?></span>
+      <?php endforeach; ?>
+    </span>
+    <span class="filter-context-count"><?= (int) $summary['total_rounds'] ?>回戦 / <?= (int) $summary['total_tournaments'] ?>大会</span>
+  </div>
+  <?php endif; ?>
+
   <!-- 通算成績サマリー -->
   <?php if ($summary && (int) $summary['total_rounds'] > 0):
     $passRate = (int) $summary['qualifying_rounds'] > 0
         ? round((int) $summary['qualifying_passes'] / (int) $summary['qualifying_rounds'] * 100)
         : 0;
 
-    $tableGames = (int) ($rankStats['table_games'] ?? 0);
-    $topCount = (int) ($rankStats['top_count'] ?? 0);
-    $lastCount = (int) ($rankStats['last_count'] ?? 0);
-    $renpaiCount = (int) ($rankStats['second_or_better'] ?? 0);
+    $tableGames = (int) ($summary['table_games'] ?? 0);
+    $topCount = (int) ($summary['top_count'] ?? 0);
+    $lastCount = (int) ($summary['last_count'] ?? 0);
+    $renpaiCount = (int) ($summary['second_or_better'] ?? 0);
     $topRate = $tableGames > 0 ? round($topCount / $tableGames * 100) : 0;
     $lastRate = $tableGames > 0 ? round($lastCount / $tableGames * 100) : 0;
     $renpaiRate = $tableGames > 0 ? round($renpaiCount / $tableGames * 100) : 0;
-    $scoreStddev = $rankStats['score_stddev'] ?? null;
+    $scoreStddev = $summary['score_stddev'] ?? null;
   ?>
   <div class="summary-grid">
     <!-- 規模 -->
@@ -174,96 +202,132 @@ if ($scoreHistory) {
   $hasRankDist = !empty($rankDist);
   $hasTimeline = !empty($timeline);
   $hasRoundPerf = !empty($roundPerf);
-  $hasEventStats = !empty($eventStats) && count($eventStats) >= 2;
-  $hasElimDist = !empty($elimDist);
-  if ($hasRankDist || $hasTimeline || $hasRoundPerf || $hasEventStats || $hasElimDist):
-    $distCounts = [0, 0, 0, 0];
-    foreach (($rankDist ?? []) as $row) {
-        $r = (int) $row['rank'];
-        if ($r >= 1 && $r <= 4) {
-            $distCounts[$r - 1] = (int) $row['cnt'];
-        }
-    }
+  $hasEventStats = !empty($eventStats);
 
-    $cumulative = [];
-    $running = 0.0;
-    $idx = 0;
-    foreach (($timeline ?? []) as $row) {
-        $idx++;
-        $running += (float) $row['score'];
-        $cumulative[] = [
-            'idx' => $idx,
-            'score' => (float) $row['score'],
-            'cumulative' => $running,
-            'label' => $row['tournament_name'] . ' ' . (int) $row['round_number'] . '回戦',
-        ];
-    }
+  $distCounts = [0, 0, 0, 0];
+  foreach (($rankDist ?? []) as $row) {
+      $r = (int) $row['rank'];
+      if ($r >= 1 && $r <= 4) {
+          $distCounts[$r - 1] = (int) $row['cnt'];
+      }
+  }
+  $distTotal = array_sum($distCounts);
+  $distPcts = array_map(fn(int $c) => $distTotal > 0 ? $c / $distTotal * 100 : 0, $distCounts);
 
-    $roundData = [];
-    foreach (($roundPerf ?? []) as $row) {
-        $roundData[] = [
-            'round' => (int) $row['round_number'],
-            'avg' => (float) $row['avg_score'],
-            'games' => (int) $row['games'],
-        ];
-    }
+  $cumulative = [];
+  $running = 0.0;
+  $idx = 0;
+  foreach (($timeline ?? []) as $row) {
+      $idx++;
+      $running += (float) $row['score'];
+      $cumulative[] = [
+          'idx' => $idx,
+          'score' => (float) $row['score'],
+          'cumulative' => $running,
+          'label' => $row['tournament_name'] . ' ' . (int) $row['round_number'] . '回戦',
+      ];
+  }
 
-    $eventData = [];
-    foreach (($eventStats ?? []) as $row) {
-        $label = EventType::tryFrom($row['event_type'])?->label() ?? $row['event_type'];
-        $eventData[] = [
-            'label' => $label,
-            'avg_rank' => (float) $row['avg_rank'],
-            'games' => (int) $row['games'],
-            'top_rate' => (int) $row['games'] > 0 ? (int) $row['tops'] / (int) $row['games'] * 100 : 0,
-        ];
-    }
+  $roundData = [];
+  foreach (($roundPerf ?? []) as $row) {
+      $roundData[] = [
+          'round' => (int) $row['round_number'],
+          'avg' => (float) $row['avg_score'],
+          'games' => (int) $row['games'],
+      ];
+  }
 
-    $elimData = [];
-    foreach (($elimDist ?? []) as $row) {
-        $er = (int) $row['eliminated_round'];
-        $elimData[] = [
-            'round' => $er,
-            'cnt' => (int) $row['cnt'],
-            'label' => $er === 0 ? '優勝' : $er . '回戦敗退',
-        ];
-    }
+  $eventData = [];
+  $bestEventIdx = null;
+  $bestAvgRank = PHP_FLOAT_MAX;
+  foreach (($eventStats ?? []) as $i => $row) {
+      $label = EventType::tryFrom($row['event_type'])?->label() ?? $row['event_type'];
+      $avgRank = (float) $row['avg_rank'];
+      $eventData[] = [
+          'label' => $label,
+          'avg_rank' => $avgRank,
+          'games' => (int) $row['games'],
+          'top_rate' => (int) $row['games'] > 0 ? (int) $row['tops'] / (int) $row['games'] * 100 : 0,
+      ];
+      if ($avgRank < $bestAvgRank) {
+          $bestAvgRank = $avgRank;
+          $bestEventIdx = $i;
+      }
+  }
+  $highlightBestEvent = count($eventData) >= 2;
   ?>
-  <div class="chart-grid">
-    <?php if ($hasRankDist): ?>
-    <div class="chart-card chart-card-small">
-      <div class="analysis-section-title">着順分布</div>
-      <div class="chart-canvas-wrap"><canvas id="rankDistChart" aria-label="卓内着順分布" role="img"></canvas></div>
-    </div>
-    <?php endif; ?>
 
-    <?php if ($hasTimeline): ?>
-    <div class="chart-card chart-card-wide">
-      <div class="analysis-section-title">累計スコア推移</div>
-      <div class="chart-canvas-wrap"><canvas id="cumulativeChart" aria-label="累計スコア推移" role="img"></canvas></div>
+  <?php if ($hasRankDist && $distTotal > 0):
+    $distAriaLabel = implode(' / ', array_map(
+        fn(int $rank) => $rank . '位 ' . round($distPcts[$rank - 1]) . '%',
+        [1, 2, 3, 4]
+    ));
+  ?>
+  <div class="rank-share-section">
+    <div class="analysis-section-title">着順シェア</div>
+    <div class="rank-share-card">
+      <div class="rank-share-bar" role="img" aria-label="卓内着順の内訳: <?= h($distAriaLabel) ?>">
+        <?php foreach ([1, 2, 3, 4] as $rank):
+          $pct = $distPcts[$rank - 1];
+          if ($pct <= 0) continue;
+          $cnt = $distCounts[$rank - 1];
+        ?>
+        <div class="rank-share-segment rank-<?= $rank ?>" style="width: <?= number_format($pct, 2, '.', '') ?>%" title="<?= $rank ?>位 <?= $cnt ?>回（<?= round($pct) ?>%）">
+          <span class="rank-share-segment-label"><?= $rank ?>位 <?= round($pct) ?>%</span>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <div class="rank-share-legend">
+        <?php foreach ([1, 2, 3, 4] as $rank):
+          $cnt = $distCounts[$rank - 1];
+        ?>
+        <div class="rank-share-legend-item">
+          <span class="rank-share-swatch rank-<?= $rank ?>" aria-hidden="true"></span>
+          <span class="rank-share-legend-label"><?= $rank ?>位</span>
+          <span class="rank-share-legend-value"><?= $cnt ?>回</span>
+        </div>
+        <?php endforeach; ?>
+      </div>
     </div>
-    <?php endif; ?>
+  </div>
+  <?php endif; ?>
 
-    <?php if ($hasEventStats): ?>
-    <div class="chart-card chart-card-small">
-      <div class="analysis-section-title">イベント種別別の成績</div>
-      <div class="chart-canvas-wrap"><canvas id="eventRadarChart" aria-label="イベント種別別の平均着順" role="img"></canvas></div>
+  <?php if ($hasEventStats): ?>
+  <div class="event-stats-section">
+    <div class="analysis-section-title">イベント種別別の成績</div>
+    <div class="event-type-cards">
+      <?php foreach ($eventData as $i => $d):
+        $isBest = $highlightBestEvent && $i === $bestEventIdx;
+      ?>
+      <div class="event-type-card<?= $isBest ? ' is-best' : '' ?>">
+        <?php if ($isBest): ?><span class="event-type-card-badge" aria-label="最も良い種別">BEST</span><?php endif; ?>
+        <div class="event-type-card-name"><?= h($d['label']) ?></div>
+        <div class="event-type-card-metrics">
+          <div class="event-type-metric">
+            <span class="event-type-metric-value"><?= number_format($d['avg_rank'], 2) ?></span>
+            <span class="event-type-metric-label">平均着順</span>
+          </div>
+          <div class="event-type-metric">
+            <span class="event-type-metric-value"><?= round($d['top_rate']) ?>%</span>
+            <span class="event-type-metric-label">トップ率</span>
+          </div>
+          <div class="event-type-metric">
+            <span class="event-type-metric-value"><?= $d['games'] ?></span>
+            <span class="event-type-metric-label">卓</span>
+          </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
     </div>
-    <?php endif; ?>
+  </div>
+  <?php endif; ?>
 
-    <?php if ($hasRoundPerf): ?>
-    <div class="chart-card chart-card-wide">
-      <div class="analysis-section-title">回戦別パフォーマンス</div>
+  <?php if ($hasRoundPerf): ?>
+  <div class="round-perf-section">
+    <div class="analysis-section-title">回戦別パフォーマンス<span class="analysis-section-hint">点サイズ = 試合数</span></div>
+    <div class="chart-card">
       <div class="chart-canvas-wrap"><canvas id="roundPerfChart" aria-label="回戦別平均スコア" role="img"></canvas></div>
     </div>
-    <?php endif; ?>
-
-    <?php if ($hasElimDist): ?>
-    <div class="chart-card chart-card-full">
-      <div class="analysis-section-title">敗退ラウンド分布（完了大会のみ）</div>
-      <div class="chart-canvas-wrap"><canvas id="elimDistChart" aria-label="敗退ラウンド分布" role="img"></canvas></div>
-    </div>
-    <?php endif; ?>
   </div>
   <?php endif; ?>
 
@@ -324,6 +388,12 @@ if ($scoreHistory) {
   <?php if ($scoreHistory): ?>
   <div class="history-section">
     <div class="analysis-section-title">スコア推移</div>
+    <?php if ($hasTimeline): ?>
+    <div class="history-chart-card">
+      <div class="history-chart-subtitle">累計スコア推移</div>
+      <div class="chart-canvas-wrap"><canvas id="cumulativeChart" aria-label="累計スコア推移" role="img"></canvas></div>
+    </div>
+    <?php endif; ?>
     <table class="history-table">
       <thead>
         <tr>
@@ -377,11 +447,8 @@ if ($scoreHistory) {
 
 <?php
 $chartData = [
-    'rankDist' => $hasRankDist ?? false ? $distCounts : null,
     'cumulative' => $hasTimeline ?? false ? $cumulative : null,
     'roundPerf' => $hasRoundPerf ?? false ? $roundData : null,
-    'eventStats' => $hasEventStats ?? false ? $eventData : null,
-    'elimDist' => $hasElimDist ?? false ? $elimData : null,
 ];
 $chartDataJson = json_encode($chartData, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 
@@ -389,13 +456,37 @@ $pageInlineScript = 'window.__playerAnalysisData = ' . $chartDataJson . ";\n" . 
 (function() {
   var filterForm = document.getElementById('event-filter-form');
   if (filterForm) {
-    filterForm.querySelectorAll('input[name="event_types[]"]').forEach(function(cb) {
+    var submitBtn = filterForm.querySelector('.event-filter-submit');
+    var submitCount = filterForm.querySelector('.event-filter-submit-count');
+    var clearEl = filterForm.querySelector('.event-filter-clear');
+    var checkboxes = filterForm.querySelectorAll('input[name="event_types[]"]');
+    var initial = {};
+    checkboxes.forEach(function(cb) { initial[cb.value] = cb.checked; });
+
+    function updatePending() {
+      var pending = 0;
+      checkboxes.forEach(function(cb) {
+        if (cb.checked !== initial[cb.value]) pending++;
+      });
+      filterForm.classList.toggle('has-pending', pending > 0);
+      if (submitBtn) {
+        submitBtn.hidden = pending === 0;
+        submitBtn.setAttribute('data-pending-count', String(pending));
+      }
+      if (submitCount) {
+        submitCount.textContent = pending > 0 ? ' (' + pending + ')' : '';
+      }
+      if (clearEl) clearEl.hidden = pending > 0;
+    }
+
+    checkboxes.forEach(function(cb) {
       cb.addEventListener('change', function() {
         var chip = cb.closest('.event-chip');
         if (chip) chip.classList.toggle('is-selected', cb.checked);
-        filterForm.submit();
+        updatePending();
       });
     });
+    updatePending();
   }
 
   var table = document.querySelector('.h2h-table');
@@ -453,38 +544,6 @@ $pageInlineScript = 'window.__playerAnalysisData = ' . $chartDataJson . ";\n" . 
     Chart.defaults.color = subColor;
     Chart.defaults.font.family = "'Inter', 'Noto Sans JP', sans-serif";
 
-    // 着順分布ドーナツ
-    var distEl = document.getElementById('rankDistChart');
-    if (distEl && data.rankDist) {
-      new Chart(distEl, {
-        type: 'doughnut',
-        data: {
-          labels: ['1位', '2位', '3位', '4位'],
-          datasets: [{
-            data: data.rankDist,
-            backgroundColor: ['#ff6b6b', '#ffa94d', '#74c0fc', '#4c6ef5'],
-            borderWidth: 0,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { color: textColor, boxWidth: 12, padding: 10 } },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
-                  var pct = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
-                  return ctx.label + ': ' + ctx.parsed + '回 (' + pct + '%)';
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-
     // 累計スコア推移折れ線
     var cumEl = document.getElementById('cumulativeChart');
     if (cumEl && data.cumulative) {
@@ -531,168 +590,73 @@ $pageInlineScript = 'window.__playerAnalysisData = ' . $chartDataJson . ";\n" . 
       });
     }
 
-    // イベント種別別の成績（レーダー: 平均着順を反転して外側=良）
-    var evEl = document.getElementById('eventRadarChart');
-    if (evEl && data.eventStats) {
-      var evLabels = data.eventStats.map(function(d) { return d.label; });
-      var evAvgRanks = data.eventStats.map(function(d) { return d.avg_rank; });
-      new Chart(evEl, {
-        type: 'radar',
-        data: {
-          labels: evLabels,
-          datasets: [{
-            label: '平均着順',
-            data: evAvgRanks,
-            borderColor: '#845ef7',
-            backgroundColor: 'rgba(132, 94, 247, 0.2)',
-            borderWidth: 2,
-            pointBackgroundColor: '#845ef7',
-            pointRadius: 3,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  var d = data.eventStats[ctx.dataIndex];
-                  return '平均 ' + d.avg_rank.toFixed(2) + '位 / トップ率 ' + d.top_rate.toFixed(0) + '% (' + d.games + '卓)';
-                }
-              }
-            }
-          },
-          scales: {
-            r: {
-              reverse: true,
-              min: 1,
-              max: 4,
-              ticks: { stepSize: 1, backdropColor: 'transparent', color: subColor },
-              grid: { color: gridColor },
-              angleLines: { color: gridColor },
-              pointLabels: { color: textColor, font: { size: 11 } }
-            }
-          }
-        }
-      });
-    }
-
-    // 回戦別パフォーマンス（折れ線 + 試合数の棒）
+    // 回戦別パフォーマンス（平均スコアの線、点サイズ=試合数、0pt基準線強調）
     var rpEl = document.getElementById('roundPerfChart');
     if (rpEl && data.roundPerf) {
       var rpLabels = data.roundPerf.map(function(d) { return d.round + '回戦'; });
       var rpAvg = data.roundPerf.map(function(d) { return d.avg; });
       var rpGames = data.roundPerf.map(function(d) { return d.games; });
+      var maxGames = rpGames.reduce(function(m, g) { return g > m ? g : m; }, 0);
+      var pointRadii = rpGames.map(function(g) {
+        if (maxGames <= 0) return 4;
+        return 4 + (g / maxGames) * 10;
+      });
+      var pointColors = rpAvg.map(function(v) {
+        return v >= 0 ? '#ff6b6b' : '#4c6ef5';
+      });
       new Chart(rpEl, {
+        type: 'line',
         data: {
           labels: rpLabels,
-          datasets: [
-            {
-              type: 'bar',
-              label: '試合数',
-              data: rpGames,
-              backgroundColor: 'rgba(132, 94, 247, 0.18)',
-              borderRadius: 4,
-              yAxisID: 'yGames',
-              order: 2,
-            },
-            {
-              type: 'line',
-              label: '平均スコア',
-              data: rpAvg,
-              borderColor: '#ff6b6b',
-              backgroundColor: 'rgba(255, 107, 107, 0.1)',
-              borderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              tension: 0.25,
-              yAxisID: 'yScore',
-              order: 1,
-            }
-          ]
+          datasets: [{
+            label: '平均スコア',
+            data: rpAvg,
+            borderColor: '#845ef7',
+            backgroundColor: 'rgba(132, 94, 247, 0.12)',
+            borderWidth: 2.5,
+            pointRadius: pointRadii,
+            pointHoverRadius: pointRadii.map(function(r) { return r + 2; }),
+            pointBackgroundColor: pointColors,
+            pointBorderColor: pointColors,
+            pointBorderWidth: 0,
+            tension: 0.3,
+            fill: true,
+          }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: { position: 'bottom', labels: { color: textColor, boxWidth: 12, padding: 10 } },
+            legend: { display: false },
             tooltip: {
               callbacks: {
                 label: function(ctx) {
-                  if (ctx.dataset.type === 'line') {
-                    var sign = ctx.parsed.y >= 0 ? '+' : '';
-                    return '平均スコア: ' + sign + ctx.parsed.y.toFixed(1);
-                  }
-                  return '試合数: ' + ctx.parsed.y;
+                  var games = rpGames[ctx.dataIndex];
+                  var sign = ctx.parsed.y >= 0 ? '+' : '';
+                  return '平均 ' + sign + ctx.parsed.y.toFixed(1) + 'pt（' + games + '試合）';
                 }
               }
             }
           },
           scales: {
             x: { grid: { color: gridColor } },
-            yScore: {
-              type: 'linear',
-              position: 'left',
+            y: {
               title: { display: true, text: '平均スコア (pt)', color: subColor },
-              grid: { color: gridColor }
-            },
-            yGames: {
-              type: 'linear',
-              position: 'right',
-              beginAtZero: true,
-              title: { display: true, text: '試合数', color: subColor },
-              grid: { display: false },
-              ticks: { stepSize: 1 }
+              grid: {
+                color: function(ctx) {
+                  return ctx.tick && ctx.tick.value === 0 ? 'rgba(132, 94, 247, 0.5)' : gridColor;
+                },
+                lineWidth: function(ctx) {
+                  return ctx.tick && ctx.tick.value === 0 ? 2 : 1;
+                }
+              }
             }
           }
         }
       });
     }
 
-    // 敗退ラウンド分布（棒）
-    var edEl = document.getElementById('elimDistChart');
-    if (edEl && data.elimDist) {
-      var edLabels = data.elimDist.map(function(d) { return d.label; });
-      var edCounts = data.elimDist.map(function(d) { return d.cnt; });
-      var edColors = data.elimDist.map(function(d) {
-        return d.round === 0 ? '#ffd43b' : 'rgba(132, 94, 247, 0.6)';
-      });
-      new Chart(edEl, {
-        type: 'bar',
-        data: {
-          labels: edLabels,
-          datasets: [{
-            label: '大会数',
-            data: edCounts,
-            backgroundColor: edColors,
-            borderRadius: 4,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) { return ctx.parsed.y + '大会'; }
-              }
-            }
-          },
-          scales: {
-            x: { grid: { display: false } },
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 },
-              grid: { color: gridColor }
-            }
-          }
-        }
-      });
-    }
   }
 
   if (document.readyState === 'loading') {

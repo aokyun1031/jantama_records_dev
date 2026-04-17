@@ -106,11 +106,19 @@ Interview::save($tournamentId, $items);              // Q&A一括保存（全削
 ```
 
 ### PlayerAnalysis
+全メソッドは第2引数で `array $selectedEventTypes = []`（EventType::value の配列）を受け取り、
+指定された大会種別のみに集計対象を絞り込む。空配列は無絞り込み。
+
 ```php
-PlayerAnalysis::summary($playerId);      // 通算成績サマリー
-PlayerAnalysis::avgTableRank($playerId); // 卓内平均着順
-PlayerAnalysis::headToHead($playerId);   // 同卓対戦成績
-PlayerAnalysis::scoreHistory($playerId); // スコア推移
+PlayerAnalysis::summary($playerId, $types);               // サマリー + 卓内着順統計（1クエリ）
+PlayerAnalysis::avgTableRank($playerId, $types);          // 卓内平均着順
+PlayerAnalysis::headToHead($playerId, $types);            // 同卓対戦成績
+PlayerAnalysis::scoreHistory($playerId, $types);          // スコア推移
+PlayerAnalysis::rankDistribution($playerId, $types);      // 卓内着順分布
+PlayerAnalysis::scoreTimeline($playerId, $types);         // スコア時系列
+PlayerAnalysis::roundPerformance($playerId, $types);      // 回戦別パフォーマンス
+PlayerAnalysis::eventTypeStats($playerId, $types);        // イベント種別別成績
+PlayerAnalysis::bestFinalRank($playerId, $types);         // 最高最終順位
 ```
 
 ## 新しいモデルの追加手順
