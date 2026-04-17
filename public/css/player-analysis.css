@@ -372,20 +372,19 @@
   height: 32px;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--glass-border);
 }
 
 .rank-share-segment {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #1a1a1a;
   font-family: 'Inter', sans-serif;
   font-size: 0.72rem;
   font-weight: 800;
   min-width: 0;
   overflow: hidden;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
   transition: flex-basis 0.4s ease;
 }
 
@@ -396,10 +395,12 @@
   padding: 0 4px;
 }
 
-.rank-share-segment.rank-1 { background: #ff6b6b; }
-.rank-share-segment.rank-2 { background: #ffa94d; }
-.rank-share-segment.rank-3 { background: #74c0fc; }
-.rank-share-segment.rank-4 { background: #4c6ef5; }
+/* 着順カラー: サイトのパレット変数（両テーマ共通のデータカラー）+ 暗色テキストで
+   コントラスト 6.5 以上を確保 */
+.rank-share-segment.rank-1 { background: var(--coral); }
+.rank-share-segment.rank-2 { background: var(--gold); }
+.rank-share-segment.rank-3 { background: var(--mint); }
+.rank-share-segment.rank-4 { background: var(--blue); }
 
 .rank-share-legend {
   display: flex;
@@ -423,10 +424,10 @@
   flex-shrink: 0;
 }
 
-.rank-share-swatch.rank-1 { background: #ff6b6b; }
-.rank-share-swatch.rank-2 { background: #ffa94d; }
-.rank-share-swatch.rank-3 { background: #74c0fc; }
-.rank-share-swatch.rank-4 { background: #4c6ef5; }
+.rank-share-swatch.rank-1 { background: var(--coral); }
+.rank-share-swatch.rank-2 { background: var(--gold); }
+.rank-share-swatch.rank-3 { background: var(--mint); }
+.rank-share-swatch.rank-4 { background: var(--blue); }
 
 .rank-share-legend-label {
   font-weight: 700;
@@ -1008,5 +1009,70 @@
   .h2h-table td {
     padding: 10px 10px;
     font-size: 0.78rem;
+  }
+
+  /* 着順シェア */
+  .rank-share-card {
+    padding: 12px;
+  }
+  .rank-share-bar {
+    height: 28px;
+  }
+  .rank-share-segment {
+    font-size: 0.65rem;
+  }
+  .rank-share-segment-label {
+    padding: 0 2px;
+  }
+  .rank-share-legend {
+    gap: 6px 14px;
+    font-size: 0.7rem;
+    margin-top: 10px;
+  }
+
+  /* イベント種別カード */
+  .event-type-cards {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .event-type-card {
+    padding: 12px 14px;
+  }
+  .event-type-card-name {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+  .event-type-card-metrics {
+    gap: 6px;
+  }
+  .event-type-metric-value {
+    font-size: 1.05rem;
+  }
+  .event-type-metric-label {
+    font-size: 0.6rem;
+  }
+
+  /* 回戦別パフォーマンス */
+  .round-perf-section .chart-canvas-wrap {
+    height: 240px;
+  }
+
+  /* 累計スコア推移（スコア推移セクション内） */
+  .history-chart-card {
+    padding: 12px;
+  }
+  .history-chart-card .chart-canvas-wrap {
+    height: 200px;
+  }
+
+  /* フィルタコンテキスト */
+  .filter-context {
+    padding: 8px 12px;
+    font-size: 0.72rem;
+  }
+  .filter-context-tag {
+    padding: 2px 8px;
+    font-size: 0.68rem;
   }
 }

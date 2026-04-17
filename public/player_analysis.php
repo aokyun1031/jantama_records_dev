@@ -324,7 +324,7 @@ if ($scoreHistory) {
 
   <?php if ($hasRoundPerf): ?>
   <div class="round-perf-section">
-    <div class="analysis-section-title">回戦別パフォーマンス<span class="analysis-section-hint">点サイズ = 試合数</span></div>
+    <div class="analysis-section-title">回戦別パフォーマンス</div>
     <div class="chart-card">
       <div class="chart-canvas-wrap"><canvas id="roundPerfChart" aria-label="回戦別平均スコア" role="img"></canvas></div>
     </div>
@@ -540,6 +540,10 @@ $pageInlineScript = 'window.__playerAnalysisData = ' . $chartDataJson . ";\n" . 
     var data = window.__playerAnalysisData || {};
     var textColor = cssVar('--text') || '#222';
     var subColor = cssVar('--text-sub') || '#666';
+    var accentRgb = cssVar('--accent-rgb') || '155,140,232';
+    var purpleColor = cssVar('--purple') || '#9b8ce8';
+    var coralColor = cssVar('--coral') || '#e8907c';
+    var blueColor = cssVar('--blue') || '#7ca8e8';
     var gridColor = 'rgba(128, 128, 128, 0.15)';
     Chart.defaults.color = subColor;
     Chart.defaults.font.family = "'Inter', 'Noto Sans JP', sans-serif";
@@ -556,8 +560,8 @@ $pageInlineScript = 'window.__playerAnalysisData = ' . $chartDataJson . ";\n" . 
           datasets: [{
             label: '累計スコア',
             data: cumValues,
-            borderColor: '#845ef7',
-            backgroundColor: 'rgba(132, 94, 247, 0.1)',
+            borderColor: purpleColor,
+            backgroundColor: 'rgba(' + accentRgb + ', 0.12)',
             borderWidth: 2,
             pointRadius: 2,
             pointHoverRadius: 5,
@@ -602,7 +606,7 @@ $pageInlineScript = 'window.__playerAnalysisData = ' . $chartDataJson . ";\n" . 
         return 4 + (g / maxGames) * 10;
       });
       var pointColors = rpAvg.map(function(v) {
-        return v >= 0 ? '#ff6b6b' : '#4c6ef5';
+        return v >= 0 ? coralColor : blueColor;
       });
       new Chart(rpEl, {
         type: 'line',
@@ -611,8 +615,8 @@ $pageInlineScript = 'window.__playerAnalysisData = ' . $chartDataJson . ";\n" . 
           datasets: [{
             label: '平均スコア',
             data: rpAvg,
-            borderColor: '#845ef7',
-            backgroundColor: 'rgba(132, 94, 247, 0.12)',
+            borderColor: purpleColor,
+            backgroundColor: 'rgba(' + accentRgb + ', 0.12)',
             borderWidth: 2.5,
             pointRadius: pointRadii,
             pointHoverRadius: pointRadii.map(function(r) { return r + 2; }),
@@ -645,7 +649,7 @@ $pageInlineScript = 'window.__playerAnalysisData = ' . $chartDataJson . ";\n" . 
               title: { display: true, text: '平均スコア (pt)', color: subColor },
               grid: {
                 color: function(ctx) {
-                  return ctx.tick && ctx.tick.value === 0 ? 'rgba(132, 94, 247, 0.5)' : gridColor;
+                  return ctx.tick && ctx.tick.value === 0 ? 'rgba(' + accentRgb + ', 0.5)' : gridColor;
                 },
                 lineWidth: function(ctx) {
                   return ctx.tick && ctx.tick.value === 0 ? 2 : 1;
