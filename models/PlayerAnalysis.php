@@ -5,12 +5,43 @@ declare(strict_types=1);
 class PlayerAnalysis
 {
     /**
+     * 選択した大会種別のみに絞り込むSQLフラグメント。
+     * $selectedEventTypes は EventType の value で検証済みの配列を受け取る前提。
+     * $tournamentIdColumn は呼び出し側で指定するハードコードのカラム参照。
+     */
+    private static function eventTypeFilterFragment(array $selectedEventTypes, string $tournamentIdColumn): string
+    {
+        if (empty($selectedEventTypes)) {
+            return '';
+        }
+        $quoted = array_map(fn(string $v): string => "'{$v}'", $selectedEventTypes);
+        $list = implode(',', $quoted);
+        return " AND EXISTS (SELECT 1 FROM tournament_meta tm_ef"
+            . " WHERE tm_ef.tournament_id = {$tournamentIdColumn}"
+            . " AND tm_ef.key = 'event_type' AND tm_ef.value IN ({$list}))";
+    }
+
+    /**
+     * 選択した大会種別のリストを tm.value 参照用の IN 句に変換する。
+     * eventTypeStats 内の JOIN 条件で使用する。
+     */
+    private static function eventTypeInClause(array $selectedEventTypes): string
+    {
+        if (empty($selectedEventTypes)) {
+            return '';
+        }
+        $quoted = array_map(fn(string $v): string => "'{$v}'", $selectedEventTypes);
+        return ' AND tm.value IN (' . implode(',', $quoted) . ')';
+    }
+
+    /**
      * 通算成績サマリー（全大会合算）。
      */
-    public static function summary(int $playerId): ?array
+    public static function summary(int $playerId, array $selectedEventTypes = []): ?array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filter = self::eventTypeFilterFragment($selectedEventTypes, 'rr.tournament_id');
+        $stmt = $pdo->prepare("
             WITH final_rounds AS (
                 SELECT tournament_id, MAX(round_number) AS final_round
                 FROM round_results
@@ -24,8 +55,8 @@ class PlayerAnalysis
                    SUM(CASE WHEN rr.round_number < fr.final_round THEN 1 ELSE 0 END) AS qualifying_rounds
             FROM round_results rr
             JOIN final_rounds fr ON fr.tournament_id = rr.tournament_id
-            WHERE rr.player_id = ?
-        ');
+            WHERE rr.player_id = ?{$filter}
+        ");
         $stmt->execute([$playerId]);
         return $stmt->fetch() ?: null;
     }
@@ -33,10 +64,11 @@ class PlayerAnalysis
     /**
      * 卓内平均着順（全大会合算）。
      */
-    public static function avgTableRank(int $playerId): ?string
+    public static function avgTableRank(int $playerId, array $selectedEventTypes = []): ?string
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filter = self::eventTypeFilterFragment($selectedEventTypes, 'ti.tournament_id');
+        $stmt = $pdo->prepare("
             SELECT AVG(table_rank)
             FROM (
                 SELECT rr.player_id,
@@ -46,9 +78,10 @@ class PlayerAnalysis
                 JOIN round_results rr ON rr.player_id = tp.player_id
                      AND rr.round_number = ti.round_number
                      AND rr.tournament_id = ti.tournament_id
+                WHERE 1=1{$filter}
             ) sub
             WHERE player_id = ?
-        ');
+        ");
         $stmt->execute([$playerId]);
         return $stmt->fetchColumn() ?: null;
     }
@@ -56,9 +89,10 @@ class PlayerAnalysis
     /**
      * 同卓対戦成績（全大会合算）。
      */
-    public static function headToHead(int $playerId): array
+    public static function headToHead(int $playerId, array $selectedEventTypes = []): array
     {
         $pdo = getDbConnection();
+        $filter = self::eventTypeFilterFragment($selectedEventTypes, 'ti.tournament_id');
         $stmt = $pdo->prepare("
             WITH table_ranks AS (
                 SELECT tp.table_id, tp.player_id,
@@ -68,6 +102,7 @@ class PlayerAnalysis
                 JOIN round_results rr ON rr.player_id = tp.player_id
                      AND rr.round_number = ti.round_number
                      AND rr.tournament_id = ti.tournament_id
+                WHERE 1=1{$filter}
             )
             SELECT p.id AS opponent_id,
                    regexp_replace(p.name, '^[0-9]+', '') AS opponent_name,
@@ -97,7 +132,7 @@ class PlayerAnalysis
                      AND rr2.round_number = ti.round_number AND rr2.tournament_id = ti.tournament_id
                 JOIN table_ranks tr ON tr.table_id = tp2.table_id AND tr.player_id = tp2.player_id
                 JOIN table_ranks tr_me ON tr_me.table_id = tp1.table_id AND tr_me.player_id = tp1.player_id
-                WHERE tp1.player_id = ?
+                WHERE tp1.player_id = ?{$filter}
                 GROUP BY tp2.player_id
             ) h ON h.opp_id = p.id
             WHERE p.id != ?
@@ -108,12 +143,13 @@ class PlayerAnalysis
     }
 
     /**
-     * スコア推移（全大会、新しい大会��）。
+     * スコア推移（全大会、新しい大会順）。
      */
-    public static function scoreHistory(int $playerId): array
+    public static function scoreHistory(int $playerId, array $selectedEventTypes = []): array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filter = self::eventTypeFilterFragment($selectedEventTypes, 'rr.tournament_id');
+        $stmt = $pdo->prepare("
             SELECT t.name AS tournament_name, rr.round_number, rr.score, rr.is_above_cutoff,
                    tbl.played_date, tbl.day_of_week, tbl.played_time
             FROM round_results rr
@@ -127,9 +163,9 @@ class PlayerAnalysis
                   AND ti.round_number = rr.round_number
                 LIMIT 1
             ) tbl ON true
-            WHERE rr.player_id = ?
+            WHERE rr.player_id = ?{$filter}
             ORDER BY t.created_at DESC, rr.round_number
-        ');
+        ");
         $stmt->execute([$playerId]);
         return $stmt->fetchAll();
     }
@@ -138,10 +174,12 @@ class PlayerAnalysis
      * 卓内着順に基づく指標（トップ率・ラス率・連帯率・スコア標準偏差）。
      * 多ゲーム卓は SUM(score) で統合し、3麻卓はラス = 3位として扱う。
      */
-    public static function rankStats(int $playerId): ?array
+    public static function rankStats(int $playerId, array $selectedEventTypes = []): ?array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filterTi = self::eventTypeFilterFragment($selectedEventTypes, 'ti.tournament_id');
+        $filterRr = self::eventTypeFilterFragment($selectedEventTypes, 'tournament_id');
+        $stmt = $pdo->prepare("
             WITH table_scores AS (
                 SELECT tp.table_id, tp.player_id, SUM(rr.score) AS table_score
                 FROM table_players tp
@@ -149,6 +187,7 @@ class PlayerAnalysis
                 JOIN round_results rr ON rr.player_id = tp.player_id
                      AND rr.round_number = ti.round_number
                      AND rr.tournament_id = ti.tournament_id
+                WHERE 1=1{$filterTi}
                 GROUP BY tp.table_id, tp.player_id
             ),
             table_ranks AS (
@@ -162,10 +201,10 @@ class PlayerAnalysis
                 SUM(CASE WHEN tbl_rank = 1 THEN 1 ELSE 0 END) AS top_count,
                 SUM(CASE WHEN tbl_rank = table_size THEN 1 ELSE 0 END) AS last_count,
                 SUM(CASE WHEN tbl_rank <= 2 THEN 1 ELSE 0 END) AS second_or_better,
-                (SELECT STDDEV_SAMP(score) FROM round_results WHERE player_id = ?) AS score_stddev
+                (SELECT STDDEV_SAMP(score) FROM round_results WHERE player_id = ?{$filterRr}) AS score_stddev
             FROM table_ranks
             WHERE player_id = ?
-        ');
+        ");
         $stmt->execute([$playerId, $playerId]);
         return $stmt->fetch() ?: null;
     }
@@ -173,10 +212,11 @@ class PlayerAnalysis
     /**
      * 卓内着順分布（1位〜4位の各出現回数）。ドーナツチャート用。
      */
-    public static function rankDistribution(int $playerId): array
+    public static function rankDistribution(int $playerId, array $selectedEventTypes = []): array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filter = self::eventTypeFilterFragment($selectedEventTypes, 'ti.tournament_id');
+        $stmt = $pdo->prepare("
             WITH table_scores AS (
                 SELECT tp.table_id, tp.player_id, SUM(rr.score) AS table_score
                 FROM table_players tp
@@ -184,6 +224,7 @@ class PlayerAnalysis
                 JOIN round_results rr ON rr.player_id = tp.player_id
                      AND rr.round_number = ti.round_number
                      AND rr.tournament_id = ti.tournament_id
+                WHERE 1=1{$filter}
                 GROUP BY tp.table_id, tp.player_id
             ),
             table_ranks AS (
@@ -196,7 +237,7 @@ class PlayerAnalysis
             WHERE player_id = ?
             GROUP BY tbl_rank
             ORDER BY tbl_rank
-        ');
+        ");
         $stmt->execute([$playerId]);
         return $stmt->fetchAll();
     }
@@ -204,16 +245,17 @@ class PlayerAnalysis
     /**
      * スコア時系列（古い順）。累計スコア推移チャート用。
      */
-    public static function scoreTimeline(int $playerId): array
+    public static function scoreTimeline(int $playerId, array $selectedEventTypes = []): array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filter = self::eventTypeFilterFragment($selectedEventTypes, 'rr.tournament_id');
+        $stmt = $pdo->prepare("
             SELECT t.name AS tournament_name, rr.round_number, rr.game_number, rr.score
             FROM round_results rr
             JOIN tournaments t ON t.id = rr.tournament_id
-            WHERE rr.player_id = ?
+            WHERE rr.player_id = ?{$filter}
             ORDER BY t.created_at ASC, rr.round_number ASC, rr.game_number ASC
-        ');
+        ");
         $stmt->execute([$playerId]);
         return $stmt->fetchAll();
     }
@@ -221,18 +263,19 @@ class PlayerAnalysis
     /**
      * 回戦別パフォーマンス（1回戦目/2回戦目/...の平均スコアと試合数）。
      */
-    public static function roundPerformance(int $playerId): array
+    public static function roundPerformance(int $playerId, array $selectedEventTypes = []): array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filter = self::eventTypeFilterFragment($selectedEventTypes, 'tournament_id');
+        $stmt = $pdo->prepare("
             SELECT round_number,
                    AVG(score) AS avg_score,
                    COUNT(*) AS games
             FROM round_results
-            WHERE player_id = ?
+            WHERE player_id = ?{$filter}
             GROUP BY round_number
             ORDER BY round_number
-        ');
+        ");
         $stmt->execute([$playerId]);
         return $stmt->fetchAll();
     }
@@ -240,11 +283,13 @@ class PlayerAnalysis
     /**
      * イベント種別別の平均卓内着順と参加卓数。
      * tournament_meta.event_type が未設定の大会は除外する。
+     * $selectedEventTypes が指定されている場合、その種別のみを集計対象にする。
      */
-    public static function eventTypeStats(int $playerId): array
+    public static function eventTypeStats(int $playerId, array $selectedEventTypes = []): array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filter = self::eventTypeInClause($selectedEventTypes);
+        $stmt = $pdo->prepare("
             WITH table_scores AS (
                 SELECT tp.table_id, tp.player_id, ti.tournament_id, SUM(rr.score) AS table_score
                 FROM table_players tp
@@ -264,10 +309,10 @@ class PlayerAnalysis
                    COUNT(*) AS games,
                    SUM(CASE WHEN tr.tbl_rank = 1 THEN 1 ELSE 0 END) AS tops
             FROM table_ranks tr
-            JOIN tournament_meta tm ON tm.tournament_id = tr.tournament_id AND tm.key = ?
+            JOIN tournament_meta tm ON tm.tournament_id = tr.tournament_id AND tm.key = ?{$filter}
             WHERE tr.player_id = ?
             GROUP BY tm.value
-        ');
+        ");
         $stmt->execute(['event_type', $playerId]);
         return $stmt->fetchAll();
     }
@@ -276,17 +321,18 @@ class PlayerAnalysis
      * 完了大会における敗退ラウンド分布。
      * eliminated_round = 0 は優勝、>0 はその回戦で敗退を意味する。
      */
-    public static function eliminationDistribution(int $playerId): array
+    public static function eliminationDistribution(int $playerId, array $selectedEventTypes = []): array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filter = self::eventTypeFilterFragment($selectedEventTypes, 's.tournament_id');
+        $stmt = $pdo->prepare("
             SELECT s.eliminated_round, COUNT(*) AS cnt
             FROM standings s
             JOIN tournaments t ON t.id = s.tournament_id
-            WHERE s.player_id = ? AND t.status = ?
+            WHERE s.player_id = ? AND t.status = ?{$filter}
             GROUP BY s.eliminated_round
             ORDER BY s.eliminated_round
-        ');
+        ");
         $stmt->execute([$playerId, TournamentStatus::Completed->value]);
         return $stmt->fetchAll();
     }
@@ -295,18 +341,20 @@ class PlayerAnalysis
      * 参加大会における最高最終順位（1位が最良）。
      * rank は standings.total 降順で ROW_NUMBER() により再計算する。
      */
-    public static function bestFinalRank(int $playerId): ?int
+    public static function bestFinalRank(int $playerId, array $selectedEventTypes = []): ?int
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('
+        $filter = self::eventTypeFilterFragment($selectedEventTypes, 'tournament_id');
+        $stmt = $pdo->prepare("
             SELECT MIN(final_rank) AS best_rank
             FROM (
                 SELECT player_id,
                        ROW_NUMBER() OVER (PARTITION BY tournament_id ORDER BY total DESC) AS final_rank
                 FROM standings
+                WHERE 1=1{$filter}
             ) sub
             WHERE player_id = ?
-        ');
+        ");
         $stmt->execute([$playerId]);
         $value = $stmt->fetchColumn();
         return $value !== false && $value !== null ? (int) $value : null;

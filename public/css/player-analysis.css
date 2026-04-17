@@ -49,6 +49,135 @@
   color: var(--text-sub);
 }
 
+/* --- 大会種別フィルタ（チップUI） --- */
+.event-filter-wrap {
+  margin-bottom: 20px;
+}
+
+.event-filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 12px 14px;
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.event-filter-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  letter-spacing: 1px;
+}
+
+.event-filter-hint {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-light);
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+.event-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1 1 auto;
+}
+
+.event-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  min-height: 32px;
+  background: transparent;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.event-chip:hover {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  color: var(--text);
+}
+
+.event-chip:active {
+  transform: scale(0.97);
+}
+
+.event-chip input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.event-chip.is-selected {
+  background: var(--btn-primary-bg);
+  border-color: transparent;
+  color: var(--btn-text-color);
+  box-shadow: 0 2px 10px rgba(var(--accent-rgb), 0.3);
+}
+
+.event-chip.is-selected:hover {
+  color: var(--btn-text-color);
+}
+
+.event-chip:focus-within {
+  outline: 2px solid rgba(var(--accent-rgb), 0.4);
+  outline-offset: 2px;
+}
+
+.event-filter-clear {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+  margin-left: auto;
+}
+
+.event-filter-clear:hover {
+  color: var(--danger);
+}
+
+.event-filter-submit {
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--btn-primary-bg);
+  color: var(--btn-text-color);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .event-filter-form {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .event-filter-label {
+    width: 100%;
+  }
+  .event-filter-clear {
+    margin-left: 0;
+  }
+}
+
 /* --- サマリーカード --- */
 .summary-grid {
   display: grid;

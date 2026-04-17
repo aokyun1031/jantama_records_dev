@@ -6,17 +6,30 @@ require __DIR__ . '/../config/bootstrap.php';
 $playerId = requirePlayerId();
 $player = requirePlayer($playerId);
 
-['data' => $summary, 'error' => $e2]          = fetchData(fn() => PlayerAnalysis::summary($playerId));
-['data' => $avgRank, 'error' => $e3]          = fetchData(fn() => PlayerAnalysis::avgTableRank($playerId));
-['data' => $headToHead, 'error' => $e4]       = fetchData(fn() => PlayerAnalysis::headToHead($playerId));
-['data' => $scoreHistory, 'error' => $e5]     = fetchData(fn() => PlayerAnalysis::scoreHistory($playerId));
-['data' => $rankStats, 'error' => $e6]        = fetchData(fn() => PlayerAnalysis::rankStats($playerId));
-['data' => $rankDist, 'error' => $e7]         = fetchData(fn() => PlayerAnalysis::rankDistribution($playerId));
-['data' => $timeline, 'error' => $e8]         = fetchData(fn() => PlayerAnalysis::scoreTimeline($playerId));
-['data' => $bestFinalRank, 'error' => $e9]    = fetchData(fn() => PlayerAnalysis::bestFinalRank($playerId));
-['data' => $roundPerf, 'error' => $e10]       = fetchData(fn() => PlayerAnalysis::roundPerformance($playerId));
-['data' => $eventStats, 'error' => $e11]      = fetchData(fn() => PlayerAnalysis::eventTypeStats($playerId));
-['data' => $elimDist, 'error' => $e12]        = fetchData(fn() => PlayerAnalysis::eliminationDistribution($playerId));
+// 大会種別フィルタ: GET パラメータを EventType で検証
+$rawEventTypes = $_GET['event_types'] ?? [];
+if (!is_array($rawEventTypes)) {
+    $rawEventTypes = [];
+}
+$selectedEventTypes = [];
+foreach ($rawEventTypes as $v) {
+    if (is_string($v) && EventType::tryFrom($v) !== null && !in_array($v, $selectedEventTypes, true)) {
+        $selectedEventTypes[] = $v;
+    }
+}
+$isFiltered = !empty($selectedEventTypes);
+
+['data' => $summary, 'error' => $e2]          = fetchData(fn() => PlayerAnalysis::summary($playerId, $selectedEventTypes));
+['data' => $avgRank, 'error' => $e3]          = fetchData(fn() => PlayerAnalysis::avgTableRank($playerId, $selectedEventTypes));
+['data' => $headToHead, 'error' => $e4]       = fetchData(fn() => PlayerAnalysis::headToHead($playerId, $selectedEventTypes));
+['data' => $scoreHistory, 'error' => $e5]     = fetchData(fn() => PlayerAnalysis::scoreHistory($playerId, $selectedEventTypes));
+['data' => $rankStats, 'error' => $e6]        = fetchData(fn() => PlayerAnalysis::rankStats($playerId, $selectedEventTypes));
+['data' => $rankDist, 'error' => $e7]         = fetchData(fn() => PlayerAnalysis::rankDistribution($playerId, $selectedEventTypes));
+['data' => $timeline, 'error' => $e8]         = fetchData(fn() => PlayerAnalysis::scoreTimeline($playerId, $selectedEventTypes));
+['data' => $bestFinalRank, 'error' => $e9]    = fetchData(fn() => PlayerAnalysis::bestFinalRank($playerId, $selectedEventTypes));
+['data' => $roundPerf, 'error' => $e10]       = fetchData(fn() => PlayerAnalysis::roundPerformance($playerId, $selectedEventTypes));
+['data' => $eventStats, 'error' => $e11]      = fetchData(fn() => PlayerAnalysis::eventTypeStats($playerId, $selectedEventTypes));
+['data' => $elimDist, 'error' => $e12]        = fetchData(fn() => PlayerAnalysis::eliminationDistribution($playerId, $selectedEventTypes));
 $error = $e2 || $e3 || $e4 || $e5 || $e6 || $e7 || $e8 || $e9 || $e10 || $e11 || $e12;
 
 // --- テンプレート変数 ---
@@ -50,13 +63,36 @@ if ($scoreHistory) {
   </div>
 </div>
 
+<?php if (!$error): ?>
+<div class="event-filter-wrap" role="region" aria-label="大会種別で絞り込み">
+  <form method="get" id="event-filter-form" class="event-filter-form">
+    <input type="hidden" name="id" value="<?= $playerId ?>">
+    <div class="event-filter-label">大会種別で絞り込み<span class="event-filter-hint">（未選択で全て）</span></div>
+    <div class="event-filter-chips" role="group" aria-label="大会種別">
+      <?php foreach (EventType::cases() as $type):
+        $checked = in_array($type->value, $selectedEventTypes, true);
+      ?>
+      <label class="event-chip<?= $checked ? ' is-selected' : '' ?>">
+        <input type="checkbox" name="event_types[]" value="<?= h($type->value) ?>"<?= $checked ? ' checked' : '' ?>>
+        <span class="event-chip-text"><?= h($type->label()) ?></span>
+      </label>
+      <?php endforeach; ?>
+    </div>
+    <?php if ($isFiltered): ?>
+    <a href="player_analysis?id=<?= $playerId ?>" class="event-filter-clear">クリア</a>
+    <?php endif; ?>
+    <noscript><button type="submit" class="event-filter-submit">適用</button></noscript>
+  </form>
+</div>
+<?php endif; ?>
+
 <?php if ($error): ?>
   <div class="analysis-error">
     データベース接続エラー。しばらくしてから再度お試しください。
   </div>
 <?php elseif (!$summary || (int) $summary['total_rounds'] === 0): ?>
   <div class="analysis-error">
-    参加した大会はまだありません。戦績データが登録されると分析結果が表示されます。
+    <?= $isFiltered ? '選択した大会種別の参加データがありません。「クリア」を押すと全ての大会が表示されます。' : '参加した大会はまだありません。戦績データが登録されると分析結果が表示されます。' ?>
   </div>
 <?php else: ?>
 
@@ -351,6 +387,17 @@ $chartDataJson = json_encode($chartData, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 
 $pageInlineScript = 'window.__playerAnalysisData = ' . $chartDataJson . ";\n" . <<<'JS'
 (function() {
+  var filterForm = document.getElementById('event-filter-form');
+  if (filterForm) {
+    filterForm.querySelectorAll('input[name="event_types[]"]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var chip = cb.closest('.event-chip');
+        if (chip) chip.classList.toggle('is-selected', cb.checked);
+        filterForm.submit();
+      });
+    });
+  }
+
   var table = document.querySelector('.h2h-table');
   if (table) {
     var headers = table.querySelectorAll('.h2h-sortable');
