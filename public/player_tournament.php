@@ -393,6 +393,8 @@ require __DIR__ . '/../templates/header.php';
             </div>
             <?php if ($isFinal && $advanced && !$championShown): $championShown = true; ?>
               <div class="member-tag tag-champion">優勝</div>
+            <?php elseif ($isFinal): ?>
+              <div class="member-tag tag-cutoff">敗退</div>
             <?php elseif ($advanced): ?>
               <div class="member-tag tag-pass">通過</div>
             <?php else: ?>
