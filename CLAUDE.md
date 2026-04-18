@@ -1,125 +1,95 @@
 # 雀魂部屋主催 - 麻雀トーナメント戦績サイト
 
-## 技術スタック
+PHP 8.2 / Apache / PostgreSQL（Neon）/ Phinx / Docker Compose / Render。フレームワーク不使用。
 
-- PHP 8.2 / Apache / PostgreSQL（Neon）
-- HTML / CSS / JavaScript（フレームワーク不使用）
-- Phinx（DBマイグレーション）
-- phpdotenv（環境変数管理）
-- Docker Compose（ローカル開発）
-- Render（本番ホスティング）
-- GitHub Codespaces（クラウド開発環境）
+## ディレクトリ
 
-## ディレクトリ構成
+- `public/` — DocumentRoot（新ページはここに）
+- `models/` — データアクセス層（SQL 集約）
+- `enums/` — PHP enum（値オブジェクト）
+- `config/` — DB 接続・ヘルパー・セキュリティ
+- `templates/` — 共通 header.php / footer.php
+- `db/migrations/`, `db/seeds/` — Phinx
+- `cloudflare-worker/` — CDN リバースプロキシ
+- `tests/e2e/` — Playwright E2E
 
-- `public/` - Webサーバー公開ディレクトリ（DocumentRoot）
-- `models/` - データアクセス層（SQLはここに集約）
-- `enums/` - PHP enum（定数定義・値オブジェクト）
-- `config/` - アプリケーション設定（DB接続・ヘルパー・セキュリティ・リクエスト処理）
-- `templates/` - 共通ヘッダー・フッター
-- `db/migrations/` - Phinxマイグレーション
-- `db/seeds/` - Phinxシーダー
-- `cloudflare-worker/` - Cloudflare Workerリバースプロキシ（CDN）
+`public/` 外は Web から到達不能。
 
-`public/` 外のファイルはWebからアクセスできない。新しいページは `public/` に作成する。
-
-## コマンド
+## よく使うコマンド
 
 ```bash
-# ローカルDocker
-docker compose up -d
-docker compose down
+# Docker
+docker compose up -d / down
 docker compose exec web composer install
 
-# Phinx（Docker内）
-docker compose exec web php vendor/bin/phinx status
-docker compose exec web php vendor/bin/phinx migrate
-docker compose exec web php vendor/bin/phinx seed:run
-docker compose exec web php vendor/bin/phinx create MigrationName
+# Phinx（Docker は `docker compose exec web` を前置）
+php vendor/bin/phinx status / migrate / seed:run / create MigrationName
 
-# Phinx（Codespaces内）
-php vendor/bin/phinx status
-php vendor/bin/phinx migrate
-php vendor/bin/phinx seed:run
-
-# E2Eテスト（ホストマシンで実行、Docker起動が前提）
+# E2E（ホスト実行、Docker 起動前提）
 cd tests/e2e && npm install && npx playwright install chromium --with-deps
-npx playwright test                              # 全テスト
-npx playwright test pages/players.spec.ts        # 特定テスト
-npx playwright test --headed                     # ブラウザ表示あり
-npx playwright test --ui                         # UIモード
-
-# git push 時に E2E テストが自動実行される（.claude/settings.json の hook で設定）
-# テスト失敗で push がブロックされる
-
-# Cloudflare Worker（CDNリバースプロキシ）
-cd cloudflare-worker && npm install
-npx wrangler login                       # 初回ログイン
-npx wrangler deploy                      # デプロイ
+npx playwright test [pages/xxx.spec.ts] [--headed|--ui]
 ```
 
-## 環境構成
+`git push` 時に E2E 自動実行（失敗で push ブロック）。詳細は `tests/e2e/` と `testing` skill。
 
-- 本番: Render → Neon production
+## 環境
+
+- 本番: Render → Neon production（push で `start.sh` が migrate 自動実行）
 - 開発: Codespaces / Docker → Neon dev
-- DBはすべてNeon（リモート）。ローカルDBコンテナは使わない
-- 本番デプロイ時に `start.sh` 経由で自動マイグレーション実行
+- DB は全て Neon（リモート）。ローカル DB コンテナ無し
 
-## コーディング規約
+## コーディング規約（要点）
 
 ### PHP
-- 全PHPファイルの先頭に `declare(strict_types=1)` を付ける
-- PSR-12 準拠: 型キャストの後にスペース `(int) $var`（`(int)$var` は不可）
-- SQLは `models/` のクラスに集約する。ビュー（`public/*.php`）にSQLを書かない
-- データ取得は `fetchData(fn() => ModelName::method())` を使う
-- HTMLエスケープは `h()` ヘルパーを使う
-- テンプレートは `templates/` の header.php / footer.php を使う
-- DB接続は `getDbConnection()` を使用。直接PDOを生成しない
-- SQLにユーザー入力を使う場合はプリペアドステートメント必須
-- GETパラメータは `requirePlayerId()` / `requireTournamentId()` / `filter_input()` で検証する
-- POST入力は `sanitizeInput($key)` で取得する（制御文字除去 + trim）
-- 配列形式のPOST入力は `preg_replace('/[\x00-\x1F\x7F]/u', '', trim(...))` で同等処理する
-- フォームページは `startSecureSession()` + `ensureCsrfToken()` を使う
-- POST検証は `validatePost()` を使う（CSRF + Turnstile を一括検証）
-- Turnstileは `footer.php` で一括管理。フォームページは `$pageTurnstile = true;` をヘッダーincludeの前に設定するだけでよい（個別フォームへのTurnstile div追加は不要）
-- Turnstile検証成功まで送信ボタンは無効化される（`ts-pending` クラスによるCSS制御）
-- POST成功後は `$_SESSION['flash']` にメッセージを設定 → `regenerateCsrfToken()` → PRGリダイレクト
-- フラッシュメッセージの読み取りは `consumeFlash()` を使う
-- `json_encode` には `JSON_UNESCAPED_UNICODE | JSON_HEX_TAG` を付ける
-- `<script>` タグには `nonce="<?= cspNonce() ?>"` を必ず付ける
-- インラインスクリプトは `$pageInlineScript` 変数を使い、直接 `<script>` タグを書かない
-- イベントハンドラ属性（`onclick`, `onsubmit` 等）は使わない。`addEventListener` または `data-confirm` パターンを使う
-- 大会スコープのデータ取得は `$tournamentId` を必ず指定する（`Player` を除く全モデル）
-- モデルやenum追加後は `composer dump-autoload` を実行する
-- `.env` の読み込みは phpdotenv (`Dotenv\Dotenv::createImmutable()`) を使う
-- ハードコード文字列は enum に定義する。ラベル表示用に `label()` メソッドを持たせる
 
-### Enum（`enums/` ディレクトリ）
-- `EventType`: 大会イベント種別（最強位戦/鳳凰位戦/マスターズ/百段位戦/プチイベント）
-- `TournamentStatus`: 大会ステータス（preparing/in_progress/completed）。`label()` + `cssClass()`
-- `PlayerMode`: 対局人数（3/4）。`label()`（三麻/四麻） + `fullLabel()`（三人麻雀/四人麻雀）
-- `RoundType`: 局数（hanchan/tonpu/ikkyoku）
-- `HanRestriction`: 翻縛り（1/2/4）
-- `ToggleRule`: ON/OFF設定（1/0）。`label('食い断')` → 食い断有/無
-- `DayOfWeek`: 曜日（0-6）。`fromDate('2026-04-07')` で日付から曜日ラベルを取得
+- 先頭に `declare(strict_types=1)`
+- PSR-12: 型キャスト後にスペース `(int) $var`
+- SQL は `models/` に集約。`public/*.php` に直書き禁止
+- データ取得は `fetchData(fn() => ModelName::method())`
+- DB 接続は `getDbConnection()`（直接 PDO 生成禁止）
+- プリペアドステートメント必須（ユーザー入力を含む SQL）
+- GET: `requirePlayerId()` / `requireTournamentId()` / `filter_input()`
+- POST: `sanitizeInput($key)`（配列は `preg_replace('/[\x00-\x1F\x7F]/u', '', trim(...))`）
+- POST ページ: `startSecureSession()` + `ensureCsrfToken()` + `validatePost()`
+- POST 成功: `$_SESSION['flash'] = ...` → `regenerateCsrfToken()` → PRG リダイレクト
+- Turnstile: `$pageTurnstile = true` のみで footer.php が一括埋込
+- 出力: `h($value)` でエスケープ
+- JS 埋込: `json_encode($x, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG)`
+- `<script>` に `nonce="<?= cspNonce() ?>"`、インラインは `$pageInlineScript`
+- イベントハンドラ属性（`onclick` 等）禁止。`addEventListener` / `data-confirm` を使う
+- 大会スコープのクエリは `$tournamentId` 必須（`Player` モデル以外）
+- モデル/enum 追加後は `composer dump-autoload`
+- ハードコード定数は enum 化。表示は `label()` メソッド
+
+詳細 → `.claude/skills/security/SKILL.md`, `.claude/skills/data-model/SKILL.md`, `.claude/skills/enum/SKILL.md`
 
 ### CSS
-- ダークテーマ対応: ページ固有CSSはCSS変数を使う。ハードコードカラー禁止
-- フォーム共通CSS: `css/forms.css` を `$pageCss` で読み込む（edit-*, btn-save, player-select-* 等）
-- フォーム入力欄: `--input-bg`, `--input-border`, `--input-border-hover`, `--input-border-focus`, `--input-focus-ring`, `--input-placeholder`, `--input-disabled-bg`, `--input-disabled-border` を使う。`--glass-border` や `--card` を input に使わない
-- 戻るボタン: `btn-cancel` クラスを使用（`components.css` で定義済み）
-- ページ固有CSSの `$pageStyle` には、forms.css / components.css に無いスタイルのみ書く
-- 大会ルール表示は `buildRuleTags($meta)` ヘルパーで生成してループ出力する
+
+- ダークテーマ: CSS 変数のみ使用（ハードコードカラー禁止）
+- フォーム: `css/forms.css` を `$pageCss` で読込。input には `--input-*` 変数を使う（`--glass-border` / `--card` 不可）
+- 戻るボタン: `btn-cancel`（components.css）
+- `$pageStyle` は forms.css / components.css に無いものだけ
+- ルールタグ表示: `buildRuleTags($meta)`
+
+詳細 → `.claude/skills/design/SKILL.md`
 
 ### HTML
-- 内部リンクに `.php` を付けない（.htaccessの301リダイレクトでPOSTデータが消えるため）
-- 画像に `width`, `height`, `alt` 属性を必ず付ける。一覧表示では `loading="lazy"` も付ける
+
+- 内部リンクに `.php` 付けない（.htaccess の 301 で POST が消える）
+- 画像に `width` / `height` / `alt` 必須。一覧は `loading="lazy"` も
 
 ## 作業ルール
 
-- 新しいディレクトリを追加したら `README.md` のディレクトリ構成セクションを更新する
-- 新しいページを追加したら `README.md` のページ遷移セクションを更新する
-- 新しいモデルやスキルを追加したら対応する `.claude/skills/` の SKILL.md を更新する
-- コーディング規約やコマンドが変わったら `CLAUDE.md` を更新する
-- 新しいページを追加したら `tests/e2e/pages/` にE2Eテストを追加する
-- 新しい機能を追加したら `tests/e2e/features/` にテストを追加する
+- 新ディレクトリ／新ページ追加 → `README.md` 更新
+- 新モデル／新 enum／新スキル追加 → `.claude/skills/` 該当 SKILL.md 更新
+- 新ページ追加 → `tests/e2e/pages/` に E2E 追加
+- 新機能追加 → `tests/e2e/features/` に E2E 追加
+- 規約・コマンド変更 → `CLAUDE.md` 更新
+
+## スキル・コマンド・agent（`.claude/`）
+
+- skills/ — `add-page`, `data-model`, `design`, `enum`, `migration`, `refactor`, `security`, `testing`
+- commands/ — `/refactor`, `/security-check`, `/migration-new`
+- agents/ — `php-reviewer`
+
+開発者向けフロー → `.claude/README.md`

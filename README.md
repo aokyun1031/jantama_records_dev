@@ -20,7 +20,7 @@
 - [E2Eテスト](#e2eテスト)
 - [デプロイ](#デプロイ)
 - [Cloudflare 連携](#cloudflare-連携)
-- [開発ツール](#開発ツール)
+- [開発ツール](#開発ツールclaude-code)
 - [関連ドキュメント](#関連ドキュメント)
 
 ---
@@ -330,33 +330,18 @@ npx wrangler deploy
 
 ---
 
-## 開発ツール
+## 開発ツール（Claude Code）
 
-### `/refactor` - ドリフト検出・修正
+Claude Code 用の skill / slash command / agent / hook を `.claude/` に配置している。
 
-Claude 主導開発で蓄積する CLAUDE.md 規約からの微妙なドリフトを検出・修正する仕組み。
-
-```bash
-# Claude Code スラッシュコマンド
-/refactor                            # ヘルスチェック（読み取り専用）
-/refactor public/player.php          # 指定ファイルのドリフトを修正
-/refactor public/css/                # 指定ディレクトリ配下を修正
-
-# スクリプト単体（CI・手動確認用）
-bash .claude/skills/refactor/scripts/scan.sh             # 全体レポート
-bash .claude/skills/refactor/scripts/scan.sh --summary   # 件数のみ
-bash .claude/skills/refactor/scripts/scan.sh --target public/player.php
-```
-
-| 深刻度 | 意味 | 対応 |
+| 入口 | 例 | 用途 |
 |---|---|---|
-| 🔴 CRITICAL | セキュリティ / 規約の根幹に関わる | 即修正 |
-| 🟡 WARNING | スタイル / 一貫性のドリフト | まとめて修正推奨 |
-| 🔵 INFO | 検討余地あり（dead code・大きすぎるページ等） | 状況を見て判断 |
+| slash command | `/refactor`, `/security-check`, `/migration-new` | 定型タスク起動 |
+| skill | `add-page`, `testing`, `security` ほか | AI が文脈で自動参照する規約集 |
+| agent | `php-reviewer` | セキュリティ／規約違反の専門レビュー |
+| hook | `run-e2e.sh`, `php-lint.sh` | Write/Edit・git push で自動検証 |
 
-- 引数なし `/refactor` はファイル変更なし。修正は引数指定時のみ
-- 1 回の修正は **1 PR = 1 テーマ**（型キャスト修正とロジック変更を混ぜない）
-- 運用タイミング: 大きな機能追加後（PR マージ前）・月次整備・新規ページ作成後の一貫性確認
+セットアップ・使い方・ワークフロー・トラブルシューティング → [`.claude/README.md`](./.claude/README.md)
 
 ---
 
@@ -364,7 +349,6 @@ bash .claude/skills/refactor/scripts/scan.sh --target public/player.php
 
 | ドキュメント | 内容 |
 |---|---|
-| [`CLAUDE.md`](./CLAUDE.md) | コーディング規約・コマンド一覧・作業ルール（Claude Code 向け正本） |
-| [`docs/`](./docs/) | DB設計書・機能設計メモ |
-| `.claude/skills/refactor/conventions.md` | `/refactor` の検出ルール一覧 |
-| `.claude/skills/refactor/SKILL.md` | `/refactor` スキル実装 |
+| [`CLAUDE.md`](./CLAUDE.md) | コーディング規約・作業ルール（Claude Code 向け正本） |
+| [`.claude/README.md`](./.claude/README.md) | 開発者向け Claude Code ガイド（skill/command/agent/hook） |
+| [`docs/`](./docs/) | DB 設計書・機能設計メモ |

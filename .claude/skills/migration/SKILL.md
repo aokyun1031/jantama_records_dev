@@ -17,87 +17,56 @@ docker compose exec web php vendor/bin/phinx create MigrationName
 
 ## 命名規約
 
-- パスカルケースで、操作 + 対象を表す名前にする
+- パスカルケース、操作 + 対象
 - 例: `AddScoreToPlayers`, `CreateMatchesTable`, `DropScheduleFromTablesInfo`
 
-## ファイル
+## ファイル配置
 
-- 配置先: `db/migrations/`
-- ファイル名は自動生成（`YYYYMMDDHHMMSS_migration_name.php`）
+- `db/migrations/` 配下に配置される
+- ファイル名は自動生成: `YYYYMMDDHHMMSS_migration_name.php`
+- 既存マイグレーションの内容は `db/migrations/` を直接参照（ここには記載しない）
 
 ## 書き方の規約
 
-- `declare(strict_types=1)` を先頭に付ける
-- `up()` と `down()` の両方を必ず実装する（ロールバック可能にする）
-- Neon（サーバーレスPG）との相性問題により、Phinxテーブルビルダーが失敗する場合がある。その場合は `$this->execute()` で直接SQLを実行する
+- 先頭に `declare(strict_types=1)`
+- `up()` と `down()` 両方を必ず実装（ロールバック可能）
+- Neon（サーバーレスPG）相性問題により Phinx テーブルビルダーが失敗する場合あり→`$this->execute()` で直接SQL
 - カラム追加・テーブル作成も `$this->execute()` で問題ない（`ALTER TABLE`, `CREATE TABLE`）
-- 外部キーには `ON DELETE CASCADE` を設定する
-- 文字列カラムには `limit` を指定する
-- 大会スコープのテーブルには `tournament_id` カラム（FK → tournaments）を追加する
+- 外部キーには `ON DELETE CASCADE`
+- 文字列カラムには `limit` を指定
+- 大会スコープのテーブルには `tournament_id` カラム + FK（→ tournaments）
 
-## 既存テーブル構成
+## 冪等性（重要）
 
-### 初期スキーマ（20260317000000_create_initial_schema）
+本番の Render は push ごとに `start.sh` 経由で `phinx migrate` を実行する。
+データ投入系マイグレーションは既存データがあればスキップするロジックを入れる。
 
-- `players` - 選手マスタ（id, name, nickname, character_id）
-- `tables_info` - 卓情報（round_number, table_name, schedule, done）
-- `table_players` - 卓メンバー（table_id → tables_info, player_id → players, seat_order）
-- `round_results` - ラウンド成績（player_id → players, round_number, score, is_above_cutoff）
-- `standings` - 総合順位（player_id → players, rank, total, pending, eliminated_round）
-- `tournament_meta` - 大会メタ情報（key, value）
+```php
+// 例: 既存データを検出してスキップ
+$count = $this->fetchRow('SELECT COUNT(*) AS c FROM standings WHERE tournament_id = 1')['c'];
+if ((int) $count > 0) {
+    return;
+}
+```
 
-### 大会対応（20260327000000_add_tournaments_support）
+## 実行コマンド
 
-- `tournaments` テーブル新規作成（id, name, status, created_at）
-- `tables_info`, `round_results` に `tournament_id` カラム + FK追加
-- `standings` のPKを `(tournament_id, player_id)` の複合PKに変更
-- `tournament_meta` のPKを `(tournament_id, key)` の複合PKに変更
-- `round_results` のユニーク制約を `(tournament_id, player_id, round_number)` に変更
+```bash
+php vendor/bin/phinx status        # ステータス確認
+php vendor/bin/phinx migrate       # マイグレーション実行
+php vendor/bin/phinx seed:run      # シーダー実行
+php vendor/bin/phinx rollback      # ロールバック
 
-### 決勝データ投入（20260327100000_add_finals_data）
-
-- 決勝（4回戦）の卓情報・成績データを投入（冪等: 既存データがあればスキップ）
-- スタンディングを決勝結果反映済みの正しい順位・スコアに更新
-- tournament_meta の current_round, remaining_players を更新
-
-### 選手名を正式名称に変更（20260329000000_rename_players_to_official_names）
-
-- players.name をアプリ内の正式名称に一括更新
-- tournament_meta の record_player も合わせて更新
-
-### 選手に呼称を追加（20260329100000_add_nickname_to_players）
-
-- players テーブルに nickname カラム（VARCHAR(50), NULL可）を追加
-- 全20名の呼称（サイト表示用の通称）を一括セット
-
-### キャラクターマスタ作成（20260329200000_create_characters_table）
-
-- characters テーブル新規作成（id, name, icon_filename）
-- players テーブルに character_id カラム + FK追加（ON DELETE SET NULL）
-
-### キャラクターシード＆選手割り当て（20260329300000_seed_characters_and_assign_players）
-
-- characters テーブルにキャラクターデータを投入
-- 既存選手に character_id を割り当て
-
-### 対局日カラム変更（20260406100534_replace_schedule_with_played_date）
-
-- tables_info の schedule カラムを played_date（DATE型）に変更
-
-### 牌譜URL追加（20260406102308_add_paifu_url_to_tables_info）
-
-- tables_info に paifu_url カラム（TEXT）を追加
-
-### 対局時間追加（20260407035154_add_played_time_to_tables_info）
-
-- tables_info に played_time カラム（VARCHAR(5)）を追加
-
-### インタビューテーブル作成（20260407062401_create_interviews_table）
-
-- interviews テーブル新規作成（id, tournament_id, question, answer, sort_order）
-- FK: tournament_id → tournaments（ON DELETE CASCADE）
+# 既存DBをPhinx管理下に置く（init.sql適用済み環境）
+php vendor/bin/phinx migrate --fake
+```
 
 ## デプロイ
 
-- 本番: Renderデプロイ時に `start.sh` 経由で自動実行される
-- 開発: 手動で `php vendor/bin/phinx migrate` を実行
+- 本番: Render デプロイ時に `start.sh` 経由で自動実行
+- 開発: 手動で `php vendor/bin/phinx migrate`
+- マイグレーション失敗時は Apache が起動しない（`set -e`）→ 本番投入前に必ず dev で検証
+
+## 関連スキル
+
+- `data-model` — テーブル構成・モデルとの対応
