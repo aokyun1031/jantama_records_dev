@@ -202,6 +202,20 @@ $pageStyle = <<<'CSS'
   border-bottom: none;
 }
 
+.member-row-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.member-row-link:hover {
+  background: rgba(var(--accent-rgb), 0.08);
+}
+
+.member-row-link:hover .member-name-text {
+  color: rgb(var(--accent-rgb));
+}
+
 .member-self {
   background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(var(--accent-rgb),0.04));
 }
@@ -382,7 +396,10 @@ require __DIR__ . '/../templates/header.php';
           // 当該ラウンドで敗退 or 過去敗退 → 敗退、それ以外（0 or 未来敗退）→ 通過
           $advanced = $memberElim === 0 || $memberElim > $roundNum;
       ?>
-        <div class="member-row <?= $member['id'] === $playerId ? 'member-self' : '' ?>">
+        <?php $isSelf = $member['id'] === $playerId; ?>
+        <?= $isSelf
+          ? '<div class="member-row member-self">'
+          : '<a href="player?id=' . (int) $member['id'] . '" class="member-row member-row-link">' ?>
           <div class="member-name">
             <?= charaIcon($member['character_icon'] ?? null, 28) ?>
             <span class="member-name-text"><?= h($member['name']) ?></span>
@@ -404,7 +421,7 @@ require __DIR__ . '/../templates/header.php';
             <div class="member-score" style="color: var(--text-light);">-</div>
             <div></div>
           <?php endif; ?>
-        </div>
+        <?= $isSelf ? '</div>' : '</a>' ?>
       <?php endforeach; ?>
     </div>
   <?php endforeach; ?>
