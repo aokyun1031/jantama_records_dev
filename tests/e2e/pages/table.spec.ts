@@ -34,6 +34,14 @@ test.describe('卓管理', () => {
     await expect(page.locator('.tb-player')).toHaveCount(4);
   });
 
+  test('参加選手を押下すると選手の個人ページに遷移する', async ({ page }) => {
+    await page.goto(`/table?id=${tableId}`);
+    const firstPlayer = page.locator('.tb-player-link').first();
+    await expect(firstPlayer).toHaveAttribute('href', /^player\?id=\d+$/);
+    await firstPlayer.click();
+    await page.waitForURL(/\/player\?id=\d+/);
+  });
+
   test('対局日を設定できる', async ({ page }) => {
     await page.goto(`/table?id=${tableId}`);
     await page.fill('input[name="played_date"]', '2026-04-10');

@@ -220,6 +220,9 @@ $pageStyle = <<<'CSS'
 .tb-players { display: flex; flex-wrap: wrap; gap: 12px; }
 .tb-player { display: flex; align-items: center; gap: 8px; }
 .tb-player-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.tb-player-link { text-decoration: none; padding: 4px 10px 4px 4px; border-radius: 999px; border: 1px solid transparent; transition: background 0.2s, border-color 0.2s, transform 0.2s; }
+.tb-player-link:hover { background: rgba(var(--accent-rgb), 0.08); border-color: rgba(var(--accent-rgb), 0.25); transform: translateY(-1px); }
+.tb-player-link:hover .tb-player-name { color: rgb(var(--accent-rgb)); }
 .tb-player-sub .tb-player-name { color: var(--gold); font-style: italic; }
 .tb-player-sub-icon { width: 32px; height: 32px; border-radius: 50%; border: 1.5px dashed rgba(var(--gold-rgb), 0.5); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--gold); flex-shrink: 0; }
 
@@ -287,10 +290,10 @@ require __DIR__ . '/../templates/header.php';
     <div class="tb-section-title">参加選手</div>
     <div class="tb-players">
       <?php foreach ($table['players'] as $p): ?>
-        <div class="tb-player">
+        <a href="player?id=<?= (int) $p['player_id'] ?>" class="tb-player tb-player-link">
           <?= charaIcon($p['character_icon'], 32) ?>
           <span class="tb-player-name"><?= h($p['nickname'] ?? $p['name']) ?></span>
-        </div>
+        </a>
       <?php endforeach; ?>
       <?php for ($s = 0; $s < $subCount; $s++): ?>
         <div class="tb-player tb-player-sub">
