@@ -173,6 +173,71 @@ a.standing-item { text-decoration: none; color: inherit; }
 
 /* 対戦結果タブのスペーシング */
 .tab-content { padding-top: 8px; }
+
+/* トーナメントレコード（standing-itemと統一感あるカード） */
+.record-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  background: var(--standing-bg);
+  border: var(--standing-border);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+a.record-card:hover {
+  transform: translateY(-2px);
+  background: var(--standing-hover-bg);
+  box-shadow: var(--standing-hover-shadow);
+}
+.record-card-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.record-card-label {
+  font-size: 0.65rem;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.record-card-player {
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.record-card-player img, .record-card-player .chara-icon-none { flex-shrink: 0; }
+.record-card-player-sep { margin: 0 2px; color: var(--text-light); }
+.record-card-player-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.record-card-player-link:hover { text-decoration: underline; }
+.record-card-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: 'Inter', sans-serif;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.record-card-num { font-size: 1.6rem; font-weight: 900; letter-spacing: 0.5px; }
+.record-card-unit { font-size: 0.75rem; font-weight: 700; }
+@media (max-width: 480px) {
+  .record-card { padding: 12px 14px; gap: 8px; }
+  .record-card-num { font-size: 1.35rem; }
+  .record-card-player { font-size: 0.9rem; }
+}
 CSS;
 
 $pageInlineScript = <<<'JS'
@@ -324,7 +389,7 @@ foreach ($roundSettings as $rn => $rs) {
 <?php if ($totalRounds > 0): ?>
 <section class="section reveal">
   <div class="section-header">
-    <div class="section-title">&#x1F004; 対戦結果</div>
+    <div class="section-title">対戦結果</div>
   </div>
 
   <div class="tabs">
@@ -467,7 +532,7 @@ foreach ($roundSettings as $rn => $rs) {
 <!-- Cumulative Standings -->
 <section class="section reveal" id="standings-section">
   <div class="section-header">
-    <div class="section-title">&#x1F005; 総合ポイント</div>
+    <div class="section-title">総合ポイント</div>
   </div>
   <div id="standings">
     <?php
@@ -517,8 +582,18 @@ foreach ($roundSettings as $rn => $rs) {
 <?php
   $recHigh = $tournamentRecords['highest_score'] ?? null;
   $recTops = $tournamentRecords['most_tops'] ?? null;
-  $recSpread = $tournamentRecords['largest_spread'] ?? null;
-  if ($recHigh || $recTops || $recSpread):
+  if ($recHigh || $recTops):
+    $startPt = (int) ($meta['starting_points'] ?? 25000);
+    $retPt = (int) ($meta['return_points'] ?? 30000);
+    $pMode = (int) ($meta['player_mode'] ?? 4);
+    $umaTop = $pMode === 3 ? 15 : 20;
+    $oka = ($retPt - $startPt) * $pMode / 1000;
+    $topRawScore = null;
+    if ($recHigh) {
+        $topPoint = (float) $recHigh['score'];
+        $topRawScore = (int) round(($topPoint - $umaTop - $oka) * 1000 + $retPt);
+    }
+    $playerLink = fn(int $pid) => 'player?id=' . $pid . '&amp;from=tournament_view&amp;tournament_id=' . $tournamentId;
 ?>
 <div class="tile-divider">
   <div class="tile-divider-line"></div>
@@ -527,49 +602,57 @@ foreach ($roundSettings as $rn => $rs) {
 </div>
 
 <!-- Records -->
-<section class="records reveal">
-  <div class="records-title">&#x1F000; トーナメントレコード &#x1F000;</div>
-
-  <?php if ($recHigh): ?>
-  <div class="record-highlight">
-    <span class="record-label">大会最高得点</span>
-    <span class="record-score" data-count="<?= h((string) $recHigh['score']) ?>">0</span>
-    <span class="record-player">
-      <?php if (!empty($recHigh['character_icon'])): ?>
-        <img src="img/chara_deformed/<?= h($recHigh['character_icon']) ?>" alt="" class="record-player-icon" width="24" height="24" loading="lazy">
-      <?php endif; ?>
-      <?= h($recHigh['player_name']) ?>
-      <span class="record-sub"><?= (int) $recHigh['round_number'] ?>回戦</span>
-    </span>
+<section class="section reveal">
+  <div class="section-header">
+    <div class="section-title">トーナメントレコード</div>
   </div>
-  <?php endif; ?>
-
-  <div class="record-sub-grid">
-    <?php if ($recTops): ?>
-    <div class="record-card">
-      <span class="record-label">最多トップ</span>
-      <span class="record-card-value"><?= (int) $recTops['top_count'] ?><span class="record-card-unit">卓</span></span>
-      <span class="record-player">
-        <?php if (!empty($recTops['character_icon'])): ?>
-          <img src="img/chara_deformed/<?= h($recTops['character_icon']) ?>" alt="" class="record-player-icon" width="22" height="22" loading="lazy">
-        <?php endif; ?>
-        <?= h($recTops['player_name']) ?>
-      </span>
-    </div>
+  <div class="record-list">
+    <?php if ($recHigh && $topRawScore !== null):
+      $highPid = (int) $recHigh['player_id'];
+    ?>
+      <a href="<?= $playerLink($highPid) ?>" class="record-card">
+        <div class="record-card-info">
+          <span class="record-card-label">大会最高得点</span>
+          <span class="record-card-player"><?= charaIcon($recHigh['character_icon'] ?? null, 22) ?><?= h($recHigh['player_name']) ?></span>
+        </div>
+        <div class="record-card-value">
+          <span class="record-card-num" data-count="<?= $topRawScore ?>">0</span>
+        </div>
+      </a>
+      <a href="<?= $playerLink($highPid) ?>" class="record-card">
+        <div class="record-card-info">
+          <span class="record-card-label">大会最高ポイント</span>
+          <span class="record-card-player"><?= charaIcon($recHigh['character_icon'] ?? null, 22) ?><?= h($recHigh['player_name']) ?></span>
+        </div>
+        <div class="record-card-value">
+          <span class="record-card-num"><?= fmtScore((float) $recHigh['score']) ?></span>
+        </div>
+      </a>
     <?php endif; ?>
-
-    <?php if ($recSpread): ?>
-    <div class="record-card">
-      <span class="record-label">単卓最大得点差</span>
-      <span class="record-card-value"><?= number_format((float) $recSpread['spread'], 0) ?><span class="record-card-unit">pt</span></span>
-      <span class="record-player">
-        <?php if (!empty($recSpread['character_icon'])): ?>
-          <img src="img/chara_deformed/<?= h($recSpread['character_icon']) ?>" alt="" class="record-player-icon" width="22" height="22" loading="lazy">
-        <?php endif; ?>
-        <?= h($recSpread['player_name']) ?>
-        <span class="record-sub"><?= (int) $recSpread['round_number'] ?>回戦</span>
-      </span>
-    </div>
+    <?php if ($recTops):
+      $winners = $recTops['winners'];
+      $topCount = (int) $recTops['top_count'];
+      $singleWinner = count($winners) === 1;
+    ?>
+      <<?= $singleWinner ? 'a href="' . $playerLink((int) $winners[0]['player_id']) . '"' : 'div' ?> class="record-card">
+        <div class="record-card-info">
+          <span class="record-card-label">最多トップ</span>
+          <span class="record-card-player">
+            <?php foreach ($winners as $k => $w): ?>
+              <?php if ($k > 0): ?><span class="record-card-player-sep">・</span><?php endif; ?>
+              <?php if ($singleWinner): ?>
+                <?= charaIcon($w['character_icon'] ?? null, 22) ?><?= h($w['player_name']) ?>
+              <?php else: ?>
+                <a href="<?= $playerLink((int) $w['player_id']) ?>" class="record-card-player-link"><?= charaIcon($w['character_icon'] ?? null, 22) ?><?= h($w['player_name']) ?></a>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          </span>
+        </div>
+        <div class="record-card-value">
+          <span class="record-card-num" data-count="<?= $topCount ?>">0</span>
+          <span class="record-card-unit">回</span>
+        </div>
+      </<?= $singleWinner ? 'a' : 'div' ?>>
     <?php endif; ?>
   </div>
 </section>
