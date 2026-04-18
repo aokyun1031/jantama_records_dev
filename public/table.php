@@ -315,7 +315,20 @@ require __DIR__ . '/../templates/header.php';
       <?php endif; ?>
     </div>
     <?php if ($isDone): ?>
-      <div><?= $table['played_date'] ? h($table['played_date']) . ($table['day_of_week'] ? '（' . h($table['day_of_week']) . '）' : '') . ($table['played_time'] ? ' ' . h($table['played_time']) : '') : '未設定' ?></div>
+      <?php
+        $schedText = '未設定';
+        if ($table['played_date']) {
+            $d = new DateTime($table['played_date']);
+            $schedText = (int) $d->format('Y') . '/' . (int) $d->format('n') . '/' . (int) $d->format('j');
+            if (!empty($table['day_of_week'])) {
+                $schedText .= '（' . mb_substr($table['day_of_week'], 0, 1) . '）';
+            }
+            if (!empty($table['played_time'])) {
+                $schedText .= ' ' . substr($table['played_time'], 0, 5);
+            }
+        }
+      ?>
+      <div><?= h($schedText) ?></div>
     <?php else: ?>
       <div class="tb-form-row">
         <div>
