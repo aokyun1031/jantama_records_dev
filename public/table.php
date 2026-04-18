@@ -212,6 +212,7 @@ $pageStyle = <<<'CSS'
 .tb-badge { display: inline-block; background: var(--badge-bg); color: var(--badge-color); font-size: 0.7rem; font-weight: 700; padding: 4px 14px; border-radius: 20px; margin-bottom: 16px; letter-spacing: 2px; box-shadow: 0 2px 12px rgba(var(--accent-rgb),0.3); }
 .tb-title { font-family: 'Noto Sans JP', sans-serif; font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 900; color: var(--text); margin-bottom: 4px; }
 .tb-subtitle { font-size: 0.85rem; color: var(--text-sub); }
+.tb-done-mark { color: var(--success); font-weight: 700; }
 .tb-content { max-width: 700px; margin: 0 auto 40px; padding: 0 16px; }
 
 .tb-section { background: var(--card); border: 1px solid rgba(var(--accent-rgb), 0.25); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
@@ -271,9 +272,11 @@ require __DIR__ . '/../templates/header.php';
 ?>
 
 <div class="tb-hero">
-  <div class="tb-badge"><?= $isDone ? 'COMPLETED' : 'TABLE' ?></div>
-  <div class="tb-title"><?= h($table['table_name']) ?></div>
-  <div class="tb-subtitle"><?= (int) $table['round_number'] ?>回戦</div>
+  <div class="tb-badge">TABLE</div>
+  <div class="tb-title"><?= h($tournament['name']) ?> <?= h($table['table_name']) ?></div>
+  <div class="tb-subtitle">
+    <?= (int) $table['round_number'] ?>回戦<?php if ($isDone): ?> ・ <span class="tb-done-mark">&#10003; 完了</span><?php endif; ?>
+  </div>
 </div>
 
 <div class="tb-content">

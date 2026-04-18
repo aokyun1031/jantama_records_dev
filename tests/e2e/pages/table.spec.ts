@@ -93,7 +93,8 @@ test.describe('卓管理', () => {
 
   test('完了した卓は読み取り専用', async ({ page }) => {
     await page.goto(`/table?id=${tableId}`);
-    await expect(page.locator('.tb-badge')).toContainText('COMPLETED');
+    await expect(page.locator('.tb-badge')).toContainText('TABLE');
+    await expect(page.locator('.tb-done-mark')).toContainText('完了');
     // フォームが表示されない
     await expect(page.locator('#table-form')).toHaveCount(0);
   });
