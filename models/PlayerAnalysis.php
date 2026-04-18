@@ -70,11 +70,14 @@ class PlayerAnalysis
                        COUNT(DISTINCT rr.tournament_id) AS total_tournaments,
                        AVG(rr.score) AS avg_score,
                        MAX(rr.score) AS best_score,
-                       SUM(CASE WHEN rr.round_number < fr.final_round AND rr.is_above_cutoff THEN 1 ELSE 0 END) AS qualifying_passes,
+                       SUM(CASE WHEN rr.round_number < fr.final_round
+                                 AND (s.eliminated_round = 0 OR s.eliminated_round > rr.round_number)
+                                THEN 1 ELSE 0 END) AS qualifying_passes,
                        SUM(CASE WHEN rr.round_number < fr.final_round THEN 1 ELSE 0 END) AS qualifying_rounds,
                        STDDEV_SAMP(rr.score) AS score_stddev
                 FROM round_results rr
                 JOIN final_rounds fr ON fr.tournament_id = rr.tournament_id
+                LEFT JOIN standings s ON s.tournament_id = rr.tournament_id AND s.player_id = rr.player_id
                 WHERE rr.player_id = ?{$filterRr}
             ),
             rank_agg AS (
@@ -183,10 +186,12 @@ class PlayerAnalysis
         $pdo = getDbConnection();
         $filter = self::eventTypeFilterFragment($selectedEventTypes, 'rr.tournament_id');
         $stmt = $pdo->prepare("
-            SELECT t.name AS tournament_name, rr.round_number, rr.score, rr.is_above_cutoff,
+            SELECT t.name AS tournament_name, rr.round_number, rr.score,
+                   (s.eliminated_round = 0 OR s.eliminated_round > rr.round_number) AS is_advanced,
                    tbl.played_date, tbl.day_of_week, tbl.played_time
             FROM round_results rr
             JOIN tournaments t ON t.id = rr.tournament_id
+            LEFT JOIN standings s ON s.tournament_id = rr.tournament_id AND s.player_id = rr.player_id
             LEFT JOIN LATERAL (
                 SELECT ti.played_date, ti.day_of_week, ti.played_time
                 FROM table_players tp

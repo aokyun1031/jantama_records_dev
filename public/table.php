@@ -112,7 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                     $scores[] = [
                         'player_id' => $pid,
                         'score' => $score,
-                        'is_above_cutoff' => true,
                     ];
                 }
                 $allGameScores[$g] = $scores;
@@ -161,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                         $hasError = true;
                         break 2;
                     }
-                    $scores[] = ['player_id' => $pid, 'score' => $score, 'is_above_cutoff' => true];
+                    $scores[] = ['player_id' => $pid, 'score' => $score];
                 }
                 $allGameScores[$g] = $scores;
             }

@@ -136,7 +136,6 @@ class TournamentSeeder extends AbstractSeed
                 'player_id'      => $playerMap[$name],
                 'round_number'   => $round,
                 'score'          => $score,
-                'is_above_cutoff'=> $above,
             ];
         }
         $this->table('round_results')->insert($rrData)->save();

@@ -207,9 +207,24 @@ $pageStyle = <<<'CSS'
 }
 
 .member-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--text);
+  min-width: 0;
+}
+
+.member-name .chara-icon,
+.member-name .chara-icon-none {
+  flex-shrink: 0;
+}
+
+.member-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .member-self .member-name {
@@ -347,10 +362,13 @@ require __DIR__ . '/../templates/header.php';
   </div>
 <?php else: ?>
   <?php
-    ['data' => $finalRoundStr] = fetchData(fn() => TournamentMeta::get($tournamentId, 'current_round', '0'));
-    $tournamentFinalRound = (int)($finalRoundStr ?? '0');
+    $tournamentFinalRound = 0;
+    if ($tournament['status'] === TournamentStatus::Completed->value) {
+      $tournamentFinalRound = max(array_map(fn($r) => (int) $r['round_number'], $rounds));
+    }
     foreach ($rounds as $ri => $round):
-      $isFinal = (int) $round['round_number'] === $tournamentFinalRound && $tournament['status'] === TournamentStatus::Completed->value;
+      $roundNum = (int) $round['round_number'];
+      $isFinal = $roundNum === $tournamentFinalRound && $tournament['status'] === TournamentStatus::Completed->value;
   ?>
     <div class="round-section" style="animation-delay: <?= $ri * 0.1 ?>s">
       <div class="round-header">
@@ -360,20 +378,22 @@ require __DIR__ . '/../templates/header.php';
       <?php
         $championShown = false;
         foreach ($round['members'] as $member):
+          $memberElim = (int) $member['eliminated_round'];
+          // 当該ラウンドで敗退 or 過去敗退 → 敗退、それ以外（0 or 未来敗退）→ 通過
+          $advanced = $memberElim === 0 || $memberElim > $roundNum;
       ?>
         <div class="member-row <?= $member['id'] === $playerId ? 'member-self' : '' ?>">
-          <div class="member-name"><?= h($member['name']) ?></div>
-          <?php if ($member['score'] !== null):
-            $aboveCutoff = $member['is_above_cutoff'] !== false && $member['is_above_cutoff'] !== 'f';
-          ?>
+          <div class="member-name">
+            <?= charaIcon($member['character_icon'] ?? null, 28) ?>
+            <span class="member-name-text"><?= h($member['name']) ?></span>
+          </div>
+          <?php if ($member['score'] !== null): ?>
             <div class="member-score <?= (float) $member['score'] >= 0 ? 'score-plus' : 'score-minus' ?>">
               <?= (float) $member['score'] >= 0 ? '+' : '' ?><?= number_format((float) $member['score'], 1) ?>
             </div>
-            <?php if ($isFinal && !$championShown): $championShown = true; ?>
+            <?php if ($isFinal && $advanced && !$championShown): $championShown = true; ?>
               <div class="member-tag tag-champion">優勝</div>
-            <?php elseif ($isFinal): ?>
-              <div class="member-tag tag-cutoff">敗退</div>
-            <?php elseif ($aboveCutoff): ?>
+            <?php elseif ($advanced): ?>
               <div class="member-tag tag-pass">通過</div>
             <?php else: ?>
               <div class="member-tag tag-cutoff">敗退</div>

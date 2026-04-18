@@ -35,8 +35,7 @@ class TableInfo
         $stmt = $pdo->prepare('
             SELECT tp.player_id, p.name, p.nickname, tp.seat_order,
                    c.icon_filename AS character_icon,
-                   SUM(rr.score) AS score,
-                   BOOL_AND(rr.is_above_cutoff) AS is_above_cutoff
+                   SUM(rr.score) AS score
             FROM table_players tp
             JOIN players p ON p.id = tp.player_id
             LEFT JOIN characters c ON c.id = p.character_id
@@ -303,18 +302,21 @@ class TableInfo
         $stmt = $pdo->prepare('
             SELECT ti.round_number, ti.table_name, ti.played_date, ti.day_of_week, ti.done,
                    p.id AS member_id, p.name AS member_name, tp2.seat_order,
-                   SUM(rr.score) AS score,
-                   BOOL_AND(rr.is_above_cutoff) AS is_above_cutoff
+                   c.icon_filename AS character_icon,
+                   s.eliminated_round,
+                   SUM(rr.score) AS score
             FROM table_players tp
             JOIN tables_info ti ON ti.id = tp.table_id
             JOIN table_players tp2 ON tp2.table_id = tp.table_id
             JOIN players p ON p.id = tp2.player_id
+            LEFT JOIN characters c ON c.id = p.character_id
+            LEFT JOIN standings s ON s.tournament_id = ti.tournament_id AND s.player_id = tp2.player_id
             LEFT JOIN round_results rr ON rr.player_id = tp2.player_id
                   AND rr.round_number = ti.round_number
                   AND rr.tournament_id = ti.tournament_id
             WHERE tp.player_id = ? AND ti.tournament_id = ?
             GROUP BY ti.round_number, ti.table_name, ti.played_date, ti.day_of_week, ti.done,
-                     p.id, p.name, tp2.seat_order
+                     p.id, p.name, tp2.seat_order, c.icon_filename, s.eliminated_round
             ORDER BY ti.round_number, SUM(rr.score) DESC NULLS LAST
         ');
         $stmt->execute([$playerId, $tournamentId]);
@@ -334,11 +336,12 @@ class TableInfo
                 ];
             }
             $rounds[$rn]['members'][] = [
-                'id'              => (int) $row['member_id'],
-                'name'            => $row['member_name'],
-                'seat_order'      => $row['seat_order'],
-                'score'           => $row['score'],
-                'is_above_cutoff' => $row['is_above_cutoff'],
+                'id'               => (int) $row['member_id'],
+                'name'             => $row['member_name'],
+                'character_icon'   => $row['character_icon'],
+                'seat_order'       => $row['seat_order'],
+                'score'            => $row['score'],
+                'eliminated_round' => (int) ($row['eliminated_round'] ?? 0),
             ];
         }
         return array_values($rounds);

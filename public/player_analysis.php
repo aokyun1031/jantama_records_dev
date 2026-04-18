@@ -408,7 +408,7 @@ if ($scoreHistory) {
       <?php foreach ($scoreHistory as $sh):
         $score = (float) $sh['score'];
         $barWidth = round(abs($score) / $maxAbsScore * 100);
-        $aboveCutoff = $sh['is_above_cutoff'] === true || $sh['is_above_cutoff'] === 't' || $sh['is_above_cutoff'] === '1';
+        $aboveCutoff = $sh['is_advanced'] === true || $sh['is_advanced'] === 't' || $sh['is_advanced'] === '1';
       ?>
         <tr>
           <td class="history-round"><?= h($sh['tournament_name']) ?> <?= (int) $sh['round_number'] ?>回戦</td>
