@@ -12,6 +12,7 @@
   var loader = document.getElementById('lp3-loader');
   if (loader) {
     var hidden = false;
+    var MIN_DISPLAY_MS = 1500;
     var statusEl = document.getElementById('lp3-loader-status');
     var statusTimers = [];
     if (statusEl) {
@@ -20,6 +21,12 @@
     }
     var hideLoader = function () {
       if (hidden) return;
+      // ナビゲーション開始からの経過時間が MIN_DISPLAY_MS 未満なら差分だけ待つ
+      var elapsed = (window.performance && performance.now) ? performance.now() : MIN_DISPLAY_MS;
+      if (elapsed < MIN_DISPLAY_MS) {
+        setTimeout(hideLoader, MIN_DISPLAY_MS - elapsed);
+        return;
+      }
       hidden = true;
       statusTimers.forEach(function (t) { clearTimeout(t); });
       loader.classList.add('is-done');

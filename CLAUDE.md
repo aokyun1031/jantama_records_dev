@@ -65,10 +65,11 @@ npx playwright test [pages/xxx.spec.ts] [--headed|--ui]
 
 ### CSS
 
-- ダークテーマ: CSS 変数のみ使用（ハードコードカラー禁止）
+- ライト固定。CSS 変数のみ使用（ハードコードカラー禁止）
 - フォーム: `css/forms.css` を `$pageCss` で読込。input には `--input-*` 変数を使う（`--glass-border` / `--card` 不可）
 - 戻るボタン: `btn-cancel`（components.css）
-- `$pageStyle` は forms.css / components.css に無いものだけ
+- **ページ固有 CSS は必ず `public/css/{page}.css` として外部化し `$pageCss` 配列で読込む**
+- `$pageStyle`（インライン CSS）は原則禁止。例外は Loader 等の Critical CSS（外部 CSS 到着前に描画が必要なもの）に限る
 - ルールタグ表示: `buildRuleTags($meta)`
 
 詳細 → `.claude/skills/design/SKILL.md`

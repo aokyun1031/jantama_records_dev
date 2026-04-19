@@ -265,6 +265,24 @@ for f in $PHP_FILES; do
   fi
 done
 
+# I7: $pageStyle = <<<'CSS' ... CSS; の行数が多いページ（30 行超）
+#     Loader 等 Critical CSS を除き、ページ固有 CSS は public/css/{page}.css に外出しする
+for f in $PHP_FILES; do
+  awk_result=$(awk '
+    /\$pageStyle[ \t]*=[ \t]*<<<.?CSS.?/ { start=NR; inblock=1; next }
+    inblock && /^CSS;/ { print start":"NR; inblock=0 }
+  ' "$f" 2>/dev/null)
+  [ -z "$awk_result" ] && continue
+  while IFS= read -r range; do
+    start_ln="${range%:*}"
+    end_ln="${range#*:}"
+    block_lines=$((end_ln - start_ln - 1))
+    if [ "$block_lines" -gt 30 ]; then
+      hit info "$f" "$start_ln" "\$pageStyle が ${block_lines} 行。public/css/$(basename "$f" .php).css に外部化検討"
+    fi
+  done <<< "$awk_result"
+done
+
 # =============================================================
 # エスケープ漏れ候補
 # =============================================================

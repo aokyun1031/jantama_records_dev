@@ -40,6 +40,7 @@ model: sonnet
 - ハードコードされた定数文字列（ステータス・種別など）が enum に置き換え可能か
 - モデル層にビジネスロジックが集約されているか
 - エラーメッセージが `.claude/skills/add-page/SKILL.md` の規約に従っているか
+- `$pageStyle` のインライン CSS が 30 行以上ある場合は `public/css/{page}.css` に外部化を推奨（Loader 等 Critical CSS は例外）
 
 ## 出力形式
 

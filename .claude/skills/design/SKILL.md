@@ -134,6 +134,26 @@ background: rgba(var(--danger-rgb), 0.03);
 - ダークテーマは廃止済み。`theme-dark.css` / `theme-toggle.css` / `theme-toggle.js` は削除済み
 - ハードコードカラーは禁止、新しい色は必ず CSS 変数で追加すること
 
+## ページ固有 CSS の置き場所
+
+- **必ず外部ファイル化する**: `public/css/{page-name}.css` として作成し、PHP 側で `$pageCss = ['css/{page-name}.css'];` で読み込む
+- **`$pageStyle`（インライン CSS）は原則禁止**。キャッシュが効かない・行数が増えると保守できない
+- 例外: Loader など「外部 CSS ロード前に描画が必要」な Critical CSS のみ `$pageStyle` に埋め込む（index.php の lp3-loader が該当）
+- 既存コンポーネントが `components.css` / `base.css` / `forms.css` に無いかを先に確認し、使えるものは再利用する
+- 複数ページで使い回す要素は `components.css` に昇格（例: `.page-hero` / `.page-hero-badge` / `.page-hero-title`）
+
+```php
+/* OK */
+$pageCss = ['css/forms.css', 'css/tournament.css'];
+
+/* NG（長い $pageStyle は外出しへ） */
+$pageStyle = <<<'CSS'
+.td-hero { ... }
+.td-badge { ... }
+/* ... 100行以上 ... */
+CSS;
+```
+
 ## レスポンシブ
 
 - 最大幅: `.main { max-width:680px }`

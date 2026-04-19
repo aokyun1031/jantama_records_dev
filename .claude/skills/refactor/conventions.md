@@ -51,7 +51,8 @@ scan.sh はここに挙げたルールのうち grep で検出可能なものを
 | I5 | `<?= $array['key'] ?>` に `h()` 無し（文字列出力なら XSS 候補） | scan.sh 自動 |
 | I6 | `<?= $var ?>` に `h()` 無し（整数・CSS クラス等の安全パターンは自動除外） | scan.sh 自動 |
 | — | `--glass-border` や `--card` を input 系に使わない（背景と同化する） | 手動レビュー |
-| — | ページ固有 CSS は `$pageStyle` に書く。`forms.css` / `components.css` に無いものだけ | 手動レビュー |
+| — | ページ固有 CSS は外部ファイル `public/css/{page}.css` に分離、`$pageCss` で読込む。`$pageStyle`（インラインCSS）は Critical CSS 例外時のみ | 手動レビュー |
+| I7 | `$pageStyle = <<<'CSS'` ... `CSS;` の行数が多い（30 行超は外出し推奨） | scan.sh 自動 |
 | — | enum に寄せるべきハードコード文字列が無いか | 手動レビュー |
 | — | 同じパターンの HTML が複数ページに散らばっていないか（共通化余地） | 手動レビュー |
 
