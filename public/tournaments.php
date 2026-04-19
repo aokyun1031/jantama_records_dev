@@ -24,38 +24,6 @@ $pageTitle = '大会一覧 - ' . SITE_NAME;
 $pageDescription = '麻雀トーナメントの大会一覧です。';
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
-.tournaments-hero {
-  text-align: center;
-  padding: 48px 20px 32px;
-}
-
-.tournaments-badge {
-  display: inline-block;
-  background: var(--badge-bg);
-  color: var(--badge-color);
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 4px 14px;
-  border-radius: 20px;
-  margin-bottom: 16px;
-  letter-spacing: 2px;
-  box-shadow: 0 2px 12px rgba(var(--accent-rgb),0.3);
-  animation: fadeDown 0.8s ease both;
-}
-
-.tournaments-title {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: clamp(1.8rem, 6vw, 2.5rem);
-  font-weight: 900;
-  background: var(--title-gradient);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: titleGrad 6s ease infinite, fadeUp 1s ease both;
-  margin-bottom: 8px;
-}
-
 .tournaments-count {
   font-size: 0.85rem;
   color: var(--text-sub);
@@ -241,9 +209,9 @@ CSS;
 require __DIR__ . '/../templates/header.php';
 ?>
 
-<div class="tournaments-hero">
-  <div class="tournaments-badge">TOURNAMENTS</div>
-  <h1 class="tournaments-title">大会一覧</h1>
+<div class="page-hero">
+  <div class="page-hero-badge">TOURNAMENTS</div>
+  <h1 class="page-hero-title">大会一覧</h1>
   <div class="tournaments-count"><?= count($tournaments ?? []) ?> 件の大会が登録されています</div>
 </div>
 

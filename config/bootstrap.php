@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 const SITE_NAME = '雀魂部屋主催';
+const SITE_URL  = 'https://jantama-records.onrender.com';
 
 // .envファイルから環境変数を読み込む（既存の環境変数は上書きしない）
 $envFile = dirname(__DIR__);

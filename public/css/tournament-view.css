@@ -1,0 +1,128 @@
+/* ======================
+   tournament-view.css
+   大会閲覧ページ (/tournament_view?id=X) 専用スタイル
+   ====================== */
+
+/* 進行中ステップ */
+.step-circle.current { background: rgba(var(--mint-rgb), 0.15); color: var(--success); border-color: var(--success); animation: pulse 2s ease infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(var(--mint-rgb), 0.3); } 50% { box-shadow: 0 0 0 6px rgba(var(--mint-rgb), 0); } }
+
+/* 未対戦卓の黄色背景を無効化 */
+.table-pending { border-color: var(--glass-border); background: var(--card); }
+.table-pending .table-card-name { color: var(--table-card-name-color); }
+
+/* 卓カードのリンク化 */
+a.table-card { text-decoration: none; color: inherit; display: block; }
+
+/* 選手カードのリンク化 */
+a.standing-item { text-decoration: none; color: inherit; }
+
+/* 卓カードヘッダー左側 */
+.table-card-head-left { display: flex; align-items: baseline; gap: 8px; }
+
+/* 卓カードの日時 */
+.table-card-schedule { font-size: 0.7rem; color: var(--text-sub); }
+
+/* 卓カードのプレイヤーリスト（未完了時） */
+.table-card-players li::before { content: none; }
+.table-card-players li { line-height: 1.4; padding: 4px 0; display: flex; align-items: center; gap: 6px; }
+.table-card-players { padding: 0; }
+
+/* 卓カード内結果表示（完了時） */
+.table-card-results { display: flex; flex-direction: column; gap: 2px; }
+.table-card-result-row { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 6px; padding: 3px 0; font-size: 0.8rem; }
+.table-card-pos { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.7rem; color: var(--text-light); text-align: center; }
+.table-card-pos.pos-1 { color: var(--gold); }
+.table-card-player { font-weight: 600; display: flex; align-items: center; gap: 4px; overflow: hidden; }
+.table-card-score { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.8rem; text-align: right; white-space: nowrap; }
+.table-card-score.plus { color: var(--plus-text); }
+.table-card-score.minus { color: var(--minus-text); }
+
+/* 全体順位のアイコン整列 */
+.standing-name { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.standing-name img, .standing-name .chara-icon-none { flex-shrink: 0; }
+
+/* 対戦結果のアイコン整列 */
+.result-name { display: flex; align-items: center; gap: 2px; }
+.result-name img, .result-name .chara-icon-none { flex-shrink: 0; }
+
+/* 勝ち抜けバッジ */
+.result-advance-badge { display: inline-block; font-size: 0.6rem; font-weight: 700; color: var(--success); background: rgba(var(--mint-rgb), 0.12); padding: 1px 8px; border-radius: 8px; margin-left: 8px; vertical-align: middle; }
+
+/* 決勝卓のカード改善 */
+.finalist-card { text-align: center; }
+.finalist-card img { display: block; margin: 0 auto 8px; }
+
+/* セクション間の余白統一 */
+.progress-section { margin-bottom: 32px; }
+
+/* 卓カードグリッドを縦並びに */
+.table-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto 20px; }
+
+/* 対戦結果タブのスペーシング */
+.tab-content { padding-top: 8px; }
+
+/* トーナメントレコード（standing-itemと統一感あるカード） */
+.record-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  background: var(--standing-bg);
+  border: var(--standing-border);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+a.record-card:hover {
+  transform: translateY(-2px);
+  background: var(--standing-hover-bg);
+  box-shadow: var(--standing-hover-shadow);
+}
+.record-card-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.record-card-label {
+  font-size: 0.65rem;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.record-card-player {
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.record-card-player img, .record-card-player .chara-icon-none { flex-shrink: 0; }
+.record-card-player-sep { margin: 0 2px; color: var(--text-light); }
+.record-card-player-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.record-card-player-link:hover { text-decoration: underline; }
+.record-card-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: 'Inter', sans-serif;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.record-card-num { font-size: 1.6rem; font-weight: 900; letter-spacing: 0.5px; }
+.record-card-unit { font-size: 0.75rem; font-weight: 700; }
+@media (max-width: 480px) {
+  .record-card { padding: 12px 14px; gap: 8px; }
+  .record-card-num { font-size: 1.35rem; }
+  .record-card-player { font-size: 0.9rem; }
+}

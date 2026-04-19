@@ -130,10 +130,9 @@ background: rgba(var(--danger-rgb), 0.03);
 
 ## テーマ
 
-- ライト: `base.css` の `:root` で定義（デフォルト）
-- ダーク: `theme-dark.css` の `:root` でCSS変数を上書き
-- CSS変数を使えば自動で両テーマ対応になる
-- `theme-dark.css` にセレクタ別のルールは追加しない（変数のみ）
+- ライト固定。`base.css` の `:root` で CSS 変数を定義する
+- ダークテーマは廃止済み。`theme-dark.css` / `theme-toggle.css` / `theme-toggle.js` は削除済み
+- ハードコードカラーは禁止、新しい色は必ず CSS 変数で追加すること
 
 ## レスポンシブ
 
