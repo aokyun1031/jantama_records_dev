@@ -13,17 +13,23 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 <?php endif; ?>
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 
-<?php if (!empty($pageOgp)): ?>
+<?php if (!empty($pageOgp)):
+    $_ogImg = $pageOgp['image'] ?? SITE_URL . '/img/logo.png';
+    $_ogUrl = $pageOgp['url'] ?? (SITE_URL . ($_SERVER['REQUEST_URI'] ?? '/'));
+?>
 <meta property="og:title" content="<?= h($pageOgp['title'] ?? $pageTitle) ?>">
 <meta property="og:description" content="<?= h($pageOgp['description'] ?? '') ?>">
 <meta property="og:type" content="website">
-<meta property="og:url" content="<?= h($pageOgp['url'] ?? '') ?>">
-<meta property="og:image" content="https://jantama-records.onrender.com/img/logo.png">
+<meta property="og:url" content="<?= h($_ogUrl) ?>">
+<meta property="og:image" content="<?= h($_ogImg) ?>">
+<?php if (!empty($pageOgp['image_alt'])): ?>
+<meta property="og:image:alt" content="<?= h($pageOgp['image_alt']) ?>">
+<?php endif; ?>
 <meta property="og:site_name" content="<?= SITE_NAME ?>">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="<?= h($pageOgp['title'] ?? $pageTitle) ?>">
 <meta name="twitter:description" content="<?= h($pageOgp['description'] ?? '') ?>">
-<meta name="twitter:image" content="https://jantama-records.onrender.com/img/logo.png">
+<meta name="twitter:image" content="<?= h($_ogImg) ?>">
 <?php endif; ?>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,11 +40,6 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 <?php foreach (($pageCss ?? []) as $css): ?>
 <link rel="stylesheet" href="<?= asset($css) ?>">
 <?php endforeach; ?>
-<link rel="stylesheet" href="<?= asset('css/theme-dark.css') ?>" id="theme-dark">
-<script nonce="<?= cspNonce() ?>">
-(function(){var s=localStorage.getItem('saikyo-theme');if(s!=='dark'){document.getElementById('theme-dark').disabled=true}})();
-</script>
-<link rel="stylesheet" href="<?= asset('css/theme-toggle.css') ?>">
 
 <?php if (!empty($pageStyle)): ?>
 <style>
@@ -57,14 +58,6 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 
 <!-- Top Controls -->
 <div class="top-controls">
-  <!-- Theme Toggle -->
-  <div class="theme-toggle" id="theme-toggle">
-    <span class="theme-toggle-icon theme-toggle-sun">&#x2600;</span>
-    <div class="theme-toggle-track" id="theme-track">
-      <div class="theme-toggle-thumb"></div>
-    </div>
-    <span class="theme-toggle-icon theme-toggle-moon">&#x1F319;</span>
-  </div>
   <!-- Hamburger Menu -->
   <button class="hamburger" id="hamburger" aria-label="メニュー">
     <span class="hamburger-line"></span>

@@ -67,36 +67,84 @@ class HallOfFame
     }
 
     /**
-     * 歴代最高ラウンドスコア（全大会横断）。
+     * ランダム選手ピックアップ（1つ以上の大会に参加した選手からランダム抽出）。
+     *
+     * @return array<array{player_id:int, player_name:string, character_icon:?string, tournament_count:int, win_count:int, best_score:?float}>
      */
-    public static function highestRoundScoreAllTime(): ?array
+    public static function randomPlayers(int $limit = 8): array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->query('
-            SELECT rr.score, rr.round_number, rr.tournament_id,
+        $stmt = $pdo->prepare("
+            SELECT p.id AS player_id,
+                   COALESCE(p.nickname, p.name) AS player_name,
+                   c.icon_filename AS character_icon,
+                   (SELECT COUNT(DISTINCT s.tournament_id)
+                      FROM standings s
+                      JOIN tournaments t ON t.id = s.tournament_id
+                     WHERE s.player_id = p.id
+                       AND t.status IN ('completed','in_progress')
+                   ) AS tournament_count,
+                   (SELECT COUNT(*)
+                      FROM (
+                        SELECT DISTINCT ON (s2.tournament_id) s2.tournament_id, s2.player_id
+                          FROM standings s2
+                          JOIN tournaments t2 ON t2.id = s2.tournament_id
+                         WHERE t2.status = 'completed' AND s2.eliminated_round = 0
+                         ORDER BY s2.tournament_id, s2.total DESC
+                      ) w
+                     WHERE w.player_id = p.id
+                   ) AS win_count,
+                   (SELECT MAX(rr.score) FROM round_results rr WHERE rr.player_id = p.id) AS best_score
+              FROM players p
+              LEFT JOIN characters c ON c.id = p.character_id
+             WHERE EXISTS (SELECT 1 FROM standings s WHERE s.player_id = p.id)
+             ORDER BY RANDOM()
+             LIMIT ?
+        ");
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * 歴代最高ラウンドスコア TOP N（全大会横断、選手ごとのベストを採用）。
+     *
+     * @return array<array{score:float, round_number:int, tournament_id:int, tournament_name:string, player_id:int, player_name:string, character_icon:?string}>
+     */
+    public static function highestRoundScores(int $limit = 3): array
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare("
+            WITH player_best AS (
+                SELECT DISTINCT ON (rr.player_id)
+                       rr.player_id, rr.score, rr.round_number, rr.tournament_id
+                FROM round_results rr
+                ORDER BY rr.player_id, rr.score DESC, rr.round_number ASC
+            )
+            SELECT pb.score, pb.round_number, pb.tournament_id,
                    t.name AS tournament_name,
                    p.id AS player_id,
                    COALESCE(p.nickname, p.name) AS player_name,
                    c.icon_filename AS character_icon
-            FROM round_results rr
-            JOIN tournaments t ON t.id = rr.tournament_id
-            JOIN players p ON p.id = rr.player_id
+            FROM player_best pb
+            JOIN tournaments t ON t.id = pb.tournament_id
+            JOIN players p ON p.id = pb.player_id
             LEFT JOIN characters c ON c.id = p.character_id
-            ORDER BY rr.score DESC, rr.round_number ASC
-            LIMIT 1
-        ');
-        return $stmt->fetch() ?: null;
+            ORDER BY pb.score DESC, pb.round_number ASC
+            LIMIT ?
+        ");
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
     }
 
     /**
-     * 歴代最多卓1位（全大会横断、同率は配列で返却）。
+     * 歴代最多卓1位 TOP N（全大会横断）。
      *
-     * @return array{top_count:int, winners: array<array{player_id:int, player_name:string, character_icon:?string}>}|null
+     * @return array<array{player_id:int, player_name:string, character_icon:?string, top_count:int}>
      */
-    public static function mostTopFinishesAllTime(): ?array
+    public static function mostTopFinishes(int $limit = 3): array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->query('
+        $stmt = $pdo->prepare("
             WITH table_scores AS (
                 SELECT tp.table_id, tp.player_id, SUM(rr.score) AS table_score
                 FROM table_players tp
@@ -123,17 +171,11 @@ class HallOfFame
             FROM player_tops pt
             JOIN players p ON p.id = pt.player_id
             LEFT JOIN characters c ON c.id = p.character_id
-            WHERE pt.top_count = (SELECT MAX(top_count) FROM player_tops)
-            ORDER BY p.name ASC
-        ');
-        $rows = $stmt->fetchAll();
-        if (!$rows) {
-            return null;
-        }
-        return [
-            'top_count' => (int) $rows[0]['top_count'],
-            'winners' => $rows,
-        ];
+            ORDER BY pt.top_count DESC, p.name ASC
+            LIMIT ?
+        ");
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
     }
 
     /**
@@ -222,21 +264,40 @@ class HallOfFame
     /**
      * 直近のインタビュー掲載大会を取得する。
      *
-     * @return array{tournament_id:int, tournament_name:string, qa_count:int}|null
+     * @return array{tournament_id:int, tournament_name:string, qa_count:int, event_type:?string, winner_id:?int, winner_name:?string, winner_icon:?string}|null
      */
     public static function latestInterview(): ?array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->query('
-            SELECT t.id AS tournament_id, t.name AS tournament_name,
-                   COUNT(i.id) AS qa_count
-            FROM tournaments t
-            JOIN interviews i ON i.tournament_id = t.id
-            GROUP BY t.id, t.name, t.created_at
-            HAVING COUNT(i.id) > 0
-            ORDER BY t.created_at DESC
-            LIMIT 1
-        ');
+        $stmt = $pdo->query("
+            WITH latest AS (
+                SELECT t.id AS tournament_id, t.name AS tournament_name,
+                       COUNT(i.id) AS qa_count
+                FROM tournaments t
+                JOIN interviews i ON i.tournament_id = t.id
+                GROUP BY t.id, t.name, t.created_at
+                HAVING COUNT(i.id) > 0
+                ORDER BY t.created_at DESC
+                LIMIT 1
+            ),
+            winner AS (
+                SELECT DISTINCT ON (s.tournament_id) s.tournament_id, s.player_id
+                FROM standings s
+                WHERE s.eliminated_round = 0
+                  AND s.tournament_id = (SELECT tournament_id FROM latest)
+                ORDER BY s.tournament_id, s.total DESC
+            )
+            SELECT l.tournament_id, l.tournament_name, l.qa_count,
+                   tm.value AS event_type,
+                   p.id AS winner_id,
+                   COALESCE(p.nickname, p.name) AS winner_name,
+                   c.icon_filename AS winner_icon
+            FROM latest l
+            LEFT JOIN tournament_meta tm ON tm.tournament_id = l.tournament_id AND tm.key = 'event_type'
+            LEFT JOIN winner w ON w.tournament_id = l.tournament_id
+            LEFT JOIN players p ON p.id = w.player_id
+            LEFT JOIN characters c ON c.id = p.character_id
+        ");
         $row = $stmt->fetch();
         if (!$row) {
             return null;
@@ -245,6 +306,10 @@ class HallOfFame
             'tournament_id' => (int) $row['tournament_id'],
             'tournament_name' => $row['tournament_name'],
             'qa_count' => (int) $row['qa_count'],
+            'event_type' => $row['event_type'] ?? null,
+            'winner_id' => $row['winner_id'] !== null ? (int) $row['winner_id'] : null,
+            'winner_name' => $row['winner_name'],
+            'winner_icon' => $row['winner_icon'],
         ];
     }
 }

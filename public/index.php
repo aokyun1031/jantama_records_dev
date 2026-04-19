@@ -4,431 +4,684 @@ require __DIR__ . '/../config/bootstrap.php';
 
 $isTopPage = true;
 
-// --- データ取得 ---
-['data' => $tournaments] = fetchData(fn() => Tournament::allWithDetails());
-['data' => $allPlayers] = fetchData(fn() => Player::all());
-
-$playerCount = count($allPlayers ?? []);
-$tournamentCount = count($tournaments ?? []);
-$completedTournaments = array_filter($tournaments ?? [], fn($t) => $t['status'] === TournamentStatus::Completed->value);
-$activeTournaments = array_filter($tournaments ?? [], fn($t) => $t['status'] === TournamentStatus::InProgress->value);
-
-// 最新の完了大会
-$latestCompleted = !empty($completedTournaments) ? reset($completedTournaments) : null;
-$latestChampion = $latestCompleted ? Standing::champion((int) $latestCompleted['id']) : null;
-
-// --- テンプレート変数 ---
-$pageTitle = SITE_NAME . ' - 麻雀トーナメント戦績サイト';
-$pageDescription = '雀魂で開催する麻雀トーナメントの戦績・対局結果・選手情報を掲載しています。';
-$pageOgp = [
-    'title' => SITE_NAME . ' - 麻雀トーナメント戦績サイト',
-    'description' => '雀魂で開催する麻雀トーナメントの戦績・対局結果・選手情報を掲載しています。',
-    'url' => 'https://jantama-records.onrender.com/',
+// --- OGP用の高速データのみ先行取得（ローダー早期描画のため） ---
+['data' => $stats] = fetchData(fn() => HallOfFame::siteStats());
+$stats = $stats ?? [
+    'total_tournaments' => 0, 'completed_tournaments' => 0, 'total_players' => 0,
+    'total_tables' => 0, 'done_tables' => 0, 'total_rounds' => 0,
 ];
-$pageStyle = <<<'CSS'
-/* Hero */
-.lp-hero {
-  text-align: center;
-  padding: 80px 20px 48px;
-  position: relative;
-  overflow: hidden;
-}
-.lp-hero-badge {
-  display: inline-block;
-  background: var(--badge-bg);
-  color: var(--badge-color);
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 4px 16px;
-  border-radius: 20px;
-  margin-bottom: 20px;
-  letter-spacing: 3px;
-  box-shadow: 0 2px 12px rgba(var(--accent-rgb), 0.3);
-  animation: fadeDown 0.8s ease both;
-}
-.lp-hero-title {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: clamp(2rem, 7vw, 3.2rem);
-  font-weight: 900;
-  background: var(--title-gradient);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: titleGrad 6s ease infinite, fadeUp 1s ease both;
-  margin-bottom: 12px;
-}
-.lp-hero-sub {
-  font-size: 1rem;
-  color: var(--text-sub);
-  max-width: 480px;
-  margin: 0 auto 32px;
-  line-height: 1.8;
-  animation: fadeUp 1s ease 0.2s both;
-}
-.lp-hero-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  animation: fadeUp 1s ease 0.4s both;
-}
-.lp-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 28px;
-  border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-family: 'Noto Sans JP', sans-serif;
-  text-decoration: none;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-.lp-btn:hover { transform: translateY(-2px); }
-.lp-btn-primary {
-  background: var(--btn-primary-bg);
-  color: var(--btn-text-color);
-  box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.3);
-}
-.lp-btn-primary:hover { box-shadow: 0 6px 28px rgba(var(--accent-rgb), 0.4); }
-.lp-btn-secondary {
-  background: var(--card);
-  color: var(--text);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-sm);
-}
-.lp-btn-secondary:hover { box-shadow: var(--shadow); }
 
-/* Stats */
-.lp-stats {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  flex-wrap: wrap;
-  padding: 40px 20px;
-  max-width: 600px;
-  margin: 0 auto;
+// キャラ画像ファイル一覧（装飾用）— ローダー用キャラを先に決める
+$charaFiles = [];
+$charaGlob = glob(__DIR__ . '/img/chara_deformed/*.png') ?: [];
+foreach ($charaGlob as $p) {
+    $charaFiles[] = basename($p);
 }
-.lp-stat {
-  text-align: center;
-}
-.lp-stat-num {
-  font-family: 'Inter', sans-serif;
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: var(--purple);
-  line-height: 1;
-}
-.lp-stat-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--text-sub);
-  margin-top: 4px;
+sort($charaFiles);
+
+// 各band境界のdivider用キャラ（ページロード毎にランダムで重複なし3体選出）
+$charaRandomPick = function (int $count) use ($charaFiles): array {
+    $n = count($charaFiles);
+    if ($n === 0) {
+        return [];
+    }
+    if ($n <= $count) {
+        $pool = $charaFiles;
+        shuffle($pool);
+        return $pool;
+    }
+    $keys = (array) array_rand($charaFiles, $count);
+    shuffle($keys);
+    return array_map(fn($k) => $charaFiles[$k], $keys);
+};
+// セクション区切り（divider）用キャラ：隣接セクション間に 3 体固定で配置（左・中央・右）。
+// あくまで区切り装飾として小さく目立たないサイズで置く。
+// 順序: Live→Champion, Champion→Series, Series→Vault, Vault→Roster,
+//       Roster→Archive, Archive→Spotlight。Hero 直後（Live 手前）は divider 無し。
+$dividerKeys = ['champion','series','vault','roster','archive','spotlight'];
+$dividerChars = [];
+$animPool = ['lp3Fuwafuwa', 'lp3Norinori', 'lp3Gunyon', 'lp3Pyon', 'lp3Indicator', 'lp3Yoisho'];
+foreach ($dividerKeys as $key) {
+    $trio = $charaRandomPick(3);
+    $dividerChars[$key] = [
+        [
+            'file'  => $trio[0] ?? '',
+            'anim'  => $animPool[array_rand($animPool)],
+            'delay' => number_format(mt_rand(0, 80) / 100, 2) . 's',
+        ],
+        [
+            'file'  => $trio[1] ?? '',
+            'anim'  => $animPool[array_rand($animPool)],
+            'delay' => number_format(mt_rand(0, 120) / 100, 2) . 's',
+        ],
+        [
+            'file'  => $trio[2] ?? '',
+            'anim'  => $animPool[array_rand($animPool)],
+            'delay' => number_format(mt_rand(0, 160) / 100, 2) . 's',
+        ],
+    ];
 }
 
-/* Section */
-.lp-section {
-  max-width: 900px;
-  margin: 0 auto 48px;
-  padding: 0 16px;
-}
-.lp-section-title {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 1.3rem;
-  font-weight: 900;
-  color: var(--text);
-  text-align: center;
-  margin-bottom: 24px;
-}
+// Divider 出力ヘルパー：3体固定（left / center / right）で横並び
+$dividerHtml = function (string $key) use ($dividerChars): string {
+    $trio = $dividerChars[$key] ?? null;
+    if (!$trio) {
+        return '';
+    }
+    $char = function (array $info, string $side): string {
+        if (empty($info['file'])) {
+            return '';
+        }
+        return '<img src="img/chara_deformed/' . h($info['file'])
+            . '" alt="" aria-hidden="true" class="lp3-divider-char is-' . h($side)
+            . ' anim-' . h($info['anim'])
+            . '" style="animation-delay:' . h($info['delay']) . '"'
+            . ' width="56" height="56" loading="lazy">';
+    };
+    return '<div class="lp3-section-divider" data-for="' . h($key) . '" aria-hidden="true">'
+        . $char($trio[0], 'left')
+        . $char($trio[1], 'center')
+        . $char($trio[2], 'right')
+        . '</div>';
+};
 
-/* Champion card */
-.lp-champion {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 24px;
-  background: linear-gradient(135deg, rgba(var(--gold-rgb), 0.08), rgba(var(--accent-rgb), 0.04));
-  border: 1px solid rgba(var(--gold-rgb), 0.25);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 24px;
-}
-.lp-champion-icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid rgba(var(--gold-rgb), 0.3);
-  flex-shrink: 0;
-}
-.lp-champion-info { flex: 1; }
-.lp-champion-name {
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: var(--text);
-  margin-bottom: 2px;
-}
-.lp-champion-tournament {
-  font-size: 0.8rem;
-  color: var(--text-sub);
-}
-.lp-champion-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-.lp-champion-tag {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 10px;
-  border-radius: 10px;
-  background: rgba(var(--accent-rgb), 0.08);
-  border: 1px solid rgba(var(--accent-rgb), 0.25);
-  color: var(--text-sub);
-}
-.lp-champion-tag.point {
-  background: rgba(var(--gold-rgb), 0.12);
-  border-color: rgba(var(--gold-rgb), 0.35);
-  color: var(--gold);
-}
-.lp-champion-link {
-  flex-shrink: 0;
-}
-@media (max-width: 560px) {
-  .lp-champion { flex-direction: column; text-align: center; }
-  .lp-champion-link { width: 100%; }
-  .lp-champion-link .lp-btn { width: 100%; justify-content: center; }
-}
+// ローダー用キャラ（ランダム3体: 左・主役・右）
+$loaderChars = $charaRandomPick(3);
+// ローダー各キャラに割り当てるアニメ（a〜f からランダム）
+$loaderAnimPool = ['a', 'b', 'c', 'd', 'e', 'f'];
+$loaderAnims = [
+    $loaderAnimPool[array_rand($loaderAnimPool)],
+    $loaderAnimPool[array_rand($loaderAnimPool)],
+    $loaderAnimPool[array_rand($loaderAnimPool)],
+];
+// animation-delay もランダムに散らして同期しないようにする
+$loaderDelays = [
+    number_format(mt_rand(0, 60) / 100, 2) . 's',
+    number_format(mt_rand(0, 60) / 100, 2) . 's',
+    number_format(mt_rand(0, 60) / 100, 2) . 's',
+];
 
-/* Tournament list */
-.lp-tournaments {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.lp-tournament-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  background: var(--card);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
-  text-decoration: none;
-  color: inherit;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.lp-tournament-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-}
-.lp-tournament-body { flex: 1; min-width: 0; }
-.lp-tournament-name {
-  font-weight: 800;
-  font-size: 0.95rem;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-.lp-tournament-meta {
-  font-size: 0.75rem;
-  color: var(--text-sub);
-}
-.lp-tournament-status {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 10px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.lp-tournament-status.preparing { background: rgba(var(--gold-rgb), 0.15); color: var(--gold); }
-.lp-tournament-status.active { background: rgba(var(--mint-rgb), 0.15); color: var(--success); }
-.lp-tournament-status.completed { background: rgba(var(--accent-rgb), 0.1); color: var(--text-sub); }
-.lp-tournament-chevron {
-  color: var(--text-light);
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
+// --- OGP（高速データのみで構築、詳細は後続で追加する省略版） ---
+$ogpDesc = '雀魂で開催する麻雀トーナメントの戦績・対局結果・選手情報を掲載。開催大会 '
+    . (int) $stats['total_tournaments'] . ' / 登録選手 '
+    . (int) $stats['total_players'] . '名 / 総半荘数 '
+    . (int) $stats['total_rounds'];
 
-/* Features */
-.lp-features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-}
-.lp-feature {
-  padding: 24px;
-  background: var(--card);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  text-align: center;
-}
-.lp-feature-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 12px;
-  font-size: 1.2rem;
-  background: rgba(var(--accent-rgb), 0.08);
-  color: var(--purple);
-}
-.lp-feature-title {
-  font-weight: 800;
-  font-size: 0.9rem;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-.lp-feature-desc {
-  font-size: 0.8rem;
-  color: var(--text-sub);
-  line-height: 1.6;
-}
+$pageTitle = SITE_NAME . ' | 雀魂トーナメント戦績サイト';
+$pageDescription = $ogpDesc;
+$pageOgp = [
+    'title' => $pageTitle,
+    'description' => $ogpDesc,
+    'url' => SITE_URL . '/',
+    'image' => SITE_URL . '/img/ogp-landing.jpg',
+    'image_alt' => SITE_NAME . ' - 雀魂トーナメント戦績ダッシュボード',
+];
 
-/* CTA */
-.lp-cta {
-  text-align: center;
-  padding: 48px 20px;
-}
-.lp-cta-title {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-.lp-cta-desc {
-  font-size: 0.85rem;
-  color: var(--text-sub);
-  margin-bottom: 20px;
-}
+$pageCss = ['css/landing-pop.css'];
+$pageScripts = ['js/landing-pop.js'];
+
+// Loader の Critical CSS をインラインで埋める（外部CSSの到着前でも表示できるように）
+// 注: 外部CSSが未ロードの段階で描画するため、ここでは CSS 変数が解決できず
+//     ハードコード色を使用する。このファイルに限っての意図的な例外。
+$pageStyle = <<<CSS
+.lp3-loader { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: #fff8f0; transition: opacity .7s ease, visibility .7s ease; }
+.lp3-loader.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+.lp3-loader-inner { text-align: center; padding: 20px; }
+.lp3-loader-cast { display: flex; gap: 18px; justify-content: center; align-items: flex-end; margin: 0 auto 22px; }
+.lp3-loader-char { display: block; transform-origin: 50% 100%; }
+.lp3-loader-char.is-main { width: 136px; height: 136px; }
+.lp3-loader-char.is-side { width: 88px; height: 88px; opacity: 0.92; }
+.lp3-loader-char.anim-a { animation: lp3LA 1.6s ease-in-out infinite; }
+.lp3-loader-char.anim-b { animation: lp3LB 1.8s ease-in-out infinite; }
+.lp3-loader-char.anim-c { animation: lp3LC 2.0s ease-in-out infinite; }
+.lp3-loader-char.anim-d { animation: lp3LD 1.4s ease-in-out infinite; }
+.lp3-loader-char.anim-e { animation: lp3LE 2.2s cubic-bezier(.3,1.3,.6,1) infinite; }
+.lp3-loader-char.anim-f { animation: lp3LF 1.7s ease-in-out infinite; }
+.lp3-loader-title { font-family: 'M PLUS Rounded 1c','Noto Sans JP',sans-serif; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 900; color: #3a2d50; letter-spacing: 0.08em; }
+.lp3-loader-status { margin-top: 14px; font-family: 'M PLUS Rounded 1c','Noto Sans JP',sans-serif; font-size: 0.88rem; color: #715c88; letter-spacing: 0.04em; min-height: 1.4em; }
+.lp3-loader-bar { margin: 14px auto 0; width: 200px; height: 3px; background: rgba(58,45,80,0.08); border-radius: 999px; overflow: hidden; }
+.lp3-loader-bar span { display: block; width: 40%; height: 100%; background: linear-gradient(90deg, #ff6aa6, #a56cff); border-radius: 999px; animation: lp3LoaderBar 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+@keyframes lp3LoaderBar { 0% { transform: translateX(-150%); } 100% { transform: translateX(400%); } }
+/* a: 上下バウンス + スクワッシュ */
+@keyframes lp3LA { 0%,100%{transform:translateY(0) scale(1,1);} 30%{transform:translateY(-14px) scale(.95,1.05);} 50%{transform:translateY(0) scale(1.18,.82);} 70%{transform:translateY(-6px) scale(1.02,.98);} }
+/* b: 左右スウェイ */
+@keyframes lp3LB { 0%,100%{transform:translateY(0) rotate(-8deg);} 50%{transform:translateY(-10px) rotate(8deg);} }
+/* c: ふわふわ浮遊 */
+@keyframes lp3LC { 0%,100%{transform:translateY(0) rotate(-2deg);} 25%{transform:translateY(-8px) rotate(1deg);} 50%{transform:translateY(-14px) rotate(-1deg);} 75%{transform:translateY(-6px) rotate(2deg);} }
+/* d: スケール脈動 */
+@keyframes lp3LD { 0%,100%{transform:scale(1,1);} 50%{transform:scale(1.1,.9);} }
+/* e: ピョン（ジャンプ→スクワッシュ） */
+@keyframes lp3LE { 0%,100%{transform:translateY(0) scale(1,1);} 15%{transform:translateY(4px) scale(1.12,.88);} 40%{transform:translateY(-26px) scale(.92,1.08);} 60%{transform:translateY(0) scale(1.2,.8);} 75%{transform:translateY(-6px) scale(.96,1.04);} }
+/* f: 軽いお辞儀 */
+@keyframes lp3LF { 0%,20%,100%{transform:translateY(0) rotate(0) scaleY(1);} 45%{transform:translateY(4px) rotate(-10deg) scaleY(.92);} 65%{transform:translateY(0) rotate(2deg) scaleY(1.02);} }
+@media (prefers-reduced-motion: reduce) { .lp3-loader-char, .lp3-loader-dots span { animation: none; } }
 CSS;
 
 require __DIR__ . '/../templates/header.php';
 ?>
 
-<!-- Hero -->
-<section class="lp-hero">
-  <div class="lp-hero-badge">MAHJONG TOURNAMENT</div>
-  <h1 class="lp-hero-title">雀魂部屋主催</h1>
-  <p class="lp-hero-sub">雀魂で開催する麻雀トーナメントの<br>対局結果・戦績・選手情報を掲載しています。</p>
-  <div class="lp-hero-actions">
-    <a href="tournaments" class="lp-btn lp-btn-primary">大会一覧を見る</a>
-    <a href="players" class="lp-btn lp-btn-secondary">選手一覧を見る</a>
-  </div>
-</section>
-
-<!-- Stats -->
-<div class="lp-stats">
-  <div class="lp-stat">
-    <div class="lp-stat-num"><?= $tournamentCount ?></div>
-    <div class="lp-stat-label">大会</div>
-  </div>
-  <div class="lp-stat">
-    <div class="lp-stat-num"><?= $playerCount ?></div>
-    <div class="lp-stat-label">登録選手</div>
-  </div>
-  <div class="lp-stat">
-    <div class="lp-stat-num"><?= count($completedTournaments) ?></div>
-    <div class="lp-stat-label">完了大会</div>
+<!-- Loader（header直後に出力→flushで先行描画） -->
+<div class="lp3-loader" id="lp3-loader" role="status" aria-live="polite" aria-label="読み込み中">
+  <div class="lp3-loader-inner">
+    <div class="lp3-loader-cast" aria-hidden="true">
+      <?php if (isset($loaderChars[0])): ?>
+        <img src="img/chara_deformed/<?= h($loaderChars[0]) ?>" alt="" class="lp3-loader-char is-side is-left anim-<?= h($loaderAnims[0]) ?>" style="animation-delay: <?= h($loaderDelays[0]) ?>" width="88" height="88">
+      <?php endif; ?>
+      <?php if (isset($loaderChars[1])): ?>
+        <img src="img/chara_deformed/<?= h($loaderChars[1]) ?>" alt="" class="lp3-loader-char is-main anim-<?= h($loaderAnims[1]) ?>" style="animation-delay: <?= h($loaderDelays[1]) ?>" width="136" height="136">
+      <?php endif; ?>
+      <?php if (isset($loaderChars[2])): ?>
+        <img src="img/chara_deformed/<?= h($loaderChars[2]) ?>" alt="" class="lp3-loader-char is-side is-right anim-<?= h($loaderAnims[2]) ?>" style="animation-delay: <?= h($loaderDelays[2]) ?>" width="88" height="88">
+      <?php endif; ?>
+    </div>
+    <div class="lp3-loader-title"><?= h(SITE_NAME) ?></div>
+    <div class="lp3-loader-status" id="lp3-loader-status">データを読み込んでいます…</div>
+    <div class="lp3-loader-bar" aria-hidden="true"><span></span></div>
   </div>
 </div>
 
+<?php
+// ローダーをブラウザへ先行送出してから重いクエリを実行
+if (function_exists('ob_get_level')) {
+    while (ob_get_level() > 0) { @ob_end_flush(); }
+}
+@flush();
+
+// --- 重いデータ取得（ローダー表示中に実行される） ---
+['data' => $tournaments] = fetchData(fn() => Tournament::allWithDetails());
+['data' => $championCounts] = fetchData(fn() => HallOfFame::championCounts(3));
+['data' => $randomPlayers] = fetchData(fn() => HallOfFame::randomPlayers(8));
+['data' => $highestScores] = fetchData(fn() => HallOfFame::highestRoundScores(3));
+['data' => $mostTops] = fetchData(fn() => HallOfFame::mostTopFinishes(3));
+['data' => $latestByEvent] = fetchData(fn() => HallOfFame::latestByEventType());
+['data' => $latestInterview] = fetchData(fn() => HallOfFame::latestInterview());
+
+$tournaments = $tournaments ?? [];
+$championCounts = $championCounts ?? [];
+$highestScores = $highestScores ?? [];
+$mostTops = $mostTops ?? [];
+$randomPlayers = $randomPlayers ?? [];
+$latestByEvent = $latestByEvent ?? [];
+
+$completedTournaments = array_values(array_filter($tournaments, fn($t) => $t['status'] === TournamentStatus::Completed->value));
+$activeTournaments = array_values(array_filter($tournaments, fn($t) => $t['status'] === TournamentStatus::InProgress->value));
+$preparingTournaments = array_values(array_filter($tournaments, fn($t) => $t['status'] === TournamentStatus::Preparing->value));
+
+$latestCompleted = $completedTournaments[0] ?? null;
+if ($latestCompleted) {
+    ['data' => $latestChampion] = fetchData(fn() => Standing::champion((int) $latestCompleted['id']));
+} else {
+    $latestChampion = null;
+}
+
+// 進行中大会詳細
+$liveCards = [];
+foreach ($activeTournaments as $t) {
+    $tid = (int) $t['id'];
+    ['data' => $standings] = fetchData(fn() => Standing::all($tid));
+    ['data' => $currentRound] = fetchData(fn() => HallOfFame::currentRound($tid));
+    $alive = array_values(array_filter($standings ?? [], fn($s) => (int) $s['eliminated_round'] === 0));
+    $liveCards[] = [
+        'tournament' => $t,
+        'current_round' => $currentRound,
+        'top3' => array_slice($alive, 0, 3),
+        'alive_count' => count($alive),
+    ];
+}
+
+// イベント種別ごとの開催数
+$eventCounts = [];
+foreach ($tournaments as $t) {
+    $et = $t['event_type'] ?? '';
+    if ($et === '') {
+        continue;
+    }
+    $eventCounts[$et] = ($eventCounts[$et] ?? 0) + 1;
+}
+?>
+
+<div class="lp3">
+
+<!-- ======================== -->
+<!-- HERO -->
+<!-- ======================== -->
+<section class="lp3-band band-hero lp3-hero">
+  <div class="lp3-inner">
+    <h1 class="lp3-hero-title">雀魂部屋主催</h1>
+    <p class="lp3-hero-sub">
+      雀魂で開催する麻雀トーナメントの対局結果・戦績・選手情報を掲載しています。
+    </p>
+
+    <div class="lp3-hero-actions">
+      <a href="tournaments" class="lp3-btn lp3-btn-primary lp3-btn-arrow">大会一覧を見る</a>
+      <a href="players" class="lp3-btn lp3-btn-secondary">選手一覧を見る</a>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ======================== -->
+<!-- LIVE -->
+<!-- ======================== -->
+<section class="lp3-band band-live lp3-reveal">
+  <div class="lp3-inner">
+    <h2 class="lp3-heading">開催中の大会</h2>
+  <?php if (!empty($liveCards)): ?>
+    <div class="lp3-live-scroller">
+      <?php foreach ($liveCards as $lc):
+          $lt = $lc['tournament'];
+          $lEvent = EventType::tryFrom($lt['event_type'] ?? '');
+      ?>
+        <a href="tournament_view?id=<?= (int) $lt['id'] ?>" class="lp3-card lp3-live-card">
+          <span class="lp3-live-pulse">LIVE</span>
+          <div class="lp3-live-name"><?= h($lt['name']) ?></div>
+          <div class="lp3-live-chips">
+            <?php if ($lEvent): ?>
+              <span class="lp3-chip is-pink"><?= h($lEvent->label()) ?></span>
+            <?php endif; ?>
+            <span class="lp3-chip is-mint"><?= (int) $lt['player_count'] ?>名参加</span>
+          </div>
+          <?php if ($lc['current_round']): ?>
+            <div class="lp3-live-progress">
+              <div>
+                <div class="lp3-live-progress-sub">進行中</div>
+                <div class="lp3-live-progress-round">第<?= (int) $lc['current_round'] ?>回戦</div>
+              </div>
+              <div class="lp3-live-alive">
+                勝ち残り <strong><?= (int) $lc['alive_count'] ?></strong> 名
+              </div>
+            </div>
+          <?php endif; ?>
+          <?php if (!empty($lc['top3'])): ?>
+            <div class="lp3-live-top">
+              <?php foreach ($lc['top3'] as $i => $s): ?>
+                <div class="lp3-live-top-row">
+                  <span class="lp3-live-top-rank">#<?= $i + 1 ?></span>
+                  <?php if (!empty($s['character_icon'])): ?>
+                    <img src="img/chara_deformed/<?= h($s['character_icon']) ?>" alt="" class="lp3-live-top-icon" width="32" height="32" loading="lazy">
+                  <?php else: ?>
+                    <span class="lp3-avatar-ph" style="width:32px;height:32px;font-size:0.5rem;">NO<br>IMG</span>
+                  <?php endif; ?>
+                  <span class="lp3-live-top-name"><?= h($s['nickname'] ?? $s['name']) ?></span>
+                  <span class="lp3-live-top-pt"><?= ((float) $s['total'] >= 0 ? '+' : '') . number_format((float) $s['total'], 1) ?></span>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  <?php elseif (!empty($preparingTournaments)):
+    $pt = $preparingTournaments[0];
+    $pEvent = EventType::tryFrom($pt['event_type'] ?? '');
+  ?>
+    <div class="lp3-card lp3-live-empty">
+      <strong>&#x2728; 次回大会 準備中</strong>
+      <?php if ($pEvent): ?>
+        <span class="lp3-chip is-pink" style="margin-right:6px;"><?= h($pEvent->label()) ?></span>
+      <?php endif; ?>
+      <a href="tournament?id=<?= (int) $pt['id'] ?>" class="lp3-btn lp3-btn-ghost lp3-btn-sm lp3-btn-arrow" style="margin-top:14px;"><?= h($pt['name']) ?></a>
+    </div>
+  <?php else: ?>
+    <div class="lp3-card lp3-live-empty">
+      <strong>&#x1F4AC; 現在開催中の大会はありません</strong>
+      <?php if ($latestCompleted): ?>
+        <div class="lp3-live-empty-sub">直近の終了大会はこちら</div>
+        <a href="tournament_view?id=<?= (int) $latestCompleted['id'] ?>" class="lp3-btn lp3-btn-primary lp3-btn-sm lp3-btn-arrow" style="margin-top:10px;"><?= h($latestCompleted['name']) ?></a>
+      <?php else: ?>
+        <a href="tournaments" class="lp3-btn lp3-btn-ghost lp3-btn-sm lp3-btn-arrow" style="margin-top:14px;">大会一覧へ</a>
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
+  </div>
+</section>
+
+
+
+<!-- ======================== -->
+<!-- CHAMPION SPOTLIGHT -->
+<!-- ======================== -->
 <?php if ($latestChampion && $latestCompleted): ?>
-<!-- Latest Champion -->
-<section class="lp-section">
-  <h2 class="lp-section-title">最新の優勝者</h2>
-  <div class="lp-champion">
-    <?php if (!empty($latestChampion['character_icon'])): ?>
-      <img src="img/chara_deformed/<?= h($latestChampion['character_icon']) ?>" alt="" class="lp-champion-icon" width="72" height="72" loading="lazy">
-    <?php endif; ?>
-    <div class="lp-champion-info">
-      <?php $championEventType = EventType::tryFrom($latestCompleted['event_type'] ?? ''); ?>
-      <div class="lp-champion-meta">
-        <?php if ($championEventType): ?>
-          <span class="lp-champion-tag"><?= h($championEventType->label()) ?></span>
+<?= $dividerHtml('champion') ?>
+<section class="lp3-band band-champion lp3-reveal">
+  <div class="lp3-inner">
+    <h2 class="lp3-heading">最新王者</h2>
+  <div class="lp3-card lp3-champion">
+    <div class="lp3-champion-grid">
+      <div class="lp3-champion-avatar">
+        <?php if (!empty($latestChampion['character_icon'])): ?>
+          <img src="img/chara_deformed/<?= h($latestChampion['character_icon']) ?>" alt="" width="170" height="170" loading="eager">
+        <?php else: ?>
+          <div class="lp3-avatar-ph" style="width:100%;height:100%;font-size:1.2rem;">NO<br>IMG</div>
         <?php endif; ?>
-        <span class="lp-champion-tag point"><?= number_format((float) $latestChampion['total'], 1) ?>pt</span>
       </div>
-      <div class="lp-champion-name"><?= h($latestChampion['nickname'] ?? $latestChampion['name']) ?></div>
-      <div class="lp-champion-tournament"><?= h($latestCompleted['name']) ?></div>
+      <div class="lp3-champion-body">
+        <?php
+        $champEvent = EventType::tryFrom($latestCompleted['event_type'] ?? '');
+        $champName = $latestChampion['nickname'] ?? $latestChampion['name'];
+        $champDate = !empty($latestCompleted['start_date']) ? date('Y.m.d', strtotime($latestCompleted['start_date'])) : '';
+        $champScore = (float) $latestChampion['total'];
+        ?>
+        <div class="lp3-champion-tournament-line">
+          <?php if ($champEvent): ?>
+            <span class="lp3-chip is-pink"><?= h($champEvent->label()) ?></span>
+          <?php endif; ?>
+          <span class="lp3-champion-tournament"><?= h($latestCompleted['name']) ?></span>
+          <?php if ($champDate !== ''): ?>
+            <span class="lp3-champion-date"><?= h($champDate) ?></span>
+          <?php endif; ?>
+        </div>
+        <div class="lp3-champion-main">
+          <h3 class="lp3-champion-name"><?= h($champName) ?></h3>
+          <div class="lp3-champion-score">
+            <span class="lp3-champion-score-num"><?= ($champScore >= 0 ? '+' : '') . number_format($champScore, 1) ?></span>
+            <span class="lp3-champion-score-unit">pt</span>
+          </div>
+        </div>
+        <div class="lp3-champion-actions">
+          <a href="tournament_view?id=<?= (int) $latestCompleted['id'] ?>" class="lp3-btn lp3-btn-primary lp3-btn-arrow">大会の詳細</a>
+          <a href="player?id=<?= (int) $latestChampion['player_id'] ?>" class="lp3-btn lp3-btn-secondary">選手ページへ</a>
+        </div>
+      </div>
     </div>
-    <div class="lp-champion-link">
-      <a href="tournament_view?id=<?= (int) $latestCompleted['id'] ?>" class="lp-btn lp-btn-secondary">大会結果を見る &#x203A;</a>
-    </div>
+  </div>
   </div>
 </section>
 <?php endif; ?>
 
-<!-- Tournaments -->
-<?php if (!empty($tournaments)): ?>
-<section class="lp-section">
-  <h2 class="lp-section-title">大会一覧</h2>
-  <div class="lp-tournaments">
-    <?php foreach (array_slice($tournaments, 0, 5) as $t):
-      $tsEnum = TournamentStatus::tryFrom($t['status']);
-      $isViewable = $t['status'] !== TournamentStatus::Preparing->value;
-      $href = $isViewable ? "tournament_view?id=" . (int) $t['id'] : "tournament?id=" . (int) $t['id'];
+
+
+<!-- ======================== -->
+<!-- SERIES HANGAR (+ 大会全体の記録 を統合) -->
+<!-- ======================== -->
+<?= $dividerHtml('series') ?>
+<section class="lp3-band band-series lp3-reveal">
+  <div class="lp3-inner">
+    <h2 class="lp3-heading">大会シリーズ</h2>
+  <div class="lp3-series">
+    <?php
+    $seriesOrder = [
+        EventType::Saikyoi->value => 'S',
+        EventType::Hooh->value => 'H',
+        EventType::Masters->value => 'M',
+        EventType::Hyakudanisen->value => '100',
+        EventType::Petit->value => 'P',
+    ];
+    foreach ($seriesOrder as $etv => $code):
+        $eventEnum = EventType::tryFrom($etv);
+        if (!$eventEnum) {
+            continue;
+        }
+        $latest = $latestByEvent[$etv] ?? null;
+        $count = $eventCounts[$etv] ?? 0;
+        $tsLatest = $latest ? TournamentStatus::tryFrom($latest['status']) : null;
+        $viewable = $latest && $latest['status'] !== TournamentStatus::Preparing->value;
+        $href = $latest ? ($viewable ? 'tournament_view?id=' . (int) $latest['id'] : 'tournament?id=' . (int) $latest['id']) : 'tournaments';
     ?>
-      <a href="<?= $href ?>" class="lp-tournament-card">
-        <div class="lp-tournament-body">
-          <div class="lp-tournament-name"><?= h($t['name']) ?></div>
-          <div class="lp-tournament-meta"><?= (int) $t['player_count'] ?>名参加<?= $t['status'] === TournamentStatus::Completed->value && !empty($t['winner_name']) ? ' ・ 優勝: ' . h($t['winner_name']) : '' ?></div>
-        </div>
-        <span class="lp-tournament-status <?= $tsEnum?->cssClass() ?? '' ?>"><?= h($tsEnum?->label() ?? '') ?></span>
-        <span class="lp-tournament-chevron">&#x203A;</span>
+      <a href="<?= h($href) ?>" class="lp3-card lp3-series-tile<?= $count === 0 ? ' is-empty' : '' ?>" data-code="<?= h((string) $code) ?>">
+        <span class="lp3-series-count">開催 <?= (int) $count ?> 回</span>
+        <div class="lp3-series-label"><?= h($eventEnum->label()) ?></div>
+        <?php if ($latest): ?>
+          <div class="lp3-series-latest-title">最新</div>
+          <div class="lp3-series-latest-name"><?= h($latest['name']) ?></div>
+          <?php if ($tsLatest && $latest['status'] !== TournamentStatus::Completed->value): ?>
+            <div class="lp3-series-status"><?= h($tsLatest->label()) ?></div>
+          <?php endif; ?>
+        <?php else: ?>
+          <div class="lp3-series-empty-note">開催予定なし</div>
+        <?php endif; ?>
       </a>
     <?php endforeach; ?>
   </div>
-  <?php if ($tournamentCount > 5): ?>
-    <div style="text-align: center; margin-top: 16px;">
-      <a href="tournaments" class="lp-btn lp-btn-secondary">すべての大会を見る</a>
+  <div class="lp3-stats">
+    <a href="tournaments" class="lp3-card lp3-stat">
+      <div class="lp3-stat-num lp3-count" data-count="<?= (int) $stats['total_tournaments'] ?>"><?= (int) $stats['total_tournaments'] ?></div>
+      <div class="lp3-stat-label">開催大会</div>
+    </a>
+    <a href="tournaments" class="lp3-card lp3-stat">
+      <div class="lp3-stat-num lp3-count" data-count="<?= (int) $stats['completed_tournaments'] ?>"><?= (int) $stats['completed_tournaments'] ?></div>
+      <div class="lp3-stat-label">終了大会</div>
+    </a>
+    <a href="players" class="lp3-card lp3-stat">
+      <div class="lp3-stat-num lp3-count" data-count="<?= (int) $stats['total_players'] ?>"><?= (int) $stats['total_players'] ?></div>
+      <div class="lp3-stat-label">登録選手</div>
+    </a>
+    <div class="lp3-card lp3-stat">
+      <div class="lp3-stat-num lp3-count" data-count="<?= (int) $stats['done_tables'] ?>"><?= (int) $stats['done_tables'] ?></div>
+      <div class="lp3-stat-label">消化卓数</div>
     </div>
-  <?php endif; ?>
+    <div class="lp3-card lp3-stat">
+      <div class="lp3-stat-num lp3-count" data-count="<?= (int) $stats['total_rounds'] ?>"><?= (int) $stats['total_rounds'] ?></div>
+      <div class="lp3-stat-label">半荘数</div>
+    </div>
+    <a href="tournaments" class="lp3-card lp3-stat">
+      <div class="lp3-stat-num lp3-count" data-count="<?= count($activeTournaments) ?>"><?= count($activeTournaments) ?></div>
+      <div class="lp3-stat-label">開催中</div>
+    </a>
+  </div>
+  </div>
+</section>
+
+
+
+<!-- ======================== -->
+<!-- VAULT -->
+<!-- ======================== -->
+<?= $dividerHtml('vault') ?>
+<section class="lp3-band band-vault lp3-reveal">
+  <div class="lp3-inner">
+    <h2 class="lp3-heading">大会記録</h2>
+  <div class="lp3-vault">
+
+    <!-- 通算優勝回数 TOP3 -->
+    <div class="lp3-card lp3-vault-cell is-wide">
+      <div class="lp3-vault-title">通算優勝回数 TOP3</div>
+      <div class="lp3-vault-sub">大会を制した累計回数</div>
+      <?php if (!empty($championCounts)):
+          $medals = ['🥇', '🥈', '🥉'];
+      ?>
+        <div class="lp3-champion-list">
+          <?php foreach ($championCounts as $i => $ch): $rank = $i + 1; ?>
+            <a href="player?id=<?= (int) $ch['player_id'] ?>" class="lp3-card lp3-champion-row">
+              <span class="lp3-rank" aria-label="<?= h((string) $rank) ?>位"><?= h($medals[$i] ?? '') ?></span>
+              <?php if (!empty($ch['character_icon'])): ?>
+                <img src="img/chara_deformed/<?= h($ch['character_icon']) ?>" alt="" class="lp3-avatar" width="48" height="48" loading="lazy">
+              <?php else: ?>
+                <span class="lp3-avatar-ph">NO<br>IMG</span>
+              <?php endif; ?>
+              <span class="lp3-champion-name-text"><?= h($ch['player_name']) ?></span>
+              <span class="lp3-champion-count"><?= (int) $ch['win_count'] ?><small>回優勝</small></span>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php else: ?>
+        <div class="lp3-vault-empty">完了大会がまだありません</div>
+      <?php endif; ?>
+    </div>
+
+    <!-- 最高ラウンド得点 TOP3 -->
+    <div class="lp3-card lp3-vault-cell is-half">
+      <div class="lp3-vault-title">最高ラウンド得点 TOP3</div>
+      <div class="lp3-vault-sub">1試合（半荘1回）で記録された歴代最高スコア</div>
+      <?php if (!empty($highestScores)):
+          $medals = ['🥇', '🥈', '🥉'];
+      ?>
+        <div class="lp3-champion-list">
+          <?php foreach ($highestScores as $i => $hs): $rank = $i + 1; ?>
+            <a href="player?id=<?= (int) $hs['player_id'] ?>" class="lp3-card lp3-champion-row">
+              <span class="lp3-rank" aria-label="<?= h((string) $rank) ?>位"><?= h($medals[$i] ?? '') ?></span>
+              <?php if (!empty($hs['character_icon'])): ?>
+                <img src="img/chara_deformed/<?= h($hs['character_icon']) ?>" alt="" class="lp3-avatar" width="48" height="48" loading="lazy">
+              <?php else: ?>
+                <span class="lp3-avatar-ph">NO<br>IMG</span>
+              <?php endif; ?>
+              <span class="lp3-champion-name-text"><?= h($hs['player_name']) ?></span>
+              <span class="lp3-champion-count"><?= ((float) $hs['score'] >= 0 ? '+' : '') . number_format((float) $hs['score'], 1) ?><small>pt</small></span>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php else: ?>
+        <div class="lp3-vault-empty">記録なし</div>
+      <?php endif; ?>
+    </div>
+
+    <!-- 最多卓1位 TOP3 -->
+    <div class="lp3-card lp3-vault-cell is-half">
+      <div class="lp3-vault-title">最多卓1位 TOP3</div>
+      <div class="lp3-vault-sub">卓内で1位を取った累計回数</div>
+      <?php if (!empty($mostTops)):
+          $medals = ['🥇', '🥈', '🥉'];
+      ?>
+        <div class="lp3-champion-list">
+          <?php foreach ($mostTops as $i => $mt): $rank = $i + 1; ?>
+            <a href="player?id=<?= (int) $mt['player_id'] ?>" class="lp3-card lp3-champion-row">
+              <span class="lp3-rank" aria-label="<?= h((string) $rank) ?>位"><?= h($medals[$i] ?? '') ?></span>
+              <?php if (!empty($mt['character_icon'])): ?>
+                <img src="img/chara_deformed/<?= h($mt['character_icon']) ?>" alt="" class="lp3-avatar" width="48" height="48" loading="lazy">
+              <?php else: ?>
+                <span class="lp3-avatar-ph">NO<br>IMG</span>
+              <?php endif; ?>
+              <span class="lp3-champion-name-text"><?= h($mt['player_name']) ?></span>
+              <span class="lp3-champion-count"><?= (int) $mt['top_count'] ?><small>回</small></span>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php else: ?>
+        <div class="lp3-vault-empty">記録なし</div>
+      <?php endif; ?>
+    </div>
+
+  </div>
+  </div>
+</section>
+
+
+
+<!-- ======================== -->
+<!-- ROSTER — ランダム選手ピックアップ -->
+<!-- ======================== -->
+<?php if (!empty($randomPlayers)): ?>
+<?= $dividerHtml('roster') ?>
+<section class="lp3-band band-roster lp3-reveal">
+  <div class="lp3-inner">
+    <h2 class="lp3-heading">選手紹介</h2>
+  <div class="lp3-roster-scroller">
+    <?php foreach ($randomPlayers as $pl):
+        $bestScore = isset($pl['best_score']) ? (float) $pl['best_score'] : null;
+        $winCount = (int) ($pl['win_count'] ?? 0);
+        $tCount = (int) ($pl['tournament_count'] ?? 0);
+    ?>
+      <a href="player?id=<?= (int) $pl['player_id'] ?>" class="lp3-card lp3-roster-card">
+        <?php if (!empty($pl['character_icon'])): ?>
+          <img src="img/chara_deformed/<?= h($pl['character_icon']) ?>" alt="" class="lp3-roster-avatar" width="90" height="90" loading="lazy">
+        <?php else: ?>
+          <span class="lp3-roster-avatar-ph">NO<br>IMG</span>
+        <?php endif; ?>
+        <div class="lp3-roster-name"><?= h($pl['player_name']) ?></div>
+        <div class="lp3-roster-badges">
+          <?php if ($winCount > 0): ?>
+            <span class="lp3-roster-badge">👑 優勝 <?= $winCount ?>回</span>
+          <?php endif; ?>
+          <span class="lp3-roster-badge is-ghost">出場 <?= $tCount ?>大会</span>
+        </div>
+        <div class="lp3-roster-best">
+          <?php if ($bestScore !== null): ?>
+            <span class="lp3-roster-best-label">最高スコア</span>
+            <span class="lp3-roster-best-num"><?= ($bestScore >= 0 ? '+' : '') . number_format($bestScore, 1) ?><small>pt</small></span>
+          <?php else: ?>
+            <span class="lp3-roster-best-label">最高スコア</span>
+            <span class="lp3-roster-best-num is-na">—</span>
+          <?php endif; ?>
+        </div>
+      </a>
+    <?php endforeach; ?>
+  </div>
+  <div style="text-align:right;margin-top:14px;">
+    <a href="players" class="lp3-btn lp3-btn-ghost lp3-btn-sm lp3-btn-arrow">選手一覧を見る</a>
+  </div>
+  </div>
 </section>
 <?php endif; ?>
 
-<!-- Features -->
-<section class="lp-section">
-  <h2 class="lp-section-title">機能紹介</h2>
-  <div class="lp-features">
-    <div class="lp-feature">
-      <div class="lp-feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
-      <div class="lp-feature-title">卓の自動振り分け</div>
-      <div class="lp-feature-desc">ランダム・スイスドロー・ポット分けから選べる卓組み。同卓回避オプション付き。</div>
-    </div>
-    <div class="lp-feature">
-      <div class="lp-feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      <div class="lp-feature-title">リアルタイム戦績</div>
-      <div class="lp-feature-desc">ラウンドごとのスコア・勝ち抜き状況をリアルタイムに追跡。総合ポイント自動集計。</div>
-    </div>
-    <div class="lp-feature">
-      <div class="lp-feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <div class="lp-feature-title">選手プロフィール</div>
-      <div class="lp-feature-desc">選手ごとの通算成績・対戦履歴・スコア推移を詳細に分析。</div>
-    </div>
-    <div class="lp-feature">
-      <div class="lp-feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
-      <div class="lp-feature-title">優勝インタビュー</div>
-      <div class="lp-feature-desc">大会優勝者への自由形式のインタビューを掲載。Q&Aの数や内容は毎回カスタマイズ可能。</div>
-    </div>
-  </div>
-</section>
 
-<!-- CTA -->
-<section class="lp-cta">
-  <div class="lp-cta-title">大会の詳細を見てみよう</div>
-  <div class="lp-cta-desc">過去の対局結果や選手情報をチェックできます。</div>
-  <div class="lp-hero-actions">
-    <a href="tournaments" class="lp-btn lp-btn-primary">大会一覧へ</a>
-    <a href="players" class="lp-btn lp-btn-secondary">選手一覧へ</a>
+
+<!-- ======================== -->
+<!-- ARCHIVE -->
+<!-- ======================== -->
+<?php if (!empty($tournaments)): ?>
+<?= $dividerHtml('archive') ?>
+<section class="lp3-band band-archive lp3-reveal">
+  <div class="lp3-inner">
+    <h2 class="lp3-heading">過去の大会</h2>
+  <div class="lp3-archive-grid">
+    <?php foreach (array_slice($tournaments, 0, 8) as $t):
+        $tsEnum = TournamentStatus::tryFrom($t['status']);
+        $etEnum = EventType::tryFrom($t['event_type'] ?? '');
+        $isViewable = $t['status'] !== TournamentStatus::Preparing->value;
+        $href = $isViewable ? 'tournament_view?id=' . (int) $t['id'] : 'tournament?id=' . (int) $t['id'];
+        $dateStr = !empty($t['start_date']) ? date('Y.m.d', strtotime($t['start_date'])) : '';
+    ?>
+      <a href="<?= h($href) ?>" class="lp3-card lp3-archive-row">
+        <span class="lp3-archive-date"><?= h($dateStr) ?></span>
+        <span class="lp3-archive-name"><?= h($t['name']) ?></span>
+        <span class="lp3-archive-event"><?= h($etEnum?->label() ?? '-') ?></span>
+        <span class="lp3-archive-winner">
+          <?php if ($t['status'] === TournamentStatus::Completed->value && !empty($t['winner_name'])): ?>
+            &#x1F451; <strong><?= h($t['winner_name']) ?></strong>
+          <?php else: ?>
+            <?= (int) $t['player_count'] ?>名参加
+          <?php endif; ?>
+        </span>
+        <span class="lp3-archive-status <?= $tsEnum?->cssClass() ?? '' ?>"><?= h($tsEnum?->label() ?? '') ?></span>
+      </a>
+    <?php endforeach; ?>
+  </div>
+  <?php if (count($tournaments) > 8): ?>
+    <div style="text-align:right;margin-top:14px;">
+      <a href="tournaments" class="lp3-btn lp3-btn-ghost lp3-btn-sm lp3-btn-arrow">すべての大会</a>
+    </div>
+  <?php endif; ?>
   </div>
 </section>
+<?php endif; ?>
+
+
+
+<!-- ======================== -->
+<!-- SPOTLIGHT (Interview) -->
+<!-- ======================== -->
+<?php if ($latestInterview): ?>
+<?= $dividerHtml('spotlight') ?>
+<section class="lp3-band band-spotlight lp3-reveal">
+  <div class="lp3-inner">
+    <h2 class="lp3-heading">優勝インタビュー</h2>
+  <?php $spEvent = EventType::tryFrom($latestInterview['event_type'] ?? ''); ?>
+  <div class="lp3-card lp3-spotlight">
+    <div class="lp3-spotlight-grid">
+      <?php if (!empty($latestInterview['winner_icon'])): ?>
+        <img src="img/chara_deformed/<?= h($latestInterview['winner_icon']) ?>" alt="" class="lp3-spotlight-avatar" width="90" height="90" loading="lazy">
+      <?php elseif (!empty($latestInterview['winner_name'])): ?>
+        <span class="lp3-avatar-ph lp3-spotlight-avatar" style="font-size:0.7rem;">NO<br>IMG</span>
+      <?php endif; ?>
+      <div class="lp3-spotlight-body">
+        <div class="lp3-spotlight-meta">
+          <?php if ($spEvent): ?>
+            <span class="lp3-chip is-pink"><?= h($spEvent->label()) ?></span>
+          <?php endif; ?>
+          <span class="lp3-spotlight-tournament"><?= h($latestInterview['tournament_name']) ?></span>
+        </div>
+        <?php if (!empty($latestInterview['winner_name'])): ?>
+          <div class="lp3-spotlight-name"><?= h($latestInterview['winner_name']) ?></div>
+        <?php endif; ?>
+      </div>
+      <a href="interview?id=<?= (int) $latestInterview['tournament_id'] ?>" class="lp3-btn lp3-btn-primary lp3-btn-arrow">インタビューを読む</a>
+    </div>
+  </div>
+  </div>
+</section>
+<?php endif; ?>
+
+</div><!-- /.lp3 -->
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>
