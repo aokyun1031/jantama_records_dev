@@ -27,23 +27,35 @@
 
 ## クイックスタート
 
-### GitHub Codespaces（推奨）
+開発環境は用途で使い分ける。
+
+| 環境 | 接続先 DB | 想定用途 |
+|---|---|---|
+| **Docker Compose（ローカル）** | ローカル Postgres コンテナ | 通常の開発。Neon compute を消費しない |
+| **GitHub Codespaces** | Neon dev ブランチ | クラウド IDE / 外出先 / 共有検証 |
+
+### Docker Compose（ローカル・推奨）
+
+`.env.example` のデフォルト接続先がローカル Postgres コンテナ（`db` サービス）。追加設定不要でそのまま起動可能。
+
+```bash
+cp .env.example .env              # そのままローカルDB接続（Turnstileキーは必要なら編集）
+cp phinx.php.example phinx.php
+docker compose up -d              # web + db 起動（db 初回起動時に current_schema.sql 自動適用）
+docker compose exec web composer install
+docker compose exec web php vendor/bin/phinx seed:run   # db/seed_data.sql を投入
+```
+
+`http://localhost:8080` でアクセス可能。DB データは Docker volume `pgdata` に永続化。
+
+ローカル DB は **マイグを実行しない**方針（古いマイグが本番 init.sql 前提で空 DB では通らないため）。スキーマは pg_dump 由来の `db/current_schema.sql`、データは `db/seed_data.sql` を `DevDataSeeder` が流す。`phinx seed:run` は何度でも実行でき、テストデータを壊しても完全復元できる。詳細 → [`docs/local-dev-seed.md`](./docs/local-dev-seed.md)。
+
+### GitHub Codespaces
 
 1. リポジトリ → **Code** → **Codespaces** → **Create codespace**
 2. 初回起動時に `.devcontainer/setup.sh` が自動実行され、PHP拡張インストール・`composer install`・`phinx.php`・`.env` 作成まで完了する
-3. `DATABASE_URL` を設定（**Codespaces Secrets** 推奨。GitHub → Settings → Codespaces → Secrets）
+3. `DATABASE_URL` に **Neon dev ブランチ** の接続文字列を設定（**Codespaces Secrets** 推奨。GitHub → Settings → Codespaces → Secrets）+ `PGSSLMODE=require`
 4. ポート `8080` の地球儀アイコン（Open in Browser）をクリック
-
-### Docker Compose（ローカル）
-
-```bash
-cp .env.example .env            # Neon dev接続文字列・Turnstileキーを設定
-cp phinx.php.example phinx.php
-docker compose up -d
-docker compose exec web composer install
-```
-
-`http://localhost:8080` でアクセス可能。
 
 ---
 
@@ -51,7 +63,8 @@ docker compose exec web composer install
 
 ```
 本番:  Cloudflare Workers ──→ Render ──→ Neon (production)
-開発:  Codespaces / Docker ──→ Neon (dev)
+開発:  Docker Compose ──→ ローカル Postgres（コンテナ / volume 永続化）
+開発:  Codespaces     ──→ Neon (dev ブランチ)
 ```
 
 ```mermaid
@@ -84,7 +97,8 @@ graph TB
 
     subgraph DevEnv["開発環境"]
         Codespaces["GitHub Codespaces\n:8080"]:::devStyle
-        Docker["Docker Compose\n:8080"]:::devStyle
+        Docker["Docker Compose\nweb :8080"]:::devStyle
+        LocalPg[("ローカル Postgres\nコンテナ :5432")]:::dbStyle
         E2E(["Playwright E2E\ngit push 時に自動実行"]):::devStyle
     end
 
@@ -102,7 +116,7 @@ graph TB
 
     PHP -->|"クエリ (リトライ×3)"| Prod
     Codespaces -->|"クエリ"| Dev
-    Docker -->|"クエリ"| Dev
+    Docker -->|"クエリ"| LocalPg
 
     GitHub -->|"main マージ時\n自動デプロイ"| App
     Monitor -->|"死活監視"| PHP
@@ -118,14 +132,14 @@ graph TB
 | フロントエンド | HTML / CSS / JavaScript（フレームワーク不使用）、Google Fonts（Noto Sans JP, Inter） |
 | データベース | PostgreSQL（Neon） |
 | マイグレーション | Phinx |
-| ホスティング | Render（本番）、GitHub Codespaces / Docker Compose（開発） |
+| ホスティング | Render（本番）、Docker Compose / GitHub Codespaces（開発） |
 | エッジ/CDN | Cloudflare Workers、Workers KV、Cron Triggers |
 | セキュリティ | Cloudflare Turnstile（bot 対策） |
 | 解析 | Cloudflare Web Analytics |
 | 監視 | UptimeRobot |
 | テスト | Playwright（E2E） |
 
-DBはすべて Neon（リモート）。ローカル DB コンテナは不要。Neon 無料枠のスリープ復帰を考慮し、DB接続はリトライ付き（最大3回・指数バックオフ）。
+本番は Neon production、Codespaces は Neon dev、ローカル Docker は Postgres コンテナ（volume `pgdata` で永続化）。Neon 無料枠のスリープ復帰を考慮し、DB接続はリトライ付き（最大3回・指数バックオフ）。
 
 ---
 
@@ -191,10 +205,14 @@ php -S 0.0.0.0:8080 -t public
 ### Docker Compose
 
 ```bash
-docker compose up -d              # 起動
-docker compose down               # 停止・削除
-docker compose exec web bash      # コンテナ内に入る
+docker compose up -d              # web + db(postgres) 起動
+docker compose down               # 停止（volume pgdata は保持）
+docker compose down -v            # 停止 + DB データ削除（リセット）
+docker compose exec web bash      # web コンテナに入る
+docker compose exec db psql -U postgres jantama  # ローカルDBへ psql 接続
 ```
+
+ホスト側から直接 DB を覗く場合は `psql -h localhost -U postgres -d jantama`（パスワード `postgres`）。
 
 ---
 
@@ -222,11 +240,37 @@ docker compose exec web php vendor/bin/phinx seed:run
 php vendor/bin/phinx migrate --fake
 ```
 
+### 接続先 DB の使い分け
+
+| 環境 | 接続先 | `.env` 設定 | スキーマ構築 | データ |
+|---|---|---|---|---|
+| Render（本番） | Neon production | Render 管理画面の環境変数 | `phinx migrate`（start.sh 自動） | 本番データ |
+| GitHub Codespaces | Neon dev ブランチ | `DATABASE_URL=postgresql://...neon.tech/...?sslmode=require` / `PGSSLMODE=require` | 既存のまま（Neon dev は production から派生） | dev ブランチのデータ |
+| Docker Compose（ローカル） | ローカル Postgres コンテナ | `DATABASE_URL=postgresql://postgres:postgres@db:5432/jantama` / `PGSSLMODE=disable` | `db/current_schema.sql` を initdb.d で自動適用 | `phinx seed:run` で `db/seed_data.sql` を流す |
+
+`.env.example` にはローカル接続をデフォルトで記載、Neon dev 用はコメントで併記。`config/database.php` と `phinx.php` は両方とも `DATABASE_URL` + `PGSSLMODE` を読むため、環境変数切替のみで動作する。
+
+### ローカル Postgres コンテナ
+
+```bash
+docker compose up -d                 # web + db 起動（初回は db が自動でスキーマ適用）
+docker compose exec web php vendor/bin/phinx seed:run  # テストデータ投入（何度でも可）
+docker compose down -v               # DB データ完全削除
+docker compose up -d                 # 再起動すればスキーマ再構築
+```
+
+- image: `postgres:17-alpine`（Neon と同バージョン）
+- 永続化: Docker volume `pgdata`
+- 資格情報: `postgres` / `postgres` / db `jantama`
+- ホスト公開ポート: `5432`（`psql -h localhost -U postgres -d jantama` で接続可）
+- **マイグ不実行**: ローカルでは `start.sh` をバイパス（`command: apache2-foreground`）。スキーマは dump、データは seed で管理
+- テストデータ更新手順 → [`docs/local-dev-seed.md`](./docs/local-dev-seed.md)
+
 ### Neon ブランチ運用
 
 ```
-Neon production (default) ← Render本番が接続
-Neon dev                  ← 開発環境が接続
+Neon production (default) ← Render 本番が接続
+Neon dev                  ← Codespaces が接続
 ```
 
 #### 開発フロー
@@ -352,3 +396,4 @@ Claude Code 用の skill / slash command / agent / hook を `.claude/` に配置
 | [`CLAUDE.md`](./CLAUDE.md) | コーディング規約・作業ルール（Claude Code 向け正本） |
 | [`.claude/README.md`](./.claude/README.md) | 開発者向け Claude Code ガイド（skill/command/agent/hook） |
 | [`docs/`](./docs/) | DB 設計書・機能設計メモ |
+| [`docs/local-dev-seed.md`](./docs/local-dev-seed.md) | ローカル Postgres コンテナのスキーマ/seed 運用と dump 更新手順 |

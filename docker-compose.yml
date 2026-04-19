@@ -1,9 +1,36 @@
 services:
   web:
     build: .
+    # ローカル開発では本番の start.sh（phinx migrate 実行）をスキップし、
+    # Apache のみ起動する。スキーマは db サービスの initdb.d で構築される。
+    command: apache2-foreground
     ports:
       - "8080:80"
     volumes:
       - .:/var/www/html
     env_file:
       - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: jantama
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # 初回起動時（= pgdata が空）にスキーマを自動適用
+      - ./db/current_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jantama"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
