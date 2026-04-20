@@ -12,7 +12,7 @@
   var loader = document.getElementById('lp3-loader');
   if (loader) {
     var hidden = false;
-    var MIN_DISPLAY_MS = 1500;
+    var MIN_DISPLAY_MS = 2000;
     var statusEl = document.getElementById('lp3-loader-status');
     var statusTimers = [];
     if (statusEl) {
@@ -138,6 +138,7 @@
     // ---- 4. Teleport (loop wrap) ----
     var teleporting = false;
     var dragState = null;
+    var navBusy = false; // nav ボタン押下中は teleport 禁止（smooth scroll 中断を防ぐ）
     function teleport(delta) {
       teleporting = true;
       scroller.scrollLeft += delta;
@@ -145,7 +146,7 @@
       requestAnimationFrame(function () { teleporting = false; });
     }
     function checkTeleport() {
-      if (teleporting) return;
+      if (teleporting || navBusy) return;
       var sl = scroller.scrollLeft;
       if (sl < origStart - 1) {
         teleport(setWidth);
@@ -188,9 +189,13 @@
       if (suppressClick) { e.preventDefault(); e.stopPropagation(); }
     }, true);
 
-    // ---- 6. Nav UI (prev / dots / next) ----
-    var nav = document.createElement('div');
-    nav.className = 'lp3-scroller-nav';
+    // ---- 6. Nav UI (矢印は scroller 左右端 absolute、ドットは下部中央) ----
+    // scroller を frame でラップし、矢印を frame 内に absolute 配置。
+    // スマホでは矢印を CSS で非表示にして drag/swipe + ドット操作のみにする。
+    var frame = document.createElement('div');
+    frame.className = 'lp3-scroller-frame';
+    scroller.parentNode.insertBefore(frame, scroller);
+    frame.appendChild(scroller);
 
     var makeArrow = function (dir) {
       var b = document.createElement('button');
@@ -204,6 +209,8 @@
     };
     var prev = makeArrow('prev');
     var next = makeArrow('next');
+    frame.appendChild(prev);
+    frame.appendChild(next);
 
     var dots = document.createElement('div');
     dots.className = 'lp3-dots' + (opts.compact ? ' is-compact' : '');
@@ -221,10 +228,11 @@
       dots.appendChild(b);
       return b;
     });
-    nav.appendChild(prev);
+
+    var nav = document.createElement('div');
+    nav.className = 'lp3-scroller-nav';
     nav.appendChild(dots);
-    nav.appendChild(next);
-    scroller.parentNode.insertBefore(nav, scroller.nextSibling);
+    frame.parentNode.insertBefore(nav, frame.nextSibling);
 
     // ---- 7. Active dot tracking (mod n to map clones→originals) ----
     function currentLogicalIdx() {
@@ -255,13 +263,26 @@
     window.addEventListener('resize', updateActive);
     updateActive();
 
-    // ---- 8. prev/next: 常に有効、境界は teleport が自動でラップ ----
-    prev.addEventListener('click', function () {
-      scroller.scrollBy({ left: -cardStep, behavior: 'smooth' });
-    });
-    next.addEventListener('click', function () {
-      scroller.scrollBy({ left: cardStep, behavior: 'smooth' });
-    });
+    // ---- 8. prev/next: 常に有効、境界は smooth 完了後にラップ ----
+    // navBusy 中は checkTeleport を停止 → smooth アニメが teleport で中断しない。
+    // 完了後に境界越えていたら teleport で原位置にワープ（scroll-snap 撤廃済みなので snap 吸着なし）。
+    function navScroll(delta) {
+      if (navBusy) return;
+      navBusy = true;
+      var target = scroller.scrollLeft + delta;
+      scroller.scrollTo({ left: target, behavior: 'smooth' });
+      setTimeout(function () {
+        navBusy = false;
+        var sl = scroller.scrollLeft;
+        if (sl < origStart - 1) {
+          teleport(setWidth);
+        } else if (sl >= origStart + setWidth - 1) {
+          teleport(-setWidth);
+        }
+      }, 600);
+    }
+    prev.addEventListener('click', function () { navScroll(-cardStep); });
+    next.addEventListener('click', function () { navScroll(cardStep); });
   }
 
   var liveScroller = document.querySelector('.lp3-live-scroller');

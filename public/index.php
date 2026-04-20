@@ -117,8 +117,8 @@ $pageOgp = [
     'image_alt' => SITE_NAME . ' - 雀魂トーナメント戦績ダッシュボード',
 ];
 
-$pageCss = ['css/landing-pop.css'];
-$pageScripts = ['js/landing-pop.js'];
+$pageCss = ['css/landing-pop.css', 'css/sakura.css'];
+$pageScripts = ['js/landing-pop.js', 'js/sakura.js'];
 
 // Loader の Critical CSS をインラインで埋める（外部CSSの到着前でも表示できるように）
 // 注: 外部CSSが未ロードの段階で描画するため、ここでは CSS 変数が解決できず
@@ -175,10 +175,13 @@ require __DIR__ . '/../templates/header.php';
       <?php endif; ?>
     </div>
     <div class="lp3-loader-title"><?= h(SITE_NAME) ?></div>
-    <div class="lp3-loader-status" id="lp3-loader-status">データを読み込んでいます…</div>
+    <div class="lp3-loader-status" id="lp3-loader-status">ロビー清掃中…</div>
     <div class="lp3-loader-bar" aria-hidden="true"><span></span></div>
   </div>
 </div>
+
+<!-- 桜演出コンテナ（JS が .sakura-petal を動的追加） -->
+<div class="sakura-container" aria-hidden="true"></div>
 
 <?php
 // ローダーをブラウザへ先行送出してから重いクエリを実行
@@ -194,7 +197,7 @@ if (function_exists('ob_get_level')) {
 ['data' => $highestScores] = fetchData(fn() => HallOfFame::highestRoundScores(3));
 ['data' => $mostTops] = fetchData(fn() => HallOfFame::mostTopFinishes(3));
 ['data' => $latestByEvent] = fetchData(fn() => HallOfFame::latestByEventType());
-['data' => $latestInterview] = fetchData(fn() => HallOfFame::latestInterview());
+['data' => $latestInterviews] = fetchData(fn() => HallOfFame::latestInterviews(5));
 
 $tournaments = $tournaments ?? [];
 $championCounts = $championCounts ?? [];
@@ -351,7 +354,7 @@ foreach ($tournaments as $t) {
     <div class="lp3-champion-grid">
       <div class="lp3-champion-avatar">
         <?php if (!empty($latestChampion['character_icon'])): ?>
-          <img src="img/chara_deformed/<?= h($latestChampion['character_icon']) ?>" alt="" width="170" height="170" loading="eager">
+          <img src="img/chara_deformed/<?= h($latestChampion['character_icon']) ?>" alt="" width="120" height="120" loading="eager">
         <?php else: ?>
           <div class="lp3-avatar-ph" style="width:100%;height:100%;font-size:1.2rem;">NO<br>IMG</div>
         <?php endif; ?>
@@ -651,32 +654,37 @@ foreach ($tournaments as $t) {
 <!-- ======================== -->
 <!-- SPOTLIGHT (Interview) -->
 <!-- ======================== -->
-<?php if ($latestInterview): ?>
+<?php if (!empty($latestInterviews)): ?>
 <?= $dividerHtml('spotlight') ?>
 <section class="lp3-band band-spotlight lp3-reveal">
   <div class="lp3-inner">
     <h2 class="lp3-heading">優勝インタビュー</h2>
-  <?php $spEvent = EventType::tryFrom($latestInterview['event_type'] ?? ''); ?>
-  <div class="lp3-card lp3-spotlight">
-    <div class="lp3-spotlight-grid">
-      <?php if (!empty($latestInterview['winner_icon'])): ?>
-        <img src="img/chara_deformed/<?= h($latestInterview['winner_icon']) ?>" alt="" class="lp3-spotlight-avatar" width="90" height="90" loading="lazy">
-      <?php elseif (!empty($latestInterview['winner_name'])): ?>
-        <span class="lp3-avatar-ph lp3-spotlight-avatar" style="font-size:0.7rem;">NO<br>IMG</span>
-      <?php endif; ?>
-      <div class="lp3-spotlight-body">
-        <div class="lp3-spotlight-meta">
-          <?php if ($spEvent): ?>
-            <span class="lp3-chip is-pink"><?= h($spEvent->label()) ?></span>
+  <div class="lp3-spotlight-list">
+    <?php foreach ($latestInterviews as $iv):
+        $spEvent = EventType::tryFrom($iv['event_type'] ?? '');
+    ?>
+      <div class="lp3-card lp3-spotlight">
+        <div class="lp3-spotlight-grid">
+          <?php if (!empty($iv['winner_icon'])): ?>
+            <img src="img/chara_deformed/<?= h($iv['winner_icon']) ?>" alt="" class="lp3-spotlight-avatar" width="64" height="64" loading="lazy">
+          <?php elseif (!empty($iv['winner_name'])): ?>
+            <span class="lp3-avatar-ph lp3-spotlight-avatar" style="font-size:0.7rem;">NO<br>IMG</span>
           <?php endif; ?>
-          <span class="lp3-spotlight-tournament"><?= h($latestInterview['tournament_name']) ?></span>
+          <div class="lp3-spotlight-body">
+            <div class="lp3-spotlight-meta">
+              <?php if ($spEvent): ?>
+                <span class="lp3-chip is-pink"><?= h($spEvent->label()) ?></span>
+              <?php endif; ?>
+              <span class="lp3-spotlight-tournament"><?= h($iv['tournament_name']) ?></span>
+            </div>
+            <?php if (!empty($iv['winner_name'])): ?>
+              <div class="lp3-spotlight-name"><?= h($iv['winner_name']) ?></div>
+            <?php endif; ?>
+          </div>
+          <a href="interview?id=<?= (int) $iv['tournament_id'] ?>" class="lp3-btn lp3-btn-primary lp3-btn-arrow">インタビューを読む</a>
         </div>
-        <?php if (!empty($latestInterview['winner_name'])): ?>
-          <div class="lp3-spotlight-name"><?= h($latestInterview['winner_name']) ?></div>
-        <?php endif; ?>
       </div>
-      <a href="interview?id=<?= (int) $latestInterview['tournament_id'] ?>" class="lp3-btn lp3-btn-primary lp3-btn-arrow">インタビューを読む</a>
-    </div>
+    <?php endforeach; ?>
   </div>
   </div>
 </section>

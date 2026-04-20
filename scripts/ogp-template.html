@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>OGP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pop-pink:   #ffb8d6;
+    --pop-pink-l: #fff0f6;
+    --pop-pink-m: #ffd5e5;
+    --pop-pink-d: #ff6aa6;
+    --pop-cream:  #fff8f0;
+    --ink:        #3a2d50;
+    --ink-sub:    #715c88;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    font-family: "Noto Sans JP", system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1000px 650px at 15% 20%, var(--pop-pink-l) 0%, transparent 60%),
+      radial-gradient(900px 600px at 85% 80%, var(--pop-pink-m) 0%, transparent 55%),
+      linear-gradient(135deg, #fff5fa 0%, #ffe3ef 100%);
+    position: relative;
+  }
+
+  /* 桜花びらを静止で背景に散らす */
+  .petal {
+    position: absolute;
+    background: radial-gradient(circle at 30% 30%, #ffd9e6 0%, #ffa6c8 70%, #ff87b5 100%);
+    border-radius: 150% 0 150% 0;
+    opacity: 0.55;
+    box-shadow: 0 2px 6px rgba(255,106,166,0.15);
+  }
+
+  .frame {
+    position: absolute;
+    inset: 32px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.82) 0%, rgba(255,240,246,0.78) 100%);
+    box-shadow: 0 20px 60px rgba(90,40,80,0.08), inset 0 0 0 2px rgba(255,106,166,0.18);
+    padding: 50px 60px;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    align-items: center;
+    gap: 40px;
+    overflow: hidden;
+  }
+
+  .frame::before {
+    content: "";
+    position: absolute;
+    top: -80px; left: -80px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(255,184,214,0.45) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .frame::after {
+    content: "";
+    position: absolute;
+    bottom: -120px; right: -100px;
+    width: 340px; height: 340px;
+    background: radial-gradient(circle, rgba(255,213,229,0.55) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .left { position: relative; z-index: 2; }
+
+  .eyebrow {
+    display: inline-block;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--pop-pink-d);
+    background: #fff;
+    padding: 6px 16px;
+    border-radius: 999px;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 12px rgba(255,106,166,0.18);
+    margin-bottom: 22px;
+  }
+
+  h1 {
+    font-size: 88px;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    text-shadow: 0 2px 0 rgba(255,255,255,0.6);
+  }
+  h1 .accent { color: var(--pop-pink-d); }
+
+  .sub {
+    margin-top: 20px;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ink-sub);
+    line-height: 1.5;
+  }
+
+  .tags {
+    margin-top: 28px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    background: #fff;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 2px solid var(--pop-pink);
+  }
+
+  .right {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chara-cluster {
+    position: relative;
+    width: 420px;
+    height: 420px;
+  }
+  .chara {
+    position: absolute;
+    width: 210px;
+    height: 210px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(90,40,80,0.18), 0 0 0 6px #fff, 0 0 0 10px var(--pop-pink);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chara img { width: 100%; height: 100%; object-fit: cover; }
+  .chara-1 { top: 10px; left: 20px; }
+  .chara-2 { top: 40px; right: 0; width: 180px; height: 180px; }
+  .chara-3 { bottom: 0; left: 90px; width: 200px; height: 200px; }
+
+  .copyright {
+    position: absolute;
+    bottom: 14px;
+    right: 28px;
+    font-size: 13px;
+    color: rgba(58,45,80,0.55);
+    font-weight: 500;
+    z-index: 3;
+  }
+
+  .site {
+    position: absolute;
+    bottom: 14px;
+    left: 28px;
+    font-size: 14px;
+    color: rgba(58,45,80,0.55);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    z-index: 3;
+  }
+</style>
+</head>
+<body>
+  <!-- 背景の静止花びら -->
+  <span class="petal" style="width:70px;height:70px;top:40px;left:80px;transform:rotate(25deg);"></span>
+  <span class="petal" style="width:54px;height:54px;top:120px;right:110px;transform:rotate(-15deg);opacity:0.45;"></span>
+  <span class="petal" style="width:44px;height:44px;bottom:60px;left:180px;transform:rotate(60deg);opacity:0.5;"></span>
+  <span class="petal" style="width:80px;height:80px;bottom:90px;right:60px;transform:rotate(-30deg);opacity:0.4;"></span>
+  <span class="petal" style="width:36px;height:36px;top:240px;left:40px;transform:rotate(10deg);opacity:0.5;"></span>
+  <span class="petal" style="width:60px;height:60px;top:20px;right:340px;transform:rotate(-40deg);opacity:0.35;"></span>
+  <span class="petal" style="width:40px;height:40px;bottom:40px;left:440px;transform:rotate(5deg);opacity:0.45;"></span>
+
+  <div class="frame">
+    <div class="left">
+      <h1>雀魂部屋<span class="accent">主催</span></h1>
+      <p class="sub">麻雀トーナメント戦績サイト<br>対局結果・選手情報・インタビュー</p>
+      <div class="tags">
+        <span class="tag">最強位戦</span>
+        <span class="tag">鳳凰位戦</span>
+        <span class="tag">マスターズ</span>
+        <span class="tag">百段位戦</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="chara-cluster">
+        <div class="chara chara-1"><img src="CHARA_1" alt=""></div>
+        <div class="chara chara-2"><img src="CHARA_2" alt=""></div>
+        <div class="chara chara-3"><img src="CHARA_3" alt=""></div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

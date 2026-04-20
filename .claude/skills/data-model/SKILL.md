@@ -121,7 +121,7 @@ HallOfFame::mostTopFinishesAllTime();         // 歴代最多卓1位（全大会
 HallOfFame::siteStats();                      // サイト全体の集計（大会・選手・卓・半荘数）
 HallOfFame::latestByEventType();              // イベント種別ごとの最新大会
 HallOfFame::currentRound($tournamentId);      // 進行中大会の現在ラウンド（未完卓のうち最小）
-HallOfFame::latestInterview();                // 直近インタビュー掲載大会
+HallOfFame::latestInterviews(5);              // 直近インタビュー掲載大会（新しい順）
 ```
 
 ### Interview

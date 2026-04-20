@@ -262,29 +262,29 @@ class HallOfFame
     }
 
     /**
-     * 直近のインタビュー掲載大会を取得する。
+     * 直近のインタビュー掲載大会を新しい順に取得する。
      *
-     * @return array{tournament_id:int, tournament_name:string, qa_count:int, event_type:?string, winner_id:?int, winner_name:?string, winner_icon:?string}|null
+     * @return array<array{tournament_id:int, tournament_name:string, qa_count:int, event_type:?string, winner_id:?int, winner_name:?string, winner_icon:?string}>
      */
-    public static function latestInterview(): ?array
+    public static function latestInterviews(int $limit = 5): array
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->query("
+        $stmt = $pdo->prepare("
             WITH latest AS (
-                SELECT t.id AS tournament_id, t.name AS tournament_name,
+                SELECT t.id AS tournament_id, t.name AS tournament_name, t.created_at,
                        COUNT(i.id) AS qa_count
                 FROM tournaments t
                 JOIN interviews i ON i.tournament_id = t.id
                 GROUP BY t.id, t.name, t.created_at
                 HAVING COUNT(i.id) > 0
                 ORDER BY t.created_at DESC
-                LIMIT 1
+                LIMIT ?
             ),
             winner AS (
                 SELECT DISTINCT ON (s.tournament_id) s.tournament_id, s.player_id
                 FROM standings s
                 WHERE s.eliminated_round = 0
-                  AND s.tournament_id = (SELECT tournament_id FROM latest)
+                  AND s.tournament_id IN (SELECT tournament_id FROM latest)
                 ORDER BY s.tournament_id, s.total DESC
             )
             SELECT l.tournament_id, l.tournament_name, l.qa_count,
@@ -297,12 +297,11 @@ class HallOfFame
             LEFT JOIN winner w ON w.tournament_id = l.tournament_id
             LEFT JOIN players p ON p.id = w.player_id
             LEFT JOIN characters c ON c.id = p.character_id
+            ORDER BY l.created_at DESC
         ");
-        $row = $stmt->fetch();
-        if (!$row) {
-            return null;
-        }
-        return [
+        $stmt->execute([$limit]);
+        $rows = $stmt->fetchAll();
+        return array_map(fn($row) => [
             'tournament_id' => (int) $row['tournament_id'],
             'tournament_name' => $row['tournament_name'],
             'qa_count' => (int) $row['qa_count'],
@@ -310,6 +309,6 @@ class HallOfFame
             'winner_id' => $row['winner_id'] !== null ? (int) $row['winner_id'] : null,
             'winner_name' => $row['winner_name'],
             'winner_icon' => $row['winner_icon'],
-        ];
+        ], $rows);
     }
 }

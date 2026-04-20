@@ -22,10 +22,13 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 <meta property="og:type" content="website">
 <meta property="og:url" content="<?= h($_ogUrl) ?>">
 <meta property="og:image" content="<?= h($_ogImg) ?>">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <?php if (!empty($pageOgp['image_alt'])): ?>
 <meta property="og:image:alt" content="<?= h($pageOgp['image_alt']) ?>">
 <?php endif; ?>
 <meta property="og:site_name" content="<?= SITE_NAME ?>">
+<meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="<?= h($pageOgp['title'] ?? $pageTitle) ?>">
 <meta name="twitter:description" content="<?= h($pageOgp['description'] ?? '') ?>">
