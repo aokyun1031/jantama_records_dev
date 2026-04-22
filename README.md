@@ -387,6 +387,8 @@ Claude Code 用の skill / slash command / agent / hook を `.claude/` に配置
 
 セットアップ・使い方・ワークフロー・トラブルシューティング → [`.claude/README.md`](./.claude/README.md)
 
+**レビュー・監査のタイミング**（コミット前 / push 前 / 定期監査の使い分け）→ [`.claude/README.md#コードレビュー監査のタイミング`](./.claude/README.md#コードレビュー監査のタイミング)
+
 ---
 
 ## 関連ドキュメント
