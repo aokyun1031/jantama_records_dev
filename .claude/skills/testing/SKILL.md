@@ -8,7 +8,7 @@ description: E2Eテスト（Playwright）の構成・規約・追加手順。ペ
 ## 配置
 
 - `tests/e2e/pages/` — ページ単位のテスト。1 ページ 1 ファイル（例: `player.spec.ts`）
-- `tests/e2e/features/` — 横断機能のテスト（セキュリティ、クリーンURL、ナビゲーション、テーマ切替）
+- `tests/e2e/features/` — 横断機能のテスト（セキュリティ、クリーンURL、ナビゲーション）
 - `tests/e2e/helpers/` — 共通ユーティリティ
   - `fixtures.ts` — カスタム `test` fixture（外部リソース・画像ブロックで高速化）
   - `test-helpers.ts` — `createTestPlayer`, `createTestTournamentWithPlayers`, `createOptimizedPage`, `expectStatus`, `TEST_PREFIX`
@@ -21,6 +21,9 @@ description: E2Eテスト（Playwright）の構成・規約・追加手順。ペ
 # セットアップ（初回のみ）
 cd tests/e2e && npm install && npx playwright install chromium --with-deps
 
+# DB にテストデータを入れる（シード依存のテストが id=1 等を参照するため必須）
+docker compose exec web php vendor/bin/phinx seed:run
+
 # 全テスト
 npx playwright test
 
@@ -32,7 +35,10 @@ npx playwright test --headed
 npx playwright test --ui
 ```
 
-前提: `docker compose up -d` で web コンテナが起動していること。`git push` 時に `.claude/hooks/run-e2e.sh` 経由で自動実行され、失敗すると push がブロックされる。
+前提:
+- `docker compose up -d` で web / db コンテナが起動していること
+- 初回、または `docker compose down -v` 後は `phinx seed:run` が必要（`player?id=1` など既存データ前提のテストが多い）
+- E2E は手動実行（push 前に各自で回す運用）
 
 ## テストファイルの基本構造
 
@@ -102,7 +108,7 @@ test.describe('選手編集・削除', () => {
 
 ## 横断機能テスト
 
-`features/` 配下。セキュリティ（CSP nonce・CSRF・ドットファイル遮断）、クリーンURL、ナビゲーション、テーマ切替など。特定ページに依存しない挙動はここに。
+`features/` 配下。セキュリティ（CSP nonce・CSRF・ドットファイル遮断）、クリーンURL、ナビゲーションなど。特定ページに依存しない挙動はここに。
 
 ## デバッグ
 

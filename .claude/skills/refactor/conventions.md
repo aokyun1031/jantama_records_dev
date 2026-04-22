@@ -67,7 +67,7 @@ scan.sh はここに挙げたルールのうち grep で検出可能なものを
 ## リファクタ後の検証
 
 - `git diff` で意図通りの差分だけか確認
-- E2E テストは `git push` 時の hook で自動実行される
+- E2E テストは手動実行（push 前に `cd tests/e2e && npx playwright test`）
 - UI が変わる可能性がある変更は `docker compose up -d` でブラウザ確認推奨
 
 ## スコープの原則

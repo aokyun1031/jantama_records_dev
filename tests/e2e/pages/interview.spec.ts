@@ -15,8 +15,7 @@ test.describe('インタビューページ', () => {
   });
 
   test('インタビュー項目が表示される', async ({ page }) => {
-    const items = page.locator('.interview-item');
-    await expect(items).not.toHaveCount(0);
+    await expect(page.locator('.interview-item')).not.toHaveCount(0);
   });
 
   test('トップページへの戻るリンクがある', async ({ page }) => {

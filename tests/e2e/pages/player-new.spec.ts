@@ -1,11 +1,13 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestPlayer } from '../helpers/test-helpers';
+import { TEST_PREFIX, createTestPlayer, bypassRequired } from '../helpers/test-helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('選手新規登録', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/player_new');
+  });
 
   test('フォームが正しく表示される', async ({ page }) => {
-    await page.goto('/player_new');
     await expect(page.locator('.edit-badge')).toContainText('NEW PLAYER');
     await expect(page.locator('input[name="name"]')).toBeVisible();
     await expect(page.locator('input[name="nickname"]')).toBeVisible();
@@ -14,12 +16,7 @@ test.describe('選手新規登録', () => {
   });
 
   test('空のフォーム送信でバリデーションエラー', async ({ page }) => {
-    await page.goto('/player_new');
-    // name を空のまま送信（HTML5 required でブロックされるのでJSで回避）
-    await page.evaluate(() => {
-      (document.querySelector('input[name="name"]') as HTMLInputElement).removeAttribute('required');
-      (document.querySelector('input[name="nickname"]') as HTMLInputElement).removeAttribute('required');
-    });
+    await bypassRequired(page);
     await page.fill('input[name="name"]', '');
     await page.click('button.btn-save');
     await expect(page.locator('.edit-message.error')).toBeVisible();
@@ -31,7 +28,6 @@ test.describe('選手新規登録', () => {
 
     expect(id).toBeGreaterThan(0);
     await expect(page.locator('.player-title')).toContainText(name);
-    // フラッシュメッセージ
     await expect(page.locator('.edit-message.success')).toContainText('登録しました');
   });
 
@@ -50,10 +46,8 @@ test.describe('選手新規登録', () => {
   });
 
   test('キャラクター未選択でエラー', async ({ page }) => {
-    await page.goto('/player_new');
     await page.fill('input[name="name"]', `${TEST_PREFIX}nochar_${Date.now()}`);
     await page.fill('input[name="nickname"]', 'テスト');
-    // キャラクター未選択のまま送信
     await page.click('button.btn-save');
     await expect(page.locator('.edit-message.error')).toContainText('キャラクターを選択');
   });

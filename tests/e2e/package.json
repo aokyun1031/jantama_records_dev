@@ -7,6 +7,8 @@
     "test:ui": "npx playwright test --ui",
     "test:pages": "npx playwright test pages/",
     "test:features": "npx playwright test features/",
+    "test:seed": "docker compose -f ../../docker-compose.yml exec web php vendor/bin/phinx seed:run",
+    "test:fresh": "npm run test:seed && npm test",
     "setup": "npx playwright install chromium --with-deps",
     "lint": "npx eslint .",
     "typecheck": "npx tsc --noEmit"

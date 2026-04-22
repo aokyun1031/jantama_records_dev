@@ -243,15 +243,6 @@ body{
   0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}
 }
 
-/* Particles */
-.particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
-.particle{position:absolute;border-radius:50%;opacity:0;animation:particleFloat linear infinite;will-change:transform,opacity}
-@keyframes particleFloat{
-  0%{opacity:0;transform:translateY(100vh) scale(0)}
-  10%{opacity:0.4}90%{opacity:0.3}
-  100%{opacity:0;transform:translateY(-20vh) scale(1) rotate(360deg)}
-}
-
 /* Main container */
 .main{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:20px 16px 60px}
 

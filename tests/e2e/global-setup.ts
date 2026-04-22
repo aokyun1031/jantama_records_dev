@@ -1,8 +1,10 @@
 import type { FullConfig } from '@playwright/test';
 
 /**
- * 全テスト実行前にNeon DBをウォームアップする。
- * Neon無料枠はスリープ状態からの復帰に数秒〜十数秒かかるため、
+ * 全テスト実行前に DB をウォームアップする。
+ *
+ * テストの既定接続先はローカル docker-compose の db コンテナ（.env の DATABASE_URL）。
+ * Neon dev ブランチに向けた場合はスリープ状態からの復帰に数秒〜十数秒かかるため、
  * 軽量ページに事前アクセスして接続を確立しておく。
  */
 async function globalSetup(config: FullConfig): Promise<void> {
@@ -18,7 +20,7 @@ async function globalSetup(config: FullConfig): Promise<void> {
         return;
       }
       console.log(`DB warmup: レスポンス ${response.status}、リトライ ${i + 1}/${maxRetries}`);
-    } catch (e) {
+    } catch {
       console.log(`DB warmup: 接続失敗、リトライ ${i + 1}/${maxRetries}`);
     }
     if (i < maxRetries - 1) {

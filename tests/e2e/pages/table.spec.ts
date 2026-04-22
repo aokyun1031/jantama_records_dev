@@ -1,30 +1,35 @@
 import { test, expect } from '../helpers/fixtures';
-import { TEST_PREFIX, createTestTournamentWithPlayers, createOptimizedPage } from '../helpers/test-helpers';
+import {
+  TEST_PREFIX,
+  NONEXISTENT_ID,
+  createOptimizedPage,
+  createTestTournamentWithPlayers,
+  expectNotFound,
+  extractIdFromUrl,
+} from '../helpers/test-helpers';
 
 test.describe.configure({ mode: 'serial', timeout: 90000 });
 test.describe('卓管理', () => {
-  let tournamentId: number;
   let tableId: number;
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(90000);
     const page = await createOptimizedPage(browser);
-    tournamentId = await createTestTournamentWithPlayers(
+    const tournamentId = await createTestTournamentWithPlayers(
       page,
       `${TEST_PREFIX}table_mgmt_${Date.now()}`
     );
 
-    // 卓を作成（ランダム生成 → 保存）
+    // 卓をランダム生成 → 保存
     await page.goto(`/table_new?tournament_id=${tournamentId}`);
     await page.click('#btn-generate');
     await expect(page.locator('.tn-table')).not.toHaveCount(0);
     await page.click('#btn-save');
-    await page.waitForURL(/\/tournament\?id=\d+/, { timeout: 60000, waitUntil: 'domcontentloaded' });
+    await page.waitForURL(/\/tournament\?id=\d+/, { timeout: 60000 });
 
     // 卓IDを取得
-    const tableLink = page.locator('.td-table-card').first();
-    const href = await tableLink.getAttribute('href');
-    tableId = parseInt(href!.match(/id=(\d+)/)![1], 10);
+    const href = await page.locator('.td-table-card').first().getAttribute('href');
+    tableId = extractIdFromUrl(href!);
     await page.close();
   });
 
@@ -47,14 +52,13 @@ test.describe('卓管理', () => {
     await page.fill('input[name="played_date"]', '2026-04-10');
     await page.fill('input[name="played_time"]', '21:00');
     await page.click('#table-form button[value="schedule"]');
-    await page.waitForURL(/table\?id=\d+&saved=1/, { waitUntil: 'domcontentloaded' });
+    await page.waitForURL(/table\?id=\d+&saved=1/);
     await expect(page.locator('.edit-message.success')).toBeVisible();
   });
 
   test('未入力・合計不一致では送信ボタンが無効', async ({ page }) => {
     await page.goto(`/table?id=${tableId}`);
     const doneBtn = page.locator('#table-form button[value="game_data"]');
-    // 初期状態: 未入力なので無効
     await expect(doneBtn).toBeDisabled();
 
     const scoreInputs = page.locator('#table-form input.tb-score-input');
@@ -69,25 +73,26 @@ test.describe('卓管理', () => {
 
   test('対局結果を保存して卓を完了にできる', async ({ page }) => {
     await page.goto(`/table?id=${tableId}`);
+
     const paifuInputs = page.locator('#table-form input.tb-paifu-input');
     const paifuCount = await paifuInputs.count();
     for (let i = 0; i < paifuCount; i++) {
       await paifuInputs.nth(i).fill(`https://example.com/paifu/test-${i + 1}`);
     }
+
     const scoreInputs = page.locator('#table-form input.tb-score-input');
     const count = await scoreInputs.count();
     const scorePool = [25.0, 10.0, -5.0, -30.0];
     for (let i = 0; i < count; i++) {
-      await scoreInputs.nth(i).fill((scorePool[i % scorePool.length]).toString());
+      await scoreInputs.nth(i).fill(scorePool[i % scorePool.length].toString());
     }
+
     const doneBtn = page.locator('#table-form button[value="game_data"]');
-    await expect(doneBtn).toBeVisible();
     await expect(page.locator('[data-sum-box]').first()).toHaveClass(/tb-sum-ok/);
     await expect(doneBtn).toBeEnabled();
     page.once('dialog', (dialog) => dialog.accept());
     await doneBtn.click();
-    // 大会ページにリダイレクト
-    await page.waitForURL(/\/tournament\?id=\d+/, { waitUntil: 'domcontentloaded' });
+    await page.waitForURL(/\/tournament\?id=\d+/);
     await expect(page.locator('.edit-message.success')).toContainText('完了しました');
   });
 
@@ -95,17 +100,14 @@ test.describe('卓管理', () => {
     await page.goto(`/table?id=${tableId}`);
     await expect(page.locator('.tb-badge')).toContainText('TABLE');
     await expect(page.locator('.tb-done-mark')).toContainText('完了');
-    // フォームが表示されない
     await expect(page.locator('#table-form')).toHaveCount(0);
   });
 
   test('存在しないIDで404', async ({ page }) => {
-    const response = await page.goto('/table?id=999999');
-    expect(response?.status()).toBe(404);
+    await expectNotFound(page, `/table?id=${NONEXISTENT_ID}`);
   });
 
   test('IDなしで404', async ({ page }) => {
-    const response = await page.goto('/table');
-    expect(response?.status()).toBe(404);
+    await expectNotFound(page, '/table');
   });
 });

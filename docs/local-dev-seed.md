@@ -22,6 +22,17 @@ docker compose up -d                                # 初回: スキーマ自動
 docker compose exec web php vendor/bin/phinx seed:run   # データ投入
 ```
 
+## `.env` の DATABASE_URL を切り替えた時の注意
+
+Codespaces (Neon dev) ↔ ローカル Docker (db:5432) を切り替える時は、**必ず `down → up` でコンテナを作り直す**。
+
+```bash
+docker compose down               # pgdata は保持（-v を付けない）
+docker compose up -d
+```
+
+`docker compose restart web` では `env_file: .env` が再読込されない（env は**コンテナ作成時のみ**読み込まれる仕様）。restart で済ませると、編集した `.env` が効かず、古い接続先（= 意図しない Neon dev への書き込み）で動き続けるので注意。
+
 データを壊しても:
 
 ```bash

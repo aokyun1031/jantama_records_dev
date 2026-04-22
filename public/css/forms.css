@@ -82,8 +82,6 @@
 .player-select-option.locked .player-select-inner:hover{border-color:rgba(var(--mint-rgb),0.3)}
 .player-select-locked-badge{font-size:0.6rem;font-weight:700;color:var(--success);background:rgba(var(--mint-rgb),0.15);padding:1px 6px;border-radius:6px;margin-left:auto;white-space:nowrap}
 
-/* Points row */
-.points-row{display:flex;gap:16px;flex-wrap:wrap}
 .points-field{flex:1;min-width:140px}
 
 /* Character selection grid */

@@ -7,7 +7,6 @@
 .section{margin-bottom:32px}
 .section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:0 4px;padding-bottom:10px;border-bottom:2px solid var(--section-header-border)}
 .section-title{font-size:1.2rem;font-weight:800;letter-spacing:1px;color:var(--section-title-color)}
-.section-badge{font-size:0.6rem;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:1px}
 .badge-live{background:var(--badge-live-bg);color:var(--badge-live-color);animation:pulse 2s ease infinite}
 .badge-done{background:var(--badge-done-bg);color:var(--badge-done-color)}
 
@@ -125,36 +124,19 @@
 .result-score{font-family:'Inter',sans-serif;font-weight:700;font-size:0.9rem;text-align:right}
 .result-score.plus{color:var(--plus-text)}
 .result-score.minus{color:var(--minus-text)}
-.result-divider{height:1px;margin:10px 12px;background:var(--result-divider)}
 .elim-section{margin-top:8px;padding:12px;background:var(--elim-bg);border-radius:var(--radius-sm)}
 .elim-title{font-size:0.7rem;color:var(--text-light);font-weight:700;margin-bottom:8px;letter-spacing:1px}
 .elim-row{opacity:1}
 .results-sub{font-size:0.7rem;color:var(--text-light);font-weight:600;padding:4px 12px;margin-bottom:4px;letter-spacing:1px}
 
-/* Pending note */
-.pending-note{
-  text-align:center;padding:16px;color:var(--pending-color);font-size:0.75rem;font-weight:600;
-  background:var(--pending-bg);
-  border-radius:var(--radius-sm);border:var(--pending-border);
-}
-.note-small{text-align:right;margin-top:4px;font-size:0.6rem;color:var(--text-light)}
-
 /* Table Detail Results */
 .table-details{margin-top:20px}
-.table-detail-block{
-  background:var(--detail-bg);backdrop-filter:blur(12px);
-  border:var(--detail-border);border-radius:var(--radius-sm);
-  padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow-sm);
-  transition:box-shadow 0.3s;
-}
-.table-detail-block:hover{box-shadow:var(--detail-hover-shadow)}
 .table-detail-head{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:10px;padding-bottom:8px;
   border-bottom:2px solid var(--table-head-border);
 }
 .table-detail-name{font-weight:800;font-size:0.9rem;color:var(--detail-name-color)}
-.table-detail-badge{font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:8px}
 .badge-top{background:linear-gradient(135deg,rgba(var(--gold-rgb),0.15),rgba(var(--gold-rgb),0.08));color:var(--gold);border:1px solid rgba(var(--gold-rgb),0.25)}
 .table-detail-row{
   display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;
@@ -175,7 +157,6 @@
 
 /* Records (page-local styles in tournament_view.php) */
 
-.records-stats{display:flex;justify-content:center;gap:32px;margin-top:20px;flex-wrap:wrap}
 .stat{text-align:center}
 .stat-num{font-family:'Inter',sans-serif;font-size:1.8rem;font-weight:900;color:var(--stat-num-color)}
 .stat-label{font-size:0.65rem;color:var(--text-light);font-weight:600}
@@ -185,7 +166,6 @@
   .standing-item{padding:12px;grid-template-columns:28px 1fr auto;gap:8px}
   .standing-score{font-size:1rem}
   .table-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
-  .records-stats{gap:20px}
 }
 
 /* ---------- Players link ---------- */

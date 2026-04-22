@@ -35,7 +35,7 @@ cd tests/e2e && npm install && npx playwright install chromium --with-deps
 npx playwright test [pages/xxx.spec.ts] [--headed|--ui]
 ```
 
-`git push` 時に E2E 自動実行（失敗で push ブロック）。詳細は `tests/e2e/` と `testing` skill。
+E2E は手動実行。push 前に `cd tests/e2e && npx playwright test` を各自で走らせる。詳細は `tests/e2e/` と `testing` skill。
 
 ## 環境
 
@@ -78,7 +78,7 @@ npx playwright test [pages/xxx.spec.ts] [--headed|--ui]
 - モデル/enum 追加後は `composer dump-autoload`
 - ハードコード定数は enum 化。表示は `label()` メソッド
 
-詳細 → `.claude/skills/security/SKILL.md`, `.claude/skills/data-model/SKILL.md`, `.claude/skills/enum/SKILL.md`
+詳細 → `.claude/skills/security/SKILL.md`, `.claude/skills/data-model/SKILL.md`, `.claude/skills/enum/SKILL.md`, `docs/database.md`（DB 設計書）
 
 ### CSS
 

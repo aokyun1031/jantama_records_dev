@@ -7,22 +7,19 @@ test.describe('選手一覧ページ', () => {
 
   test('ページが正常に表示される', async ({ page }) => {
     await expect.soft(page).toHaveTitle(/選手一覧/);
-    await expect.soft(page.locator('.players-badge')).toContainText('PLAYERS');
+    await expect.soft(page.locator('.page-hero-badge')).toContainText('PLAYERS');
   });
 
   test('選手カードが表示される', async ({ page }) => {
-    const cards = page.locator('.player-card');
-    await expect(cards).not.toHaveCount(0);
+    await expect(page.locator('.player-card')).not.toHaveCount(0);
   });
 
   test('選手カードに名前が表示される', async ({ page }) => {
-    const firstCard = page.locator('.player-card').first();
-    await expect(firstCard.locator('.player-name')).not.toBeEmpty();
+    await expect(page.locator('.player-card').first().locator('.player-name')).not.toBeEmpty();
   });
 
   test('選手カードのリンクが正しい', async ({ page }) => {
-    const firstCard = page.locator('.player-card').first();
-    const href = await firstCard.getAttribute('href');
+    const href = await page.locator('.player-card').first().getAttribute('href');
     expect(href).toMatch(/player\?id=\d+/);
   });
 
@@ -36,8 +33,7 @@ test.describe('選手一覧ページ', () => {
 
   test('選手カードに画像またはプレースホルダーがある', async ({ page }) => {
     const firstCard = page.locator('.player-card').first();
-    const hasIcon = await firstCard.locator('.player-icon').count();
-    const hasPlaceholder = await firstCard.locator('.player-icon-placeholder').count();
-    expect(hasIcon + hasPlaceholder).toBeGreaterThan(0);
+    const icons = await firstCard.locator('.player-icon, .player-icon-placeholder').count();
+    expect(icons).toBeGreaterThan(0);
   });
 });

@@ -22,18 +22,17 @@ test.describe('セキュリティ', () => {
     expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
   });
 
-  test('CSP nonce がリクエストごとに異なる', async ({ page }) => {
-    const res1 = await page.goto('/');
-    const csp1 = res1!.headers()['content-security-policy'];
-    const res2 = await page.goto('/');
-    const csp2 = res2!.headers()['content-security-policy'];
+  test('CSP nonce がリクエストごとに異なる', async ({ request }) => {
+    // ブラウザの page.goto を 2 回走らせると重いので HTTP request で直接取得する
+    const extractNonce = (csp: string | undefined): string | undefined =>
+      csp?.match(/'nonce-([a-f0-9]+)'/)?.[1];
 
-    test.skip(!csp1 || !csp2, 'CSP ヘッダーが設定されていない');
+    const [res1, res2] = await Promise.all([request.get('/'), request.get('/')]);
+    const nonce1 = extractNonce(res1.headers()['content-security-policy']);
+    const nonce2 = extractNonce(res2.headers()['content-security-policy']);
 
-    const nonce1 = csp1.match(/'nonce-([a-f0-9]+)'/)?.[1];
-    const nonce2 = csp2.match(/'nonce-([a-f0-9]+)'/)?.[1];
-    expect(nonce1).toBeDefined();
-    expect(nonce2).toBeDefined();
+    test.skip(!nonce1 || !nonce2, 'CSP ヘッダーが設定されていない');
+
     expect(nonce1).not.toBe(nonce2);
   });
 

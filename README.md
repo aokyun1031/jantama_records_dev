@@ -99,7 +99,7 @@ graph TB
         Codespaces["GitHub Codespaces\n:8080"]:::devStyle
         Docker["Docker Compose\nweb :8080"]:::devStyle
         LocalPg[("ローカル Postgres\nコンテナ :5432")]:::dbStyle
-        E2E(["Playwright E2E\ngit push 時に自動実行"]):::devStyle
+        E2E(["Playwright E2E\n（手動実行）"]):::devStyle
     end
 
     GitHub["GitHub\nmain ブランチ"]:::deployStyle
@@ -301,7 +301,7 @@ npx playwright test features/    # 機能テストのみ
 npx playwright test --ui         # UIモード
 ```
 
-`git push` 時に Claude Code の hook で自動実行される（Docker 未起動時はスキップ）。テスト失敗で push がブロックされる。
+push 前に各自で `cd tests/e2e && npx playwright test` を手動実行する運用。
 
 | ディレクトリ | 内容 |
 |---|---|
@@ -383,7 +383,7 @@ Claude Code 用の skill / slash command / agent / hook を `.claude/` に配置
 | slash command | `/refactor`, `/security-check`, `/migration-new` | 定型タスク起動 |
 | skill | `add-page`, `testing`, `security` ほか | AI が文脈で自動参照する規約集 |
 | agent | `php-reviewer` | セキュリティ／規約違反の専門レビュー |
-| hook | `run-e2e.sh`, `php-lint.sh` | Write/Edit・git push で自動検証 |
+| hook | `php-lint.sh` | Write/Edit 時に PHP 構文チェック |
 
 セットアップ・使い方・ワークフロー・トラブルシューティング → [`.claude/README.md`](./.claude/README.md)
 
@@ -396,4 +396,5 @@ Claude Code 用の skill / slash command / agent / hook を `.claude/` に配置
 | [`CLAUDE.md`](./CLAUDE.md) | コーディング規約・作業ルール（Claude Code 向け正本） |
 | [`.claude/README.md`](./.claude/README.md) | 開発者向け Claude Code ガイド（skill/command/agent/hook） |
 | [`docs/`](./docs/) | DB 設計書・機能設計メモ |
+| [`docs/database.md`](./docs/database.md) | DB 設計書（ER 図・ビジネスルール・不変条件・全テーブル詳細） |
 | [`docs/local-dev-seed.md`](./docs/local-dev-seed.md) | ローカル Postgres コンテナのスキーマ/seed 運用と dump 更新手順 |

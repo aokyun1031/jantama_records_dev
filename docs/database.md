@@ -1,13 +1,14 @@
 # データベース設計書
 
-麻雀トーナメントの戦績管理システム。設計意図・ビジネスルール・不変条件を記述する。
+麻雀トーナメントの戦績管理システム。**設計意図・ビジネスルール・不変条件・各カラムの役割**を記述する。
 
-> - **スキーマの真実（カラム定義・インデックス・FK）** → [`db/current_schema.sql`](../db/current_schema.sql)（Neon から pg_dump したもの）
-> - **モデル層の API** → [`.claude/skills/data-model/SKILL.md`](../.claude/skills/data-model/SKILL.md)
-> - **マイグ履歴** → `git log db/migrations/`
-> - **ローカル DB 運用** → [`local-dev-seed.md`](./local-dev-seed.md)
-
-このドキュメントは設計意図のみを記述する。機械的に取れる情報は書かない（rot 防止）。
+> **真実の源（Source of Truth）**
+> - スキーマ定義（型・NOT NULL・DEFAULT・インデックス・FK） → [`db/current_schema.sql`](../db/current_schema.sql)
+> - モデル層 API → [`.claude/skills/data-model/SKILL.md`](../.claude/skills/data-model/SKILL.md)
+> - マイグ履歴 → `git log db/migrations/`
+> - ローカル DB 運用 → [`local-dev-seed.md`](./local-dev-seed.md)
+>
+> このドキュメントは **「なぜ」** と **「どう使うか」** を記述する。機械的に取れる情報（型など）は書かない（rot 防止）。
 
 ## 概要
 
@@ -18,6 +19,8 @@
 - 結果は追記型。遡っての変更手段は用意しない
 
 ## ER 図
+
+リレーションのみ示す。カラム定義は [`db/current_schema.sql`](../db/current_schema.sql) および本ドキュメント下部「テーブル詳細」を参照。
 
 ```mermaid
 erDiagram
@@ -32,77 +35,9 @@ erDiagram
     tables_info ||--o{ table_players    : ""
     tables_info ||--o{ table_paifu_urls : ""
     characters  ||--o{ players          : ""
-
-    tournaments {
-        int      id
-        varchar  name
-        varchar  status
-        timestamp created_at
-    }
-    players {
-        int     id
-        varchar name          "UNIQUE / 正式名称"
-        varchar nickname      "表示用"
-        int     character_id  "FK characters"
-    }
-    characters {
-        int     id
-        varchar name          "UNIQUE"
-        varchar icon_filename
-    }
-    tables_info {
-        int     id
-        int     tournament_id
-        int     round_number
-        varchar table_name
-        date    played_date
-        varchar day_of_week
-        varchar played_time
-        boolean done
-    }
-    table_players {
-        int id
-        int table_id
-        int player_id
-        int seat_order    "1-4"
-    }
-    table_paifu_urls {
-        int  id
-        int  table_id
-        int  game_number  "半荘番号"
-        text url
-    }
-    round_results {
-        int     id
-        int     tournament_id
-        int     player_id
-        int     round_number
-        int     game_number   "半荘番号 (default 1)"
-        numeric score         "1桁小数"
-    }
-    standings {
-        int     tournament_id "PK"
-        int     player_id     "PK"
-        int     rank
-        numeric total
-        boolean pending
-        int     eliminated_round
-    }
-    tournament_meta {
-        int     tournament_id "PK"
-        varchar key           "PK"
-        varchar value
-    }
-    interviews {
-        int  id
-        int  tournament_id
-        int  sort_order
-        text question
-        text answer
-    }
 ```
 
-FK の削除挙動: `characters → players` のみ `SET NULL`。それ以外は全て `CASCADE`。
+**FK 削除挙動**: `characters → players` のみ `SET NULL`（キャラ削除で選手行を消さない）。それ以外は全て `CASCADE`。
 
 ## ビジネスルール
 
@@ -110,7 +45,7 @@ FK の削除挙動: `characters → players` のみ `SET NULL`。それ以外は
 
 - `tournaments.status`: `in_progress` / `completed` 等。運営が設定
 - 全派生データは `tournament_id` で大会スコープ。大会削除で CASCADE 全削除
-- イベント種別（最強位戦・鳳凰位戦・マスターズ・百段位戦・プチイベント）は `tournament_meta.event_type` に保持。enum `EventType` で統一
+- イベント種別（最強位戦・鳳凰位戦・マスターズ・百段位戦・プチイベント）は `tournament_meta` の `event_type` キーに保持。enum `EventType` で統一
 
 ### 進行
 
@@ -125,13 +60,12 @@ FK の削除挙動: `characters → players` のみ `SET NULL`。それ以外は
 ```
 
 - 1 卓は必ず 4 名（麻雀ルール）
-- 通過/敗退の判定は **`standings.eliminated_round` に記録**（回戦単位、列削除前は `round_results.is_above_cutoff` に持たせていたが 2026-04-18 に整理）
+- 通過/敗退の判定は `standings.eliminated_round` に記録（回戦単位）
 - カットオフの閾値は DB に保存しない。運営が判断し結果のみ記録
 
 ### スコア
 
-- 1 桁小数（例: `82.5`, `-72.8`）
-- 正負どちらも
+- 1 桁小数（例: `82.5`, `-72.8`）。正負どちらも取り得る
 - 1 対局卓で複数半荘打つ場合 `round_results` は `game_number` で分けて記録
 - `standings.total` = その大会内で本人が参加した全 `round_results.score` の合計
 - `standings.rank` = `total` 降順
@@ -149,8 +83,8 @@ FK の削除挙動: `characters → players` のみ `SET NULL`。それ以外は
 ### 対局卓
 
 - `tables_info.done = true` で対局完了扱い
-- `table_players.seat_order` (1-4) は着席位置
-- 牌譜 URL は `table_paifu_urls` に半荘 (`game_number`) ごとに保存（UNIQUE(`table_id`, `game_number`)）
+- `table_players.seat_order` (1–4) は着席位置
+- 牌譜 URL は `table_paifu_urls` に半荘 (`game_number`) ごとに保存
 
 ### インタビュー
 
@@ -183,7 +117,7 @@ FK の削除挙動: `characters → players` のみ `SET NULL`。それ以外は
 
 | 制約 | 保証方法 |
 |---|---|
-| 同一大会・同一選手・同一回戦・同一半荘のスコアは 1 件 | `round_results_unique_game` UNIQUE(`tournament_id`, `player_id`, `round_number`, `game_number`) |
+| 同一大会・同一選手・同一回戦・同一半荘のスコアは 1 件 | `round_results_unique_game` UNIQUE (`tournament_id`, `player_id`, `round_number`, `game_number`) |
 | 1 大会につき 1 選手 1 standings レコード | `standings_pkey` PRIMARY KEY (`tournament_id`, `player_id`) |
 | 1 大会につき同一キーは 1 件 | `tournament_meta_pkey` PRIMARY KEY (`tournament_id`, `key`) |
 | 同一卓・同一半荘の牌譜 URL は 1 件 | `table_paifu_urls_table_id_game_number_key` UNIQUE |
@@ -202,7 +136,7 @@ FK の削除挙動: `characters → players` のみ `SET NULL`。それ以外は
 | FK 制約 | `{table}_{col}_fkey` | `round_results_player_id_fkey` |
 | boolean | 状態語（`is_*` / `done` / `pending`） | `done`, `pending` |
 
-## 主要キー (`tournament_meta.key`)
+## `tournament_meta.key` の主要値
 
 | key | 意味 |
 |---|---|
@@ -211,10 +145,125 @@ FK の削除挙動: `characters → players` のみ `SET NULL`。それ以外は
 | `remaining_players` | 残留選手数 |
 | `event_type` | イベント種別（`EventType` enum の値） |
 
-`record_score` / `record_player` は廃止（2026-04-17）。`TournamentRecords::all()` が `round_results` から動的算出する。
+大会記録（最高得点・最多トップ等）は DB に保存せず、`TournamentRecords::all()` が `round_results` から動的算出する（SSoT は round_results）。
 
-## 参考
+## テーブル詳細
 
-- モデルのクエリ詳細 → `.claude/skills/data-model/SKILL.md`
-- マイグ追加手順 → `.claude/skills/migration/SKILL.md`
-- ローカル DB 初期化 → `docs/local-dev-seed.md`
+全 10 テーブル（`phinxlog` は Phinx 管理用のため除外）。カラムの型・NOT NULL・DEFAULT は [`db/current_schema.sql`](../db/current_schema.sql) を参照。ここでは **役割・意味・他カラムとの関係** を記述する。
+
+### `tournaments` — 大会マスター
+
+1 行 = 1 大会。全派生データ（卓・結果・順位・インタビュー）は `tournament_id` で紐付き、大会削除で CASCADE される。
+
+| カラム | 役割・意味 |
+|---|---|
+| `id` (PK) | 大会 ID |
+| `name` | 大会名（表示用） |
+| `status` | `in_progress` / `completed` 等。運営が手動で遷移 |
+| `created_at` | 作成タイムスタンプ |
+
+### `players` — 選手マスター
+
+1 行 = 1 選手。大会を跨いで継続利用される。敗退しても削除せず履歴保持。
+
+| カラム | 役割・意味 |
+|---|---|
+| `id` (PK) | 選手 ID |
+| `name` (UNIQUE) | 正式名称。全体で一意（重複登録防止） |
+| `nickname` | 表示用の呼称。正式名称より砕けた呼び名を許容 |
+| `character_id` (FK → `characters.id`) | 雀魂キャラ。`SET NULL` なのでキャラ削除しても選手は残る |
+
+### `characters` — 雀魂キャラマスター
+
+選手アイコン用の雀魂キャラ定義。運営が事前登録する参照データ。
+
+| カラム | 役割・意味 |
+|---|---|
+| `id` (PK) | キャラ ID |
+| `name` (UNIQUE) | キャラ名。全体で一意 |
+| `icon_filename` | アイコン画像ファイル名（`public/images/characters/` 配下を想定）。null 許可 |
+
+### `tables_info` — 対局卓
+
+1 大会・1 回戦・1 卓に対して 1 行。1 卓で複数半荘打つ場合でも行は増えない（半荘は `game_number` で区別）。
+
+| カラム | 役割・意味 |
+|---|---|
+| `id` (PK) | 卓 ID |
+| `tournament_id` (FK) | 所属大会 |
+| `round_number` | 何回戦か（1 始まり） |
+| `table_name` | 卓名（例: `A卓`, `B卓`）。表示用 |
+| `played_date` | 対局予定/実施日。null 許可（未定の時点で行を作成し得るため） |
+| `day_of_week` | 曜日の文字列。`played_date` 設定時に併せて埋める UI 補助 |
+| `played_time` | 開始時刻（例: `"21:00"`）。自由記述の文字列 |
+| `done` | 対局完了フラグ。`false` の間はスコア未確定として扱う |
+
+### `table_players` — 卓と選手の結び付け
+
+1 卓に最大 4 名。卓が確定したタイミングで挿入される。
+
+| カラム | 役割・意味 |
+|---|---|
+| `id` (PK) | 行 ID |
+| `table_id` (FK) | 対局卓 |
+| `player_id` (FK) | 選手 |
+| `seat_order` | 着席位置（1–4）。東南西北の描画順に使う |
+
+### `table_paifu_urls` — 牌譜 URL
+
+1 卓の半荘ごとに 1 行。`(table_id, game_number)` で UNIQUE。
+
+| カラム | 役割・意味 |
+|---|---|
+| `id` (PK) | 行 ID |
+| `table_id` (FK) | 対局卓 |
+| `game_number` | 半荘番号（default 1）。1 卓で複数半荘打つ場合に 2, 3... と増える |
+| `url` | 雀魂牌譜 URL。空文字許可（任意入力） |
+
+### `round_results` — 回戦・半荘単位のスコア
+
+大会の全スコアの根幹。`(tournament_id, player_id, round_number, game_number)` で UNIQUE。
+
+| カラム | 役割・意味 |
+|---|---|
+| `id` (PK) | 行 ID |
+| `tournament_id` (FK) | 所属大会 |
+| `player_id` (FK) | 選手 |
+| `round_number` | 何回戦のスコアか |
+| `game_number` | 半荘番号（default 1）。1 卓で複数半荘打つ場合に分ける |
+| `score` | そのスコア。正負の 1 桁小数 |
+
+### `standings` — 大会 × 選手 の順位サマリ
+
+`round_results` から集計した派生データ。複合主キー `(tournament_id, player_id)` で 1 大会 1 選手 1 行。
+
+| カラム | 役割・意味 |
+|---|---|
+| `tournament_id` (PK/FK) | 所属大会 |
+| `player_id` (PK/FK) | 選手 |
+| `rank` | 大会内順位（`total` 降順） |
+| `total` | その選手の全回戦スコア合計 |
+| `pending` | 結果確定待ちフラグ（途中集計用の予約フィールド）。現状の実装では常に `false` |
+| `eliminated_round` | 敗退回戦（0 = 残留中、N = N 回戦で敗退） |
+
+### `tournament_meta` — 大会メタ情報 (key-value)
+
+`(tournament_id, key)` で主キー。可変な大会属性をスキーマ追加せずに保持する汎用領域。主要 key は本ドキュメント上部の表を参照。
+
+| カラム | 役割・意味 |
+|---|---|
+| `tournament_id` (PK/FK) | 所属大会 |
+| `key` (PK) | 属性名 |
+| `value` | 属性値（文字列。数値も文字列として保存） |
+
+### `interviews` — 優勝者インタビュー Q&A
+
+完了大会のインタビュー記事。任意登録（登録しない大会もある）。
+
+| カラム | 役割・意味 |
+|---|---|
+| `id` (PK) | 行 ID |
+| `tournament_id` (FK) | 所属大会 |
+| `sort_order` | 表示順（昇順で並べる） |
+| `question` | 質問文 |
+| `answer` | 回答文 |

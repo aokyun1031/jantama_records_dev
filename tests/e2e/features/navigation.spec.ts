@@ -3,20 +3,17 @@ import { test, expect } from '../helpers/fixtures';
 test.describe('ページ間ナビゲーション', () => {
   test('トップ → 選手一覧 → 選手詳細 → 戦績分析 の遷移', async ({ page }, testInfo) => {
     testInfo.setTimeout(60000);
-    // トップページ
     await page.goto('/');
 
-    // 選手一覧へ（index.php には複数リンクがあるので first を使用）
+    // index.php には複数リンクがあるので first を使用
     await page.locator('a[href="players"]').first().click();
     await expect(page).toHaveURL(/\/players/);
-    await expect(page.locator('.players-badge')).toBeVisible();
+    await expect(page.locator('.page-hero-badge')).toBeVisible();
 
-    // 最初の選手カードをクリック
     await page.locator('.player-card').first().click();
     await expect(page).toHaveURL(/\/player\?id=/);
     await expect(page.locator('.player-badge')).toContainText('PLAYER');
 
-    // 戦績分析へ
     await page.click('a[href*="player_analysis"]');
     await expect(page).toHaveURL(/\/player_analysis/);
     await expect(page.locator('.analysis-badge')).toContainText('ANALYSIS');
@@ -25,12 +22,10 @@ test.describe('ページ間ナビゲーション', () => {
   test('選手詳細 → 編集 → 戻る の遷移', async ({ page }) => {
     await page.goto('/player?id=1');
 
-    // 編集へ
     await page.click('.player-edit-link');
     await expect(page).toHaveURL(/\/player_edit\?id=1/);
     await expect(page.locator('.edit-badge')).toContainText('EDIT');
 
-    // 戻る
     await page.click('a.btn-cancel');
     await expect(page).toHaveURL(/\/player\?id=1/);
   });
@@ -38,12 +33,10 @@ test.describe('ページ間ナビゲーション', () => {
   test('選手一覧 → 新規登録 → 戻る の遷移', async ({ page }) => {
     await page.goto('/players');
 
-    // 新規登録へ
     await page.click('a[href="player_new"]');
     await expect(page).toHaveURL(/\/player_new/);
     await expect(page.locator('.edit-badge')).toContainText('NEW PLAYER');
 
-    // 戻る
     await page.click('a.btn-cancel');
     await expect(page).toHaveURL(/\/players/);
   });

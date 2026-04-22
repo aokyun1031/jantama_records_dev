@@ -1,20 +1,20 @@
-import { test as base } from '@playwright/test';
+import { test as base, type Page } from '@playwright/test';
+
+const EXTERNAL_FONTS = /fonts\.(googleapis|gstatic)\.com/;
+const IMAGE_ASSETS = /\.(png|jpg|jpeg|webp|gif|svg|ico)(\?.*)?$/;
 
 /**
- * 外部リソースをブロックするカスタムfixture。
- * Google Fonts等のテストに不要な外部通信を排除して高速化する。
+ * テストに不要な外部フォント・画像をブロックして高速化する。
+ * page fixture と createOptimizedPage で共通利用。
  */
+export async function blockHeavyResources(page: Page): Promise<void> {
+  await page.route(EXTERNAL_FONTS, (route) => route.abort());
+  await page.route(IMAGE_ASSETS, (route) => route.abort());
+}
+
 export const test = base.extend({
   page: async ({ page }, use) => {
-    // テストに不���な外部リソース・画像���ブロックして高速化
-    await page.route(
-      /fonts\.(googleapis|gstatic)\.com/,
-      (route) => route.abort()
-    );
-    await page.route(
-      /\.(png|jpg|jpeg|webp|gif|svg|ico)(\?.*)?$/,
-      (route) => route.abort()
-    );
+    await blockHeavyResources(page);
     await use(page);
   },
 });

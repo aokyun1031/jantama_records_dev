@@ -1,4 +1,5 @@
 import { test, expect } from '../helpers/fixtures';
+import { expectNotFound } from '../helpers/test-helpers';
 
 test.describe('404エラーページ', () => {
   test('存在しないURLで404が表示される', async ({ page }) => {
@@ -14,12 +15,10 @@ test.describe('404エラーページ', () => {
   });
 
   test('不正なプレイヤーIDで404', async ({ page }) => {
-    const response = await page.goto('/player?id=abc');
-    expect(response?.status()).toBe(404);
+    await expectNotFound(page, '/player?id=abc');
   });
 
   test('不正な分析ページIDで404', async ({ page }) => {
-    const response = await page.goto('/player_analysis?id=-1');
-    expect(response?.status()).toBe(404);
+    await expectNotFound(page, '/player_analysis?id=-1');
   });
 });

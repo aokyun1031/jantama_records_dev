@@ -52,7 +52,7 @@ bash .claude/skills/refactor/scripts/scan.sh --target $ARGUMENTS
 
 - **1 PR = 1 テーマ**: 型キャスト修正とロジック変更を混ぜない
 - **scan.sh が自動検出しない規約**は `conventions.md` を参照し、必要なら手動レビュー
-- **E2E テスト**は `git push` 時の hook で自動実行される。push 前に確認は不要
+- **E2E テスト**は手動実行。push 前に `cd tests/e2e && npx playwright test` を各自で回す
 - **CRITICAL** の修正はセキュリティ直結。見送らず即対応を提案する
 - 修正対象ファイルの周辺パターン（既存の書き方）を壊さない
 
