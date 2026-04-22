@@ -205,6 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
 
 // --- テンプレート変数 ---
 $pageTitle = h($table['table_name']) . ' - ' . h($tournament['name']) . ' - ' . SITE_NAME;
+$pageDescription = $tournament['name'] . ' ' . $table['table_name'] . ' の対局情報・成績を管理します。';
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .tb-hero { text-align: center; padding: 48px 20px 24px; }

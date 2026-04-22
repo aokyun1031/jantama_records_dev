@@ -148,6 +148,7 @@ $jsPlayers = array_map(fn($p) => [
 
 // --- テンプレート変数 ---
 $pageTitle = '卓作成 - ' . h($tournament['name']) . ' - ' . SITE_NAME;
+$pageDescription = $tournament['name'] . ' の新しい卓を作成します。';
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .tn-hero { text-align: center; padding: 48px 20px 24px; }

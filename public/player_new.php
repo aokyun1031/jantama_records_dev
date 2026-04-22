@@ -59,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- テンプレート変数 ---
 $pageTitle = '選手登録 - ' . SITE_NAME;
+$pageDescription = '新しい選手を登録します。';
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'
 .edit-form { max-width: 600px; }
