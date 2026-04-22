@@ -54,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- テンプレート変数 ---
 $pageTitle = h($tournament['name']) . ' 選手登録 - ' . SITE_NAME;
+$pageDescription = $tournament['name'] . ' に参加する選手を登録します。';
 $pageCss = ['css/forms.css'];
 $pageStyle = '';
 

@@ -108,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- テンプレート変数 ---
 $pageTitle = '大会作成 - ' . SITE_NAME;
+$pageDescription = '新しい麻雀トーナメント大会を作成します。';
 $pageCss = ['css/forms.css'];
 $pageStyle = '';
 
