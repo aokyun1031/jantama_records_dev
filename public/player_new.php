@@ -40,9 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 $newId = Player::create($postName, $postNickname, $postCharacterId);
-                regenerateCsrfToken();
-                startSecureSession();
                 $_SESSION['flash'] = '選手を登録しました。';
+                regenerateCsrfToken();
                 header('Location: player?id=' . $newId);
                 exit;
             } catch (PDOException $e) {

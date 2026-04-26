@@ -180,10 +180,14 @@ index.php（トップ）
   │    ├→ tournament_new.php（大会作成）
   │    └→ tournament.php（大会管理）
   │         ├→ tournament_edit.php（大会情報編集）
-  │         ├→ tournament_players.php（選手登録）
+  │         ├→ tournament_players.php（選手登録：運営一括）
+  │         ├→ tournament_join.php（選手公開URL：参加表明）
   │         ├→ table_new.php（卓作成）
   │         ├→ table.php（卓管理：日程・牌譜URL・結果登録・完了）
   │         └→ interview_edit.php（優勝インタビュー設定・大会完了）
+  ├→ dispatch_dm.php（Discord DM 配信エンドポイント）
+  ├→ discord_oauth_redirect.php（Discord OAuth 認可開始）
+  ├→ discord_oauth_callback.php（Discord OAuth コールバック）
   ├→ tournament_view.php（大会結果閲覧）
   └→ interview.php（優勝インタビュー）
 ```

@@ -174,6 +174,34 @@ class Tournament
     }
 
     /**
+     * 大会に選手1人を追加する。既に参加済みなら何もしない。
+     */
+    public static function addPlayer(int $id, int $playerId): void
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare(
+            'INSERT INTO standings (tournament_id, player_id, rank, total, pending, eliminated_round)
+             VALUES (?, ?, 0, 0, false, 0)
+             ON CONFLICT (tournament_id, player_id) DO NOTHING'
+        );
+        $stmt->execute([$id, $playerId]);
+    }
+
+    /**
+     * 大会から選手1人を削除する。対局済みの場合は例外を投げる。
+     */
+    public static function removePlayer(int $id, int $playerId): void
+    {
+        $playedIds = self::playedPlayerIds($id);
+        if (in_array($playerId, $playedIds, true)) {
+            throw new RuntimeException('対局済みの選手は削除できません。');
+        }
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare('DELETE FROM standings WHERE tournament_id = ? AND player_id = ?');
+        $stmt->execute([$id, $playerId]);
+    }
+
+    /**
      * 大会を作成し、メタ情報と参加選手を登録する。
      *
      * @param array<string, string> $meta
@@ -268,6 +296,63 @@ class Tournament
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('DELETE FROM tournaments WHERE id = ?');
         $stmt->execute([$id]);
+    }
+
+    /**
+     * DM送信対象の選手を返す。
+     * 全選手のうち、未参加 かつ 未送信（または失敗・no_discord_id）の選手。
+     * 参加済選手や送信成功済選手は対象外。
+     *
+     * @return array<int, array{id:int, name:string, nickname:?string, discord_user_id:?string, character_icon:?string}>
+     */
+    public static function dmTargets(int $tournamentId): array
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare(
+            "SELECT p.id, p.name, p.nickname, p.discord_user_id,
+                    c.icon_filename AS character_icon
+               FROM players p
+               LEFT JOIN characters c ON c.id = p.character_id
+              WHERE p.id NOT IN (SELECT player_id FROM standings WHERE tournament_id = ?)
+                AND p.id NOT IN (SELECT player_id FROM tournament_dm_dispatches WHERE tournament_id = ? AND status = 'sent')
+              ORDER BY p.name"
+        );
+        $stmt->execute([$tournamentId, $tournamentId]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * DM送信履歴を記録する（UPSERT）。
+     */
+    public static function recordDmDispatch(int $tournamentId, int $playerId, string $status): void
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare(
+            "INSERT INTO tournament_dm_dispatches (tournament_id, player_id, sent_at, status)
+             VALUES (?, ?, NOW(), ?)
+             ON CONFLICT (tournament_id, player_id)
+             DO UPDATE SET sent_at = NOW(), status = EXCLUDED.status"
+        );
+        $stmt->execute([$tournamentId, $playerId, $status]);
+    }
+
+    /**
+     * 大会の DM 送信履歴を player_id => status のマップで返す。
+     *
+     * @return array<int, string>
+     */
+    public static function dmDispatchesByPlayer(int $tournamentId): array
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare(
+            'SELECT player_id, status FROM tournament_dm_dispatches WHERE tournament_id = ?'
+        );
+        $stmt->execute([$tournamentId]);
+        $map = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $map[(int) $row['player_id']] = (string) $row['status'];
+        }
+        return $map;
     }
 
     public static function byPlayer(int $playerId): array

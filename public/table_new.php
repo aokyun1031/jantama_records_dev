@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $validationError = '卓を作成してください。';
         } else {
             foreach ($postTables as $t) {
-                $name = trim($t['name'] ?? '');
+                $name = preg_replace('/[\x00-\x1F\x7F]/u', '', trim($t['name'] ?? ''));
                 $playerIds = array_map('intval', $t['player_ids'] ?? []);
                 if ($name === '' || mb_strlen($name) > 20) {
                     $validationError = '卓名が不正です。';

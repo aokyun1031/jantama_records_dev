@@ -39,6 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ['data' => $rounds] = fetchData(fn() => TableInfo::byTournament($tournamentId));
 ['data' => $standings] = fetchData(fn() => Standing::all($tournamentId));
 
+// 大会作成直後フラグ（自動DM送信トリガー）
+$dmDispatchPending = (($_SESSION['dm_dispatch_pending'] ?? 0) === $tournamentId);
+unset($_SESSION['dm_dispatch_pending']);
+
 $isCompleted = $tournament['status'] === TournamentStatus::Completed->value;
 $hasTables = !empty($rounds);
 $canDelete = !$isCompleted;
@@ -133,7 +137,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
   </div>
 </div>
 
-<div class="td-content">
+<div class="td-content" data-csrf-token="<?= h($_SESSION['csrf_token']) ?>" data-tournament-id="<?= $tournamentId ?>"<?= $dmDispatchPending ? ' data-dm-dispatch-pending="1"' : '' ?>>
   <?php if ($flash): ?>
     <div class="edit-message success"><?= h($flash) ?></div>
   <?php endif; ?>
@@ -421,7 +425,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
 </div>
 
 <?php
-$pageInlineScript = '';
+$pageScripts = ['js/dispatch-dm.js'];
 
 require __DIR__ . '/../templates/footer.php';
 ?>

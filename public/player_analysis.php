@@ -7,7 +7,7 @@ $playerId = requirePlayerId();
 $player = requirePlayer($playerId);
 
 // 大会種別フィルタ: GET パラメータを EventType で検証
-$rawEventTypes = $_GET['event_types'] ?? [];
+$rawEventTypes = filter_input(INPUT_GET, 'event_types', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) ?? [];
 if (!is_array($rawEventTypes)) {
     $rawEventTypes = [];
 }

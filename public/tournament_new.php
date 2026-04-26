@@ -95,8 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ], $postPlayerIds);
 
                 $_SESSION['flash'] = '大会を作成しました。';
+                $_SESSION['dm_dispatch_pending'] = $tournamentId;
                 regenerateCsrfToken();
-                header('Location: tournaments');
+                header('Location: tournament?id=' . $tournamentId);
                 exit;
             } catch (PDOException $e) {
                 error_log('[DB] ' . $e->getMessage());
@@ -135,7 +136,7 @@ require __DIR__ . '/../templates/header.php';
     <!-- 参加選手 -->
     <div class="edit-section">
       <div class="edit-section-title">参加選手</div>
-      <div class="edit-hint" style="margin-bottom: 16px;">卓作成時に選手の追加、削除が可能です。</div>
+      <div class="edit-hint" style="margin-bottom: 16px;">事前に参加確定の選手だけチェック。未選択の選手には大会作成後 自動的にDiscord DMで参加表明URLが送信されます（Discord ID 未登録選手は対象外）。</div>
       <div class="player-select-controls">
         <button type="button" class="btn-select-toggle" id="btn-select-all">全選択</button>
         <button type="button" class="btn-select-toggle" id="btn-deselect-all">全解除</button>

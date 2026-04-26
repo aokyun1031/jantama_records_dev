@@ -94,8 +94,13 @@ CREATE TABLE public.players (
     id integer NOT NULL,
     name character varying(50) NOT NULL,
     nickname character varying(50) DEFAULT NULL::character varying,
-    character_id integer
+    character_id integer,
+    discord_user_id character varying(32),
+    discord_username character varying(64)
 );
+
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_players_discord_user_id ON public.players (discord_user_id) WHERE discord_user_id IS NOT NULL;
 
 
 --
@@ -164,6 +169,27 @@ CREATE TABLE public.standings (
     eliminated_round integer DEFAULT 0,
     tournament_id integer NOT NULL
 );
+
+
+--
+-- Name: tournament_dm_dispatches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tournament_dm_dispatches (
+    tournament_id integer NOT NULL,
+    player_id integer NOT NULL,
+    sent_at timestamp with time zone DEFAULT now() NOT NULL,
+    status character varying(16) NOT NULL
+);
+
+ALTER TABLE ONLY public.tournament_dm_dispatches
+    ADD CONSTRAINT tournament_dm_dispatches_pkey PRIMARY KEY (tournament_id, player_id);
+
+ALTER TABLE ONLY public.tournament_dm_dispatches
+    ADD CONSTRAINT tournament_dm_dispatches_tournament_id_fkey FOREIGN KEY (tournament_id) REFERENCES public.tournaments(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.tournament_dm_dispatches
+    ADD CONSTRAINT tournament_dm_dispatches_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.players(id) ON DELETE CASCADE;
 
 
 --

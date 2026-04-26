@@ -328,7 +328,7 @@ foreach ($tournaments as $t) {
     </div>
   <?php else: ?>
     <div class="lp3-card lp3-live-empty">
-      <strong>&#x1F4AC; 現在開催中の大会はありません</strong>
+      <strong>現在開催中の大会はありません</strong>
       <?php if ($latestCompleted): ?>
         <div class="lp3-live-empty-sub">直近の終了大会はこちら</div>
         <a href="tournament_view?id=<?= (int) $latestCompleted['id'] ?>" class="lp3-btn lp3-btn-primary lp3-btn-sm lp3-btn-arrow" style="margin-top:10px;"><?= h($latestCompleted['name']) ?></a>

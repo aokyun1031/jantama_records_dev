@@ -35,7 +35,7 @@ foreach ($paifuUrls as $pu) {
 
 
 // POST処理
-$success = isset($_GET['saved']) && $_GET['saved'] === '1';
+$success = filter_input(INPUT_GET, 'saved') === '1';
 $validationError = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
