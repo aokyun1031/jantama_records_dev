@@ -94,7 +94,12 @@ foreach ($targets as $p) {
         'footer' => ['text' => SITE_NAME],
     ];
 
-    $ok = discordSendDmEmbed($discordUserId, $embed);
+    // クライアントで Embed 非表示の選手にも本文が届くように content も併送する
+    $content = "🀄 **{$tournament['name']}** の参加表明URLが届きました。\n"
+        . "こちらから参加 / 不参加 を選択してください:\n"
+        . $joinUrl;
+
+    $ok = discordSendDmEmbed($discordUserId, $embed, $content);
     Tournament::recordDmDispatch($tournamentId, $playerId, $ok ? 'sent' : 'failed');
     $counts[$ok ? 'sent' : 'failed']++;
 

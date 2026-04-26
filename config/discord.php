@@ -266,7 +266,7 @@ function discordOauthFetchUser(string $accessToken): ?array
  *   title, description, color, url, fields, footer など
  *   https://discord.com/developers/docs/resources/channel#embed-object
  */
-function discordSendDmEmbed(string $userId, array $embed): bool
+function discordSendDmEmbed(string $userId, array $embed, string $content = ''): bool
 {
     if ($userId === '' || !discordEnabled()) {
         return false;
@@ -279,7 +279,12 @@ function discordSendDmEmbed(string $userId, array $embed): bool
     }
 
     $channelId = (string) $dm['body']['id'];
-    $msg = discordRequest('POST', '/channels/' . $channelId . '/messages', ['embeds' => [$embed]]);
+    // content も併送する。クライアント設定で Embed 非表示の選手にも本文が届くようにする。
+    $payload = ['embeds' => [$embed]];
+    if ($content !== '') {
+        $payload['content'] = $content;
+    }
+    $msg = discordRequest('POST', '/channels/' . $channelId . '/messages', $payload);
     if (!$msg || $msg['status'] >= 400) {
         error_log('[Discord] send embed failed: user=' . $userId . ' status=' . ($msg['status'] ?? '-'));
         return false;

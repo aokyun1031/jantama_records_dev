@@ -24,17 +24,19 @@
 
 ```mermaid
 erDiagram
-    tournaments ||--o{ tables_info      : ""
-    tournaments ||--o{ round_results    : ""
-    tournaments ||--o{ standings        : ""
-    tournaments ||--o{ tournament_meta  : ""
-    tournaments ||--o{ interviews       : ""
-    players     ||--o{ round_results    : ""
-    players     ||--o{ standings        : ""
-    players     ||--o{ table_players    : ""
-    tables_info ||--o{ table_players    : ""
-    tables_info ||--o{ table_paifu_urls : ""
-    characters  ||--o{ players          : ""
+    tournaments ||--o{ tables_info               : ""
+    tournaments ||--o{ round_results             : ""
+    tournaments ||--o{ standings                 : ""
+    tournaments ||--o{ tournament_meta           : ""
+    tournaments ||--o{ interviews                : ""
+    tournaments ||--o{ tournament_dm_dispatches  : ""
+    players     ||--o{ round_results             : ""
+    players     ||--o{ standings                 : ""
+    players     ||--o{ table_players             : ""
+    players     ||--o{ tournament_dm_dispatches  : ""
+    tables_info ||--o{ table_players             : ""
+    tables_info ||--o{ table_paifu_urls          : ""
+    characters  ||--o{ players                   : ""
 ```
 
 **FK 削除挙動**: `characters → players` のみ `SET NULL`（キャラ削除で選手行を消さない）。それ以外は全て `CASCADE`。
@@ -172,6 +174,8 @@ erDiagram
 | `name` (UNIQUE) | 正式名称。全体で一意（重複登録防止） |
 | `nickname` | 表示用の呼称。正式名称より砕けた呼び名を許容 |
 | `character_id` (FK → `characters.id`) | 雀魂キャラ。`SET NULL` なのでキャラ削除しても選手は残る |
+| `discord_user_id` (UNIQUE) | Discord ユーザーID（雪片ID）。OAuth2 連携または手動で紐付け。null 許可（未連携選手） |
+| `discord_username` | Discord 表示名（`global_name` 優先、無ければ `username`）。OAuth 連携時にキャッシュ |
 
 ### `characters` — 雀魂キャラマスター
 
@@ -267,3 +271,15 @@ erDiagram
 | `sort_order` | 表示順（昇順で並べる） |
 | `question` | 質問文 |
 | `answer` | 回答文 |
+
+### `tournament_dm_dispatches` — Discord DM 配信履歴
+
+大会作成時に Discord DM で参加表明URLを送った履歴。`(tournament_id, player_id)` で一意。
+「未配信選手のみ再送」「個別再送」で参照する。送信成功（`sent`）の選手は再送対象から除外。
+
+| カラム | 役割・意味 |
+|---|---|
+| `tournament_id` (PK/FK) | 所属大会 |
+| `player_id` (PK/FK) | 送信先選手 |
+| `sent_at` | 最終送信時刻 |
+| `status` | `sent` / `failed` / `no_discord_id` のいずれか（DM拒否設定や ID 未登録は `failed` / `no_discord_id`） |

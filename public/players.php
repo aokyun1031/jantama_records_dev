@@ -158,8 +158,12 @@ require __DIR__ . '/../templates/header.php';
         <div class="player-icon-placeholder">NO<br>IMAGE</div>
       <?php endif; ?>
       <div class="player-info">
-        <div class="player-name"><?= h($player['name']) ?></div>
-        <?php if ($player['nickname'] !== null && $player['nickname'] !== ''): ?><div class="player-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
+        <?php if ($player['nickname'] !== null && $player['nickname'] !== ''): ?>
+          <div class="player-name"><?= h($player['nickname']) ?></div>
+          <div class="player-nickname"><?= h($player['name']) ?></div>
+        <?php else: ?>
+          <div class="player-name"><?= h($player['name']) ?></div>
+        <?php endif; ?>
       </div>
     </a>
   <?php endforeach; ?>

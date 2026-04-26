@@ -378,6 +378,50 @@ npx wrangler deploy
 
 ---
 
+## Discord 連携
+
+選手と Discord ユーザーを OAuth2 で紐付け、大会作成時に参加表明URLを自動 DM 送信する。
+
+### 機能
+
+- **OAuth2 連携**: `player_edit` の「Discord と連携」ボタンで自分の Discord アカウントを紐付け（要求権限 `identify` のみ）
+- **大会作成時 自動 DM 配信**: 大会作成完了 → 未参加 + Discord 連携済 の選手に Embed DM 送信（`POST /dispatch_dm` を JS 自動発火）
+- **個別 / 全員 再送**: `tournament.php` の「未送信全員にDM送信」or 個別ボタンで再送（履歴は `tournament_dm_dispatches` で重複防止）
+- **選手公開URL**: 受信した DM のリンクから `/tournament_join` 開く → 「参加する / 取消」ワンクリック
+
+### 構成ファイル
+
+| ファイル | 役割 |
+|---|---|
+| `public/discord_oauth_redirect.php` | OAuth 認可開始（state HMAC 署名） |
+| `public/discord_oauth_callback.php` | code 受信 → token 交換 → User 情報保存 |
+| `public/dispatch_dm.php` | DM 送信エンドポイント（POST + CSRF） |
+| `public/tournament_join.php` | 選手公開URL（参加 / 取消） |
+| `config/discord.php` | Bot API / OAuth2 ヘルパ |
+
+### 環境変数
+
+| 変数 | 用途 | ローカル | 本番 |
+|---|---|---|---|
+| `DISCORD_BOT_TOKEN` | Bot API 認証（DM 送信） | `.env` | Render Environment |
+| `DISCORD_APPLICATION_ID` | OAuth `client_id` | 同上 | 同上 |
+| `DISCORD_PUBLIC_KEY` | (Interactions Endpoint 用、現在未使用) | 同上 | 同上 |
+| `DISCORD_CLIENT_SECRET` | OAuth トークン交換 | 同上 | 同上 |
+| `DISCORD_OAUTH_REDIRECT_URI` | OAuth callback URL（環境別に異なる） | `http://localhost:8080/discord_oauth_callback` | `https://jantama-records.onrender.com/discord_oauth_callback` |
+| `DISCORD_GUILD_ID` | 大会用サーバー ID | 同上 | 同上 |
+| `APP_SECRET` | OAuth state HMAC 署名鍵 (`openssl rand -hex 32` で生成、ローカル/本番で別値推奨) | 同上 | 同上 |
+
+### 事前準備
+
+1. **Discord Developer Portal でアプリ作成** → Bot 化 → Token / Application ID / Public Key / Client Secret 取得
+2. **OAuth2 > Redirects** に本番 + ローカル両方の `discord_oauth_callback` URL を登録
+3. **Bot をサーバーに招待** （`bot` + `applications.commands` scope）
+4. **選手側設定**: Discord ユーザー設定 > プライバシー・安全 > 「サーバーメンバーからのダイレクトメッセージを許可」ON
+
+詳細手順 → コミット履歴の Discord 関連 PR を参照。
+
+---
+
 ## 開発ツール（Claude Code）
 
 Claude Code 用の skill / slash command / agent / hook を `.claude/` に配置している。
