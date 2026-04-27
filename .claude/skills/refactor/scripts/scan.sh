@@ -34,6 +34,16 @@ PHP_FILES=$(find "$TARGET" -type f -name '*.php' 2>/dev/null | sort)
 JS_FILES=$(find "$TARGET" -type f -name '*.js' 2>/dev/null | sort)
 CSS_FILES=$(find "$TARGET" -type f -name '*.css' 2>/dev/null | sort)
 
+# 対象外ファイル（参照無しの旧ページ等。詳細は conventions.md を参照）
+EXCLUDE_FILES=(
+  "public/index_legacy.php"
+)
+for excl in "${EXCLUDE_FILES[@]}"; do
+  PHP_FILES=$(printf "%s\n" "$PHP_FILES" | grep -vxF "$excl" || true)
+  JS_FILES=$(printf "%s\n" "$JS_FILES" | grep -vxF "$excl" || true)
+  CSS_FILES=$(printf "%s\n" "$CSS_FILES" | grep -vxF "$excl" || true)
+done
+
 [ -z "$PHP_FILES" ] && [ -z "$JS_FILES" ] && [ -z "$CSS_FILES" ] && {
   echo "No PHP/JS/CSS files found in $TARGET"
   exit 0
