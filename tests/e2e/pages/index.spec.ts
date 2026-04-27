@@ -29,6 +29,17 @@ test.describe('トップページ', () => {
     await expect(page.locator('.lp3-series-tile')).toHaveCount(5);
   });
 
+  test('シリーズタイルは大会一覧の種別フィルタ付きへ遷移する', async ({ page }) => {
+    const tiles = page.locator('.lp3-series-tile');
+    for (let i = 0; i < await tiles.count(); i++) {
+      const href = await tiles.nth(i).getAttribute('href');
+      expect(href).toMatch(/^tournaments\?event_types(%5B%5D|\[\])=/);
+    }
+    await tiles.first().click();
+    await expect(page).toHaveURL(/\/tournaments\?event_types/);
+    await expect(page.locator('.event-chip.is-selected')).toHaveCount(1);
+  });
+
   test('大会アーカイブが存在する', async ({ page }) => {
     await expect(page.locator('.lp3-archive-row').first()).toBeVisible();
   });
@@ -46,5 +57,18 @@ test.describe('トップページ', () => {
     const copyright = page.locator('.footer-copyright');
     await expect.soft(copyright).toContainText('Soul Games');
     await expect.soft(copyright).toContainText('Yostar');
+  });
+
+  test('スマホ幅でインタビューボタンが内容サイズ（幅100%にならない）', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    const btn = page.locator('.lp3-spotlight .lp3-btn-primary').first();
+    if (await btn.count() === 0) test.skip();
+    const grid = page.locator('.lp3-spotlight-grid').first();
+    const btnBox = await btn.boundingBox();
+    const gridBox = await grid.boundingBox();
+    expect(btnBox).not.toBeNull();
+    expect(gridBox).not.toBeNull();
+    expect(btnBox!.width).toBeLessThan(gridBox!.width * 0.85);
   });
 });

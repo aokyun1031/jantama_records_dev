@@ -117,8 +117,8 @@ $pageOgp = [
     'image_alt' => SITE_NAME . ' - 雀魂トーナメント戦績ダッシュボード',
 ];
 
-$pageCss = ['css/landing-pop.css', 'css/sakura.css'];
-$pageScripts = ['js/landing-pop.js', 'js/sakura.js'];
+$pageCss = ['css/landing-pop.css'];
+$pageScripts = ['js/landing-pop.js'];
 
 // Loader の Critical CSS をインラインで埋める（外部CSSの到着前でも表示できるように）
 // 注: 外部CSSが未ロードの段階で描画するため、ここでは CSS 変数が解決できず
@@ -179,9 +179,6 @@ require __DIR__ . '/../templates/header.php';
     <div class="lp3-loader-bar" aria-hidden="true"><span></span></div>
   </div>
 </div>
-
-<!-- 桜演出コンテナ（JS が .sakura-petal を動的追加） -->
-<div class="sakura-container" aria-hidden="true"></div>
 
 <?php
 // ローダーをブラウザへ先行送出してから重いクエリを実行

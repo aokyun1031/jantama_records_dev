@@ -29,8 +29,7 @@
         $latest = $latestByEvent[$etv] ?? null;
         $count = $eventCounts[$etv] ?? 0;
         $tsLatest = $latest ? TournamentStatus::tryFrom($latest['status']) : null;
-        $viewable = $latest && $latest['status'] !== TournamentStatus::Preparing->value;
-        $href = $latest ? ($viewable ? 'tournament_view?id=' . (int) $latest['id'] : 'tournament?id=' . (int) $latest['id']) : 'tournaments';
+        $href = 'tournaments?event_types[]=' . urlencode($etv);
     ?>
       <a href="<?= h($href) ?>" class="lp3-card lp3-series-tile<?= $count === 0 ? ' is-empty' : '' ?>" data-code="<?= h((string) $code) ?>">
         <span class="lp3-series-count">開催 <?= (int) $count ?> 回</span>

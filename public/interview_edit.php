@@ -68,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 try {
                     Tournament::complete($tournamentId);
+                    announceDiscordTournamentCompleted($tournamentId);
                     $_SESSION['flash'] = '大会を完了しました！';
                     regenerateCsrfToken();
                     header('Location: tournament?id=' . $tournamentId);
