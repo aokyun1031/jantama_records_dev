@@ -29,9 +29,9 @@
 .edit-radio-group{display:flex;flex-wrap:wrap;gap:8px}
 .edit-radio-option{position:relative;cursor:pointer}
 .edit-radio-option input{position:absolute;opacity:0;pointer-events:none}
-.edit-radio-label{display:inline-block;padding:8px 16px;border:2px solid transparent;border-radius:var(--radius-sm);font-size:0.85rem;font-weight:600;color:var(--text-sub);background:rgba(var(--accent-rgb),0.04);transition:border-color 0.2s,box-shadow 0.2s,color 0.2s}
+.edit-radio-label{display:inline-block;padding:8px 16px;border:2px solid var(--input-border);border-radius:var(--radius-sm);font-size:0.85rem;font-weight:600;color:var(--text-sub);background:rgba(var(--accent-rgb),0.04);transition:border-color 0.2s,box-shadow 0.2s,color 0.2s}
 .edit-radio-option input:checked+.edit-radio-label{border-color:var(--purple);box-shadow:0 0 0 3px rgba(var(--accent-rgb),0.2);background:rgba(var(--accent-rgb),0.08);color:var(--text)}
-.edit-radio-label:hover{border-color:rgba(var(--accent-rgb),0.4)}
+.edit-radio-label:hover{border-color:var(--input-border-hover)}
 .edit-select{padding:10px 14px;border:1.5px solid var(--input-border);border-radius:var(--radius-sm);font-size:0.9rem;font-family:'Noto Sans JP',sans-serif;background:var(--input-bg);color:var(--text);cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s}
 .edit-select:hover:not(:disabled):not(:focus){border-color:var(--input-border-hover)}
 .edit-select:focus{outline:none;border-color:var(--input-border-focus);box-shadow:var(--input-focus-ring)}

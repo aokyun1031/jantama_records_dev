@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $_SESSION['flash'] = '大会を作成しました。';
                 $_SESSION['dm_dispatch_pending'] = $tournamentId;
+                announceDiscordTournamentCreated($tournamentId);
                 regenerateCsrfToken();
                 header('Location: tournament?id=' . $tournamentId);
                 exit;

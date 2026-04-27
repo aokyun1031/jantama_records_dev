@@ -12,7 +12,8 @@ class Standing
     {
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('
-            SELECT s.rank, s.player_id, p.name, p.nickname, s.total, s.pending, s.eliminated_round,
+            SELECT s.rank, s.player_id, p.name, p.nickname, p.discord_user_id,
+                   s.total, s.pending, s.eliminated_round,
                    c.icon_filename AS character_icon
             FROM standings s
             JOIN players p ON p.id = s.player_id

@@ -1371,7 +1371,14 @@ a.lp3-stat:hover .lp3-stat-num { color: var(--pop-pink-d); }
   .lp3-archive-row { grid-template-columns: 90px 1fr 90px; padding: 12px 16px; }
   .lp3-archive-event, .lp3-archive-winner { display: none; }
   .lp3-spotlight { padding: 20px 18px; }
-  .lp3-spotlight-grid { grid-template-columns: 1fr; gap: 12px; }
+  .lp3-spotlight-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    justify-items: center;
+    text-align: center;
+  }
+  .lp3-spotlight-body { align-items: center; }
+  .lp3-spotlight-meta { justify-content: center; }
   /* Section divider: タブレット */
   .lp3-section-divider { height: 62px; margin: -22px 0; }
   .lp3-divider-char { width: 36px; height: 36px; }

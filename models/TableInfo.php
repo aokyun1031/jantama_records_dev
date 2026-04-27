@@ -33,7 +33,7 @@ class TableInfo
         $pdo = getDbConnection();
         // 選手一覧（合計スコア付き）
         $stmt = $pdo->prepare('
-            SELECT tp.player_id, p.name, p.nickname, tp.seat_order,
+            SELECT tp.player_id, p.name, p.nickname, p.discord_user_id, tp.seat_order,
                    c.icon_filename AS character_icon,
                    SUM(rr.score) AS score
             FROM table_players tp
@@ -42,7 +42,7 @@ class TableInfo
             LEFT JOIN round_results rr ON rr.player_id = tp.player_id
                   AND rr.tournament_id = ? AND rr.round_number = ?
             WHERE tp.table_id = ?
-            GROUP BY tp.player_id, p.name, p.nickname, tp.seat_order, c.icon_filename
+            GROUP BY tp.player_id, p.name, p.nickname, p.discord_user_id, tp.seat_order, c.icon_filename
             ORDER BY tp.seat_order
         ');
         $stmt->execute([$table['tournament_id'], $table['round_number'], $id]);
@@ -287,6 +287,52 @@ class TableInfo
                 'name'       => $row['player_name'],
                 'icon'       => $row['player_icon'] ?? '',
                 'seat_order' => $row['seat_order'],
+            ];
+        }
+        return array_values($tables);
+    }
+
+    /**
+     * 特定ラウンドの卓と各卓メンバーを Discord 告知用に取得する。
+     *
+     * 各メンバーの discord_user_id を含む。Discord 未連携選手は null。
+     *
+     * @return array<int, array{
+     *   table_id:int, table_name:string,
+     *   players:array<int, array{
+     *     player_id:int, name:string, nickname:?string, discord_user_id:?string
+     *   }>
+     * }>
+     */
+    public static function byRoundForAnnounce(int $tournamentId, int $roundNumber): array
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare('
+            SELECT t.id AS table_id, t.table_name,
+                   tp.player_id, p.name, p.nickname, p.discord_user_id, tp.seat_order
+            FROM tables_info t
+            JOIN table_players tp ON tp.table_id = t.id
+            JOIN players p ON p.id = tp.player_id
+            WHERE t.tournament_id = ? AND t.round_number = ?
+            ORDER BY t.id, tp.seat_order
+        ');
+        $stmt->execute([$tournamentId, $roundNumber]);
+
+        $tables = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $tableId = (int) $row['table_id'];
+            if (!isset($tables[$tableId])) {
+                $tables[$tableId] = [
+                    'table_id'   => $tableId,
+                    'table_name' => $row['table_name'],
+                    'players'    => [],
+                ];
+            }
+            $tables[$tableId]['players'][] = [
+                'player_id'       => (int) $row['player_id'],
+                'name'            => $row['name'],
+                'nickname'        => $row['nickname'],
+                'discord_user_id' => $row['discord_user_id'],
             ];
         }
         return array_values($tables);

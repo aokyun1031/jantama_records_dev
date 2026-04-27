@@ -124,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         TournamentMeta::set($tournamentId, $rk . '_advance_mode', $advanceMode);
                         TournamentMeta::set($tournamentId, $rk . '_game_count', (string) $gameCount);
                         TournamentMeta::set($tournamentId, $rk . '_game_type', $gameType);
+                        announceDiscordRoundTablesAssigned($tournamentId, $roundNumber);
                         $_SESSION['flash'] = count($tablesData) . '卓を作成しました。';
                         regenerateCsrfToken();
                         header('Location: tournament?id=' . $tournamentId);

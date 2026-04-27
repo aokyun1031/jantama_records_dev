@@ -187,6 +187,22 @@ ALTER TABLE ONLY public.tournament_dm_dispatches
 
 
 --
+-- Name: discord_scheduled_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.discord_scheduled_events (
+    entity_type character varying(16) NOT NULL,
+    entity_id integer NOT NULL,
+    discord_event_id character varying(32) NOT NULL,
+    guild_id character varying(32) NOT NULL,
+    last_synced_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.discord_scheduled_events
+    ADD CONSTRAINT discord_scheduled_events_pkey PRIMARY KEY (entity_type, entity_id);
+
+
+--
 -- Name: table_paifu_urls; Type: TABLE; Schema: public; Owner: -
 --
 

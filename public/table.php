@@ -63,7 +63,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                 $validationError = '時間の形式が不正です。';
             } else {
                 try {
+                    $prevDate = (string) ($table['played_date'] ?? '');
+                    $prevTime = (string) ($table['played_time'] ?? '');
                     TableInfo::updateSchedule($tableId, $playedDate ?: null, $dayOfWeek, $playedTime);
+                    syncDiscordTableEvent($tableId, $prevDate, $prevTime);
                     regenerateCsrfToken();
                     header('Location: table?id=' . $tableId . '&saved=1');
                     exit;
@@ -124,6 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                     }
                     TableInfo::markDone($tableId);
                     Standing::updateTotals($tournamentId);
+                    announceDiscordTableResult($tableId);
                     $_SESSION['flash'] = Tournament::processRoundCompletion($tournamentId, (int) $table['round_number']);
                     regenerateCsrfToken();
                     header('Location: tournament?id=' . $tournamentId);
@@ -167,13 +171,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
 
             if (!$hasError) {
                 try {
+                    $prevDate = (string) ($table['played_date'] ?? '');
+                    $prevTime = (string) ($table['played_time'] ?? '');
                     TableInfo::updateSchedule($tableId, $playedDate ?: null, $dayOfWeek, $playedTime);
+                    syncDiscordTableEvent($tableId, $prevDate, $prevTime);
                     TablePaifuUrl::saveAll($tableId, $bulkUrls);
                     foreach ($allGameScores as $g => $scores) {
                         RoundResult::saveScores($tournamentId, (int) $table['round_number'], $scores, $g);
                     }
                     TableInfo::markDone($tableId);
                     Standing::updateTotals($tournamentId);
+                    announceDiscordTableResult($tableId);
 
                     $_SESSION['flash'] = Tournament::processRoundCompletion($tournamentId, (int) $table['round_number']);
                     regenerateCsrfToken();
