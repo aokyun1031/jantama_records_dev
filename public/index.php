@@ -245,208 +245,21 @@ foreach ($tournaments as $t) {
 
 <div class="lp3">
 
-<!-- ======================== -->
-<!-- HERO -->
-<!-- ======================== -->
-<section class="lp3-band band-hero lp3-hero">
-  <div class="lp3-inner">
-    <h1 class="lp3-hero-title">雀魂部屋主催</h1>
-    <p class="lp3-hero-sub">
-      雀魂で開催する麻雀トーナメントの対局結果・戦績・選手情報を掲載しています。
-    </p>
-
-    <div class="lp3-hero-actions">
-      <a href="tournaments" class="lp3-btn lp3-btn-primary lp3-btn-arrow">大会一覧を見る</a>
-      <a href="players" class="lp3-btn lp3-btn-secondary">選手一覧を見る</a>
-    </div>
-  </div>
-</section>
+<?php require __DIR__ . '/../templates/partials/index/hero.php'; ?>
 
 <?php require __DIR__ . '/../templates/partials/index/live.php'; ?>
 
-<!-- ======================== -->
-<!-- CHAMPION SPOTLIGHT -->
-<!-- ======================== -->
-<?php if ($latestChampion && $latestCompleted): ?>
-<?= $dividerHtml('champion') ?>
-<section class="lp3-band band-champion lp3-reveal">
-  <div class="lp3-inner">
-    <h2 class="lp3-heading">最新王者</h2>
-  <div class="lp3-card lp3-champion">
-    <div class="lp3-champion-grid">
-      <div class="lp3-champion-avatar">
-        <?php if (!empty($latestChampion['character_icon'])): ?>
-          <img src="img/chara_deformed/<?= h($latestChampion['character_icon']) ?>" alt="" width="120" height="120" loading="eager">
-        <?php else: ?>
-          <div class="lp3-avatar-ph" style="width:100%;height:100%;font-size:1.2rem;">NO<br>IMG</div>
-        <?php endif; ?>
-      </div>
-      <div class="lp3-champion-body">
-        <?php
-        $champEvent = EventType::tryFrom($latestCompleted['event_type'] ?? '');
-        $champName = $latestChampion['nickname'] ?? $latestChampion['name'];
-        $champDate = !empty($latestCompleted['start_date']) ? date('Y.m.d', strtotime($latestCompleted['start_date'])) : '';
-        $champScore = (float) $latestChampion['total'];
-        ?>
-        <div class="lp3-champion-tournament-line">
-          <?php if ($champEvent): ?>
-            <span class="lp3-chip is-pink"><?= h($champEvent->label()) ?></span>
-          <?php endif; ?>
-          <span class="lp3-champion-tournament"><?= h($latestCompleted['name']) ?></span>
-          <?php if ($champDate !== ''): ?>
-            <span class="lp3-champion-date"><?= h($champDate) ?></span>
-          <?php endif; ?>
-        </div>
-        <div class="lp3-champion-main">
-          <h3 class="lp3-champion-name"><?= h($champName) ?></h3>
-          <div class="lp3-champion-score">
-            <span class="lp3-champion-score-num"><?= ($champScore >= 0 ? '+' : '') . number_format($champScore, 1) ?></span>
-            <span class="lp3-champion-score-unit">pt</span>
-          </div>
-        </div>
-        <div class="lp3-champion-actions">
-          <a href="tournament_view?id=<?= (int) $latestCompleted['id'] ?>" class="lp3-btn lp3-btn-primary lp3-btn-arrow">大会の詳細</a>
-          <a href="player?id=<?= (int) $latestChampion['player_id'] ?>" class="lp3-btn lp3-btn-secondary">選手ページへ</a>
-        </div>
-      </div>
-    </div>
-  </div>
-  </div>
-</section>
-<?php endif; ?>
+<?php require __DIR__ . '/../templates/partials/index/champion.php'; ?>
 
 <?php require __DIR__ . '/../templates/partials/index/series.php'; ?>
 
 <?php require __DIR__ . '/../templates/partials/index/vault.php'; ?>
 
-<!-- ======================== -->
-<!-- ROSTER — ランダム選手ピックアップ -->
-<!-- ======================== -->
-<?php if (!empty($randomPlayers)): ?>
-<?= $dividerHtml('roster') ?>
-<section class="lp3-band band-roster lp3-reveal">
-  <div class="lp3-inner">
-    <h2 class="lp3-heading">選手紹介</h2>
-  <div class="lp3-roster-scroller">
-    <?php foreach ($randomPlayers as $pl):
-        $bestScore = isset($pl['best_score']) ? (float) $pl['best_score'] : null;
-        $winCount = (int) ($pl['win_count'] ?? 0);
-        $tCount = (int) ($pl['tournament_count'] ?? 0);
-    ?>
-      <a href="player?id=<?= (int) $pl['player_id'] ?>" class="lp3-card lp3-roster-card">
-        <?php if (!empty($pl['character_icon'])): ?>
-          <img src="img/chara_deformed/<?= h($pl['character_icon']) ?>" alt="" class="lp3-roster-avatar" width="90" height="90" loading="lazy">
-        <?php else: ?>
-          <span class="lp3-roster-avatar-ph">NO<br>IMG</span>
-        <?php endif; ?>
-        <div class="lp3-roster-name"><?= h($pl['player_name']) ?></div>
-        <div class="lp3-roster-badges">
-          <?php if ($winCount > 0): ?>
-            <span class="lp3-roster-badge">👑 優勝 <?= $winCount ?>回</span>
-          <?php endif; ?>
-          <span class="lp3-roster-badge is-ghost">出場 <?= $tCount ?>大会</span>
-        </div>
-        <div class="lp3-roster-best">
-          <?php if ($bestScore !== null): ?>
-            <span class="lp3-roster-best-label">最高スコア</span>
-            <span class="lp3-roster-best-num"><?= ($bestScore >= 0 ? '+' : '') . number_format($bestScore, 1) ?><small>pt</small></span>
-          <?php else: ?>
-            <span class="lp3-roster-best-label">最高スコア</span>
-            <span class="lp3-roster-best-num is-na">—</span>
-          <?php endif; ?>
-        </div>
-      </a>
-    <?php endforeach; ?>
-  </div>
-  <div style="text-align:right;margin-top:14px;">
-    <a href="players" class="lp3-btn lp3-btn-ghost lp3-btn-sm lp3-btn-arrow">選手一覧を見る</a>
-  </div>
-  </div>
-</section>
-<?php endif; ?>
+<?php require __DIR__ . '/../templates/partials/index/roster.php'; ?>
 
+<?php require __DIR__ . '/../templates/partials/index/archive.php'; ?>
 
-
-<!-- ======================== -->
-<!-- ARCHIVE -->
-<!-- ======================== -->
-<?php if (!empty($tournaments)): ?>
-<?= $dividerHtml('archive') ?>
-<section class="lp3-band band-archive lp3-reveal">
-  <div class="lp3-inner">
-    <h2 class="lp3-heading">過去の大会</h2>
-  <div class="lp3-archive-grid">
-    <?php foreach (array_slice($tournaments, 0, 8) as $t):
-        $tsEnum = TournamentStatus::tryFrom($t['status']);
-        $etEnum = EventType::tryFrom($t['event_type'] ?? '');
-        $isViewable = $t['status'] !== TournamentStatus::Preparing->value;
-        $href = $isViewable ? 'tournament_view?id=' . (int) $t['id'] : 'tournament?id=' . (int) $t['id'];
-        $dateStr = !empty($t['start_date']) ? date('Y.m.d', strtotime($t['start_date'])) : '';
-    ?>
-      <a href="<?= h($href) ?>" class="lp3-card lp3-archive-row">
-        <span class="lp3-archive-date"><?= h($dateStr) ?></span>
-        <span class="lp3-archive-name"><?= h($t['name']) ?></span>
-        <span class="lp3-archive-event"><?= h($etEnum?->label() ?? '-') ?></span>
-        <span class="lp3-archive-winner">
-          <?php if ($t['status'] === TournamentStatus::Completed->value && !empty($t['winner_name'])): ?>
-            &#x1F451; <strong><?= h($t['winner_name']) ?></strong>
-          <?php else: ?>
-            <?= (int) $t['player_count'] ?>名参加
-          <?php endif; ?>
-        </span>
-        <span class="lp3-archive-status <?= $tsEnum?->cssClass() ?? '' ?>"><?= h($tsEnum?->label() ?? '') ?></span>
-      </a>
-    <?php endforeach; ?>
-  </div>
-  <?php if (count($tournaments) > 8): ?>
-    <div style="text-align:right;margin-top:14px;">
-      <a href="tournaments" class="lp3-btn lp3-btn-ghost lp3-btn-sm lp3-btn-arrow">すべての大会</a>
-    </div>
-  <?php endif; ?>
-  </div>
-</section>
-<?php endif; ?>
-
-
-
-<!-- ======================== -->
-<!-- SPOTLIGHT (Interview) -->
-<!-- ======================== -->
-<?php if (!empty($latestInterviews)): ?>
-<?= $dividerHtml('spotlight') ?>
-<section class="lp3-band band-spotlight lp3-reveal">
-  <div class="lp3-inner">
-    <h2 class="lp3-heading">優勝インタビュー</h2>
-  <div class="lp3-spotlight-list">
-    <?php foreach ($latestInterviews as $iv):
-        $spEvent = EventType::tryFrom($iv['event_type'] ?? '');
-    ?>
-      <div class="lp3-card lp3-spotlight">
-        <div class="lp3-spotlight-grid">
-          <?php if (!empty($iv['winner_icon'])): ?>
-            <img src="img/chara_deformed/<?= h($iv['winner_icon']) ?>" alt="" class="lp3-spotlight-avatar" width="64" height="64" loading="lazy">
-          <?php elseif (!empty($iv['winner_name'])): ?>
-            <span class="lp3-avatar-ph lp3-spotlight-avatar" style="font-size:0.7rem;">NO<br>IMG</span>
-          <?php endif; ?>
-          <div class="lp3-spotlight-body">
-            <div class="lp3-spotlight-meta">
-              <?php if ($spEvent): ?>
-                <span class="lp3-chip is-pink"><?= h($spEvent->label()) ?></span>
-              <?php endif; ?>
-              <span class="lp3-spotlight-tournament"><?= h($iv['tournament_name']) ?></span>
-            </div>
-            <?php if (!empty($iv['winner_name'])): ?>
-              <div class="lp3-spotlight-name"><?= h($iv['winner_name']) ?></div>
-            <?php endif; ?>
-          </div>
-          <a href="interview?id=<?= (int) $iv['tournament_id'] ?>" class="lp3-btn lp3-btn-primary lp3-btn-arrow">インタビューを読む</a>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-  </div>
-</section>
-<?php endif; ?>
+<?php require __DIR__ . '/../templates/partials/index/spotlight.php'; ?>
 
 </div><!-- /.lp3 -->
 
