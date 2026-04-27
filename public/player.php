@@ -34,7 +34,7 @@ require __DIR__ . '/../templates/header.php';
     </div>
     <?php if ($player['nickname'] !== null && $player['nickname'] !== ''): ?><div class="player-nickname"><?= h($player['nickname']) ?></div><?php endif; ?>
   </div>
-  <a href="player_analysis?id=<?= $playerId ?>" class="btn btn-secondary" style="margin-top: 20px;">個人戦績分析</a>
+  <a href="player_analysis?id=<?= $playerId ?>" class="player-btn player-btn-secondary" style="margin-top: 20px;">個人戦績分析</a>
 </div>
 
 <?php if ($flash): ?>

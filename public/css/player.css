@@ -235,7 +235,7 @@
   margin-bottom: 24px;
 }
 
-.btn {
+.player-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -249,16 +249,12 @@
   box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
 }
 
-.btn:hover {
+.player-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.4);
 }
 
-.btn-primary {
-  background: var(--btn-primary-bg);
-}
-
-.btn-secondary {
+.player-btn-secondary {
   background: var(--btn-secondary-bg);
 }
 
