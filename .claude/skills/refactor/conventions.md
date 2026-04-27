@@ -47,7 +47,7 @@ scan.sh はここに挙げたルールのうち grep で検出可能なものを
 | I1 | CSS ハードコードカラー（hex #xxx）は `var(--X)` に置換検討 | scan.sh 自動 |
 | I2 | `rgba(数値, ...)` は `rgba(var(--X-rgb), α)` に置換検討（純粋な黒・白は除外） | scan.sh 自動 |
 | I3 | `public/js/` `public/css/` の未参照ファイル（dead code 候補） | scan.sh 自動 |
-| I4 | 500 行超の `.php` は責務分割を検討（`models/` や include 化） | scan.sh 自動 |
+| I4 | 800 行超の `.php` は責務分割を検討（CSS/JS 外部化前提の閾値） | scan.sh 自動 |
 | I5 | `<?= $array['key'] ?>` に `h()` 無し（文字列出力なら XSS 候補） | scan.sh 自動 |
 | I6 | `<?= $var ?>` に `h()` 無し（整数・CSS クラス等の安全パターンは自動除外） | scan.sh 自動 |
 | — | `--glass-border` や `--card` を input 系に使わない（背景と同化する） | 手動レビュー |
@@ -65,6 +65,20 @@ scan.sh はここに挙げたルールのうち grep で検出可能なものを
 - `public/index_legacy.php` — 参照ゼロの旧ランディングページ。アーカイブ目的で残置。
 
 新たに対象外を増やす場合は `scripts/scan.sh` の `EXCLUDE_FILES` に追記し、ここにも理由を書く。
+
+## 800 行超ファイルの対処フロー (I4)
+
+機械的に分割するのではなく、上から順に検討する。CSS/JS が外部化済みであることが前提（規約が満たされていれば多くは 800 行未満に収まる）。
+
+1. **ロジック肥大化を疑う** — ファイル先頭の PHP ロジック（`require __DIR__ . '/../templates/header.php';` より前）が 200 行を超えていたら、まず `models/` や `config/helpers.php` 系に切り出す。`fetchData()` 呼び出しが 5 個以上、複雑な整形ロジックがある場合に該当しやすい
+2. **JS/CSS が外部化済みか確認** — 未外部化なら先に `public/js/{page}.js` / `public/css/{page}.css` に分離する
+3. **同パターン HTML の繰り返しを partial 化** — 同じ構造のカードが 3 種類以上、長い `foreach` 展開などが繰り返されているなら `templates/partials/{page}/{section}.php` 化を検討
+4. **責務混在ならページ分割** — 1 URL に複数機能が同居しているなら URL を分ける（例: `/admin/users` と `/admin/users/edit`）
+5. **それでも超えるなら例外として許容** — ランディングページのようにセクションが本来多いケース。ファイル先頭のコメントで例外であることと理由を明記する。`I7` の Critical CSS マーカーと同じ「明示的な例外」扱い
+
+「800 行超 = 即分割」ではない。閾値はあくまで考え直すきっかけ。
+
+---
 
 ## Critical CSS マーカーによる部分除外
 

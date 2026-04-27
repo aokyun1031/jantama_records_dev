@@ -278,11 +278,11 @@ done
 # 大きすぎるページ
 # =============================================================
 
-# I4: 500 行超の .php
+# I4: 800 行超の .php（CSS/JS は外部化済みの前提。判断フローは conventions.md 参照）
 for f in $PHP_FILES; do
   lines=$(wc -l < "$f" 2>/dev/null || echo 0)
-  if [ "$lines" -gt 500 ]; then
-    hit info "$f" "$lines" "500 行超 ($lines 行)。ロジックを models/ や include に分割検討"
+  if [ "$lines" -gt 800 ]; then
+    hit info "$f" "$lines" "800 行超 ($lines 行)。まずロジックを models/ や config/ helper に切り出し、次に templates/partials/ 化を検討"
   fi
 done
 
