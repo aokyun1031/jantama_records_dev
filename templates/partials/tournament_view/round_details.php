@@ -28,7 +28,6 @@
 
   <?php
     $posLabels = ['1st', '2nd', '3rd', '4th'];
-    $medals = ['🥇', '🥈', '🥉'];
   ?>
   <?php foreach ($roundNumbers as $i => $rn):
     $rSettings = $roundSettings[$rn] ?? [];

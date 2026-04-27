@@ -46,10 +46,10 @@ done
 
 # Critical CSS マーカーを含むファイルは I1/I2/I7 のハードコード/外部化チェックから除外する
 # （Loader 等で「外部 CSS 到着前に描画必要」な意図的な例外。CLAUDE.md 参照）
-PHP_FILES_NON_CRITICAL=""
+PHP_FILES_NON_CRITICAL=()
 for f in $PHP_FILES; do
   if ! grep -q "Critical CSS" "$f" 2>/dev/null; then
-    PHP_FILES_NON_CRITICAL="$PHP_FILES_NON_CRITICAL $f"
+    PHP_FILES_NON_CRITICAL+=("$f")
   fi
 done
 
@@ -243,7 +243,7 @@ done < <(grep -HnE '\$_POST\[' $PHP_FILES 2>/dev/null)
 while IFS=: read -r file line _; do
   [ -z "$file" ] && continue
   hit info "$file" "$line" "ハードコード hex カラー。CSS 変数に置換検討"
-done < <(grep -HnE '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b' $PHP_FILES_NON_CRITICAL 2>/dev/null \
+done < <(grep -HnE '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b' "${PHP_FILES_NON_CRITICAL[@]}" 2>/dev/null \
     | grep -vE '(<\?=|href=|src=|id=|name=|<script|<!--|&#x)' \
     | grep -vE "['\"]#[0-9a-fA-F]+['\"]" )
 
@@ -254,7 +254,7 @@ while IFS= read -r entry; do
   echo "$_pe_content" | grep -qE 'rgba\(\s*0\s*,\s*0\s*,\s*0\s*,' && continue
   echo "$_pe_content" | grep -qE 'rgba\(\s*255\s*,\s*255\s*,\s*255\s*,' && continue
   hit info "$_pe_file" "$_pe_line" "rgba(数値...) をハードコード。rgba(var(--X-rgb), α) を使う"
-done < <(grep -HnE 'rgba\(\s*[0-9]+\s*,' $PHP_FILES_NON_CRITICAL 2>/dev/null \
+done < <(grep -HnE 'rgba\(\s*[0-9]+\s*,' "${PHP_FILES_NON_CRITICAL[@]}" 2>/dev/null \
     | grep -vE "['\"]rgba\(")
 
 # =============================================================
@@ -288,7 +288,7 @@ done
 
 # I7: $pageStyle = <<<'CSS' ... CSS; の行数が多いページ（30 行超）
 #     Loader 等 Critical CSS を除き、ページ固有 CSS は public/css/{page}.css に外出しする
-for f in $PHP_FILES_NON_CRITICAL; do
+for f in "${PHP_FILES_NON_CRITICAL[@]}"; do
   awk_result=$(awk '
     /\$pageStyle[ \t]*=[ \t]*<<<.?CSS.?/ { start=NR; inblock=1; next }
     inblock && /^CSS;/ { print start":"NR; inblock=0 }
