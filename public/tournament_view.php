@@ -260,7 +260,7 @@ foreach ($roundSettings as $rn => $rs) {
 </div>
 <?php endif; ?>
 
-<?php require __DIR__ . '/../templates/_tournament_view_round_details.php'; ?>
+<?php require __DIR__ . '/../templates/partials/tournament_view/round_details.php'; ?>
 
 <?php
   $hasAnyResults = false;

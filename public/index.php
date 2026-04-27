@@ -262,7 +262,7 @@ foreach ($tournaments as $t) {
   </div>
 </section>
 
-<?php require __DIR__ . '/../templates/_index_live.php'; ?>
+<?php require __DIR__ . '/../templates/partials/index/live.php'; ?>
 
 <!-- ======================== -->
 <!-- CHAMPION SPOTLIGHT -->
@@ -315,7 +315,9 @@ foreach ($tournaments as $t) {
 </section>
 <?php endif; ?>
 
-<?php require __DIR__ . '/../templates/_index_series.php'; ?>
+<?php require __DIR__ . '/../templates/partials/index/series.php'; ?>
+
+<?php require __DIR__ . '/../templates/partials/index/vault.php'; ?>
 
 <!-- ======================== -->
 <!-- ROSTER — ランダム選手ピックアップ -->
