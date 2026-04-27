@@ -229,6 +229,9 @@
   --ended-text-color:var(--text);
   --ended-text-shadow:none;
 
+  /* 純色（規約「CSS 変数のみ使用」準拠のため変数化） */
+  --white:#fff;
+
   /* Discord ブランドカラー（player_edit.php の連携カード等） */
   --discord-blurple:#5865F2;
   --discord-blurple-rgb:88,101,242;
