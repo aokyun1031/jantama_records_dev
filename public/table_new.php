@@ -20,7 +20,8 @@ $meta = $tournament['meta'];
 $playerMode = (int) ($meta['player_mode'] ?? 4);
 
 // 勝ち抜き中の選手のみ取得（eliminated_round = 0）
-$activePlayerIds = Standing::activePlayerIds($tournamentId);
+['data' => $activePlayerIds] = fetchData(fn() => Standing::activePlayerIds($tournamentId));
+$activePlayerIds = $activePlayerIds ?? [];
 
 ['data' => $registeredPlayerIds] = fetchData(fn() => Tournament::playerIds($tournamentId));
 ['data' => $allPlayers] = fetchData(fn() => Player::all());
@@ -42,7 +43,8 @@ if ($prevRound >= 1) {
 }
 
 // 順位データ（成績考慮用）
-$jsStandings = Standing::totalMap($tournamentId);
+['data' => $jsStandings] = fetchData(fn() => Standing::totalMap($tournamentId));
+$jsStandings = $jsStandings ?? [];
 
 // POST処理
 $validationError = '';
@@ -147,7 +149,7 @@ $jsPlayers = array_map(fn($p) => [
 ], $tournamentPlayers);
 
 // --- テンプレート変数 ---
-$pageTitle = '卓作成 - ' . h($tournament['name']) . ' - ' . SITE_NAME;
+$pageTitle = '卓作成 - ' . $tournament['name'] . ' - ' . SITE_NAME;
 $pageDescription = $tournament['name'] . ' の新しい卓を作成します。';
 $pageCss = ['css/forms.css', 'css/table_new.css'];
 $pageScripts = ['js/table_new.js'];

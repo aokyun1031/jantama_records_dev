@@ -73,8 +73,8 @@ $otherJoinedPlayers = array_filter(
 $ruleTags = buildRuleTags($tournament['meta']);
 
 // --- テンプレート変数 ---
-$pageTitle = h($tournament['name']) . ' 参加表明 - ' . SITE_NAME;
-$pageDescription = h($player['nickname'] ?? $player['name']) . ' さん専用の参加表明ページです。';
+$pageTitle = $tournament['name'] . ' 参加表明 - ' . SITE_NAME;
+$pageDescription = ($player['nickname'] ?? $player['name']) . ' さん専用の参加表明ページです。';
 $pageCss = ['css/tournament-join.css'];
 $pageTurnstile = true;
 require __DIR__ . '/../templates/header.php';

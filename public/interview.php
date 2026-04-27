@@ -2,18 +2,17 @@
 declare(strict_types=1);
 require __DIR__ . '/../config/bootstrap.php';
 
-// ID指定があればその大会、なければid=1にフォールバック
-$tournamentId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: 1;
+$tournamentId = requireTournamentId();
 ['data' => $tournamentData] = fetchData(fn() => Tournament::find($tournamentId));
 $tournamentName = $tournamentData['name'] ?? '';
 $eventType = EventType::tryFrom(TournamentMeta::get($tournamentId, 'event_type'));
 
 ['data' => $finalists] = fetchData(fn() => Standing::finalists($tournamentId));
 ['data' => $interviews] = fetchData(fn() => Interview::byTournament($tournamentId));
-$champion = Standing::champion($tournamentId);
+['data' => $champion] = fetchData(fn() => Standing::champion($tournamentId));
 
-$pageTitle = '優勝インタビュー - ' . h($tournamentName);
-$pageDescription = h($tournamentName) . ' 優勝者への優勝インタビューを掲載しています。';
+$pageTitle = '優勝インタビュー - ' . $tournamentName;
+$pageDescription = $tournamentName . ' 優勝者への優勝インタビューを掲載しています。';
 $pageOgp = [
     'title' => '優勝インタビュー - ' . $tournamentName,
     'description' => $tournamentName . ' 優勝者への優勝インタビューを掲載しています。',
@@ -38,7 +37,9 @@ require __DIR__ . '/../templates/header.php';
 <section class="interview-section">
   <div class="interview-profile">
     <div class="interview-avatar">
-      <img src="img/chara_deformed/<?= $champion && $champion['character_icon'] ? h($champion['character_icon']) : '' ?>" alt="<?= $champion ? h($champion['name']) : '' ?>" width="80" height="80">
+      <?php if ($champion && !empty($champion['character_icon'])): ?>
+        <img src="img/chara_deformed/<?= h($champion['character_icon']) ?>" alt="<?= h($champion['name']) ?>" width="80" height="80">
+      <?php endif; ?>
       <span class="crown">👑</span>
     </div>
     <div class="interview-profile-info">

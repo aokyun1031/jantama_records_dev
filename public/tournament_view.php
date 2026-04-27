@@ -19,7 +19,7 @@ $isCompleted = $tournamentData['status'] === TournamentStatus::Completed->value;
 ['data' => $interviews] = fetchData(fn() => Interview::byTournament($tournamentId));
 ['data' => $tournamentRecords] = fetchData(fn() => TournamentRecords::all($tournamentId));
 
-$champion = Standing::champion($tournamentId);
+['data' => $champion] = fetchData(fn() => Standing::champion($tournamentId));
 
 $playerMode = (int) ($meta['player_mode'] ?? 4);
 
@@ -105,8 +105,8 @@ function scoreCls(float $score): string
 }
 
 // --- テンプレート変数 ---
-$pageTitle = h($tournamentName) . ' - ' . SITE_NAME;
-$pageDescription = h($tournamentName) . 'の全対局結果と最終順位を掲載しています。';
+$pageTitle = $tournamentName . ' - ' . SITE_NAME;
+$pageDescription = $tournamentName . 'の全対局結果と最終順位を掲載しています。';
 $pageOgp = [
     'title' => $tournamentName . ' - ' . SITE_NAME,
     'description' => $tournamentName . 'の全対局結果と最終順位を掲載しています。',

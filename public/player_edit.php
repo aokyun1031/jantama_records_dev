@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // --- テンプレート変数 ---
-$pageTitle = h($player['name']) . ' 編集 - ' . SITE_NAME;
+$pageTitle = $player['name'] . ' 編集 - ' . SITE_NAME;
 $pageDescription = $player['name'] . ' の選手情報を編集します。';
 $pageCss = ['css/forms.css'];
 $pageStyle = <<<'CSS'

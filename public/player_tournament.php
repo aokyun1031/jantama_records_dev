@@ -19,8 +19,8 @@ $ruleTags = buildRuleTags($meta);
 ['data' => $rounds, 'error' => $error] = fetchData(fn() => TableInfo::byPlayerAndTournament($tournamentId, $playerId));
 
 // --- テンプレート変数 ---
-$pageTitle = h($player['name']) . ' - ' . h($tournament['name']) . ' - ' . SITE_NAME;
-$pageDescription = h($player['name']) . ' の ' . h($tournament['name']) . ' 戦績です。';
+$pageTitle = $player['name'] . ' - ' . $tournament['name'] . ' - ' . SITE_NAME;
+$pageDescription = $player['name'] . ' の ' . $tournament['name'] . ' 戦績です。';
 $pageCss = ['css/player-tournament.css'];
 
 // --- 表示 ---

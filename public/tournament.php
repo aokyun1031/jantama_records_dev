@@ -82,7 +82,7 @@ if ($currentRound > 0) {
     $isFinalRound = ($meta[$rk . '_is_final'] ?? '0') === '1';
     if ($isFinalRound && $allCurrentDone) {
         $isFinalDone = true;
-        $champion = Standing::champion($tournamentId);
+        ['data' => $champion] = fetchData(fn() => Standing::champion($tournamentId));
         $championId = $champion ? (int) $champion['player_id'] : null;
     }
 }
@@ -101,8 +101,8 @@ if ($playerCount === 0) {
 $ruleTags = buildRuleTags($meta);
 
 // --- テンプレート変数 ---
-$pageTitle = h($tournament['name']) . ' - ' . SITE_NAME;
-$pageDescription = h($tournament['name']) . 'の大会詳細ページです。';
+$pageTitle = $tournament['name'] . ' - ' . SITE_NAME;
+$pageDescription = $tournament['name'] . 'の大会詳細ページです。';
 $pageCss = ['css/forms.css', 'css/tournament.css'];
 $pageTurnstile = true;
 require __DIR__ . '/../templates/header.php';

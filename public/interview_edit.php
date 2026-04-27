@@ -11,7 +11,7 @@ $tournamentId = requireTournamentId();
 $tournament = requireTournamentWithMeta($tournamentId);
 
 // 優勝者を取得
-$champion = Standing::champion($tournamentId);
+['data' => $champion] = fetchData(fn() => Standing::champion($tournamentId));
 
 // 既存インタビューを取得
 ['data' => $interviews] = fetchData(fn() => Interview::byTournament($tournamentId));
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } elseif ($action === 'complete') {
             // インタビューが1つ以上あるか確認
-            $currentItems = Interview::byTournament($tournamentId);
+            ['data' => $currentItems] = fetchData(fn() => Interview::byTournament($tournamentId));
             if (empty($currentItems)) {
                 $validationError = 'インタビューを1つ以上登録してから大会を完了してください。';
             } else {

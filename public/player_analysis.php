@@ -31,8 +31,8 @@ $isFiltered = !empty($selectedEventTypes);
 $error = $e2 || $e3 || $e4 || $e5 || $e7 || $e8 || $e9 || $e10 || $e11;
 
 // --- テンプレート変数 ---
-$pageTitle = h($player['name']) . ' 戦績分析 - ' . SITE_NAME;
-$pageDescription = h($player['name']) . ' の戦績分析ページです。';
+$pageTitle = $player['name'] . ' 戦績分析 - ' . SITE_NAME;
+$pageDescription = $player['name'] . ' の戦績分析ページです。';
 $pageCss = ['css/player-analysis.css'];
 $pageScripts = ['js/vendor/chart.umd.min.js', 'js/player_analysis.js'];
 $pageStyle = '';
