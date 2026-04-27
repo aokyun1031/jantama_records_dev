@@ -185,12 +185,6 @@ CREATE TABLE public.tournament_dm_dispatches (
 ALTER TABLE ONLY public.tournament_dm_dispatches
     ADD CONSTRAINT tournament_dm_dispatches_pkey PRIMARY KEY (tournament_id, player_id);
 
-ALTER TABLE ONLY public.tournament_dm_dispatches
-    ADD CONSTRAINT tournament_dm_dispatches_tournament_id_fkey FOREIGN KEY (tournament_id) REFERENCES public.tournaments(id) ON DELETE CASCADE;
-
-ALTER TABLE ONLY public.tournament_dm_dispatches
-    ADD CONSTRAINT tournament_dm_dispatches_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.players(id) ON DELETE CASCADE;
-
 
 --
 -- Name: table_paifu_urls; Type: TABLE; Schema: public; Owner: -
@@ -590,6 +584,22 @@ ALTER TABLE ONLY public.tables_info
 
 ALTER TABLE ONLY public.tournament_meta
     ADD CONSTRAINT tournament_meta_tournament_id_fkey FOREIGN KEY (tournament_id) REFERENCES public.tournaments(id) ON DELETE CASCADE;
+
+
+--
+-- Name: tournament_dm_dispatches tournament_dm_dispatches_tournament_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tournament_dm_dispatches
+    ADD CONSTRAINT tournament_dm_dispatches_tournament_id_fkey FOREIGN KEY (tournament_id) REFERENCES public.tournaments(id) ON DELETE CASCADE;
+
+
+--
+-- Name: tournament_dm_dispatches tournament_dm_dispatches_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tournament_dm_dispatches
+    ADD CONSTRAINT tournament_dm_dispatches_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.players(id) ON DELETE CASCADE;
 
 
 --
