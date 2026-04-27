@@ -66,6 +66,15 @@ scan.sh はここに挙げたルールのうち grep で検出可能なものを
 
 新たに対象外を増やす場合は `scripts/scan.sh` の `EXCLUDE_FILES` に追記し、ここにも理由を書く。
 
+## Critical CSS マーカーによる部分除外
+
+ファイル内に文字列 `Critical CSS` を含むコメントがある場合、scan.sh はそのファイルの I1（ハードコード hex）/ I2（rgba 数値）/ I7（`$pageStyle` 行数）を自動的に除外する。
+Loader 等「外部 CSS 到着前に描画必要」な意図的例外のための慣用マーカー。
+
+該当例: `public/index.php` の Loader CSS（外部 CSS 未ロード段階で描画するため CSS 変数が解決できず、ハードコード色を意図的に使用している）。
+
+新規ページで Critical CSS を使う場合は、コードコメントに必ず `Critical CSS` の文字列を含めること。
+
 ---
 
 ## リファクタ判断の優先順位
