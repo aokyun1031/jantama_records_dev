@@ -46,14 +46,14 @@ test.describe('大会新規作成', () => {
   test('選手未選択でも大会を作成できる', async ({ page }) => {
     await page.fill('input[name="name"]', `${TEST_PREFIX}大会_${Date.now()}`);
     await page.click('button.btn-save');
-    await page.waitForURL(/\/tournaments(\?.*)?$/);
+    await page.waitForURL(/\/tournament\?id=\d+/);
   });
 
   test('選手を選択して大会を作成できる', async ({ page }) => {
     await page.fill('input[name="name"]', `${TEST_PREFIX}大会_${Date.now()}`);
     await page.locator('.player-select-option input[type="checkbox"]').first().check({ force: true });
     await page.click('button.btn-save');
-    await page.waitForURL(/\/tournaments(\?.*)?$/);
+    await page.waitForURL(/\/tournament\?id=\d+/);
   });
 
   test('バリデーションエラー後に入力値が保持される', async ({ page }) => {

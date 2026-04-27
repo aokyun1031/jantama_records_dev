@@ -1,0 +1,111 @@
+.players-count {
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  animation: fadeUp 1s ease 0.3s both;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s, box-shadow 0.3s;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: playerFadeIn 0.5s ease forwards;
+}
+
+.player-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.player-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--glass-border);
+}
+
+.player-icon-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: var(--text-sub);
+}
+
+.player-info {
+  min-width: 0;
+}
+
+.player-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.player-nickname {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+.players-error {
+  text-align: center;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(var(--coral-rgb),0.1), rgba(var(--coral-rgb),0.05));
+  border: 1px solid rgba(var(--coral-rgb),0.3);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+.players-error-label {
+  font-weight: 700;
+  color: var(--coral);
+  margin-bottom: 8px;
+}
+
+.players-error-detail {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  word-break: break-all;
+}
+
+@keyframes playerFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .players-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.edit-message { max-width: 600px; margin-left: auto; margin-right: auto; }

@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // --- テンプレート変数 ---
-$pageTitle = h($tournament['name']) . ' 編集 - ' . SITE_NAME;
+$pageTitle = $tournament['name'] . ' 編集 - ' . SITE_NAME;
 $pageCss = ['css/forms.css'];
 $pageStyle = '';
 

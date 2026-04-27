@@ -2,7 +2,8 @@ import { test, expect } from '../helpers/fixtures';
 
 test.describe('インタビューページ', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/interview');
+    // seed の tournament_id=1 にチャンピオン・インタビュー・キャラアイコンが揃っている
+    await page.goto('/interview?id=1');
   });
 
   test('ページが正常に表示される', async ({ page }) => {

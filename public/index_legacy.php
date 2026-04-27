@@ -15,7 +15,10 @@ $activeTournaments = array_filter($tournaments ?? [], fn($t) => $t['status'] ===
 
 // 最新の完了大会
 $latestCompleted = !empty($completedTournaments) ? reset($completedTournaments) : null;
-$latestChampion = $latestCompleted ? Standing::champion((int) $latestCompleted['id']) : null;
+$latestChampion = null;
+if ($latestCompleted) {
+    ['data' => $latestChampion] = fetchData(fn() => Standing::champion((int) $latestCompleted['id']));
+}
 
 // --- テンプレート変数 ---
 $pageTitle = SITE_NAME . ' - 麻雀トーナメント戦績サイト';

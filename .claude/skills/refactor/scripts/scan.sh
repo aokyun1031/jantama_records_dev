@@ -34,6 +34,25 @@ PHP_FILES=$(find "$TARGET" -type f -name '*.php' 2>/dev/null | sort)
 JS_FILES=$(find "$TARGET" -type f -name '*.js' 2>/dev/null | sort)
 CSS_FILES=$(find "$TARGET" -type f -name '*.css' 2>/dev/null | sort)
 
+# 対象外ファイル（参照無しの旧ページ等。詳細は conventions.md を参照）
+EXCLUDE_FILES=(
+  "public/index_legacy.php"
+)
+for excl in "${EXCLUDE_FILES[@]}"; do
+  PHP_FILES=$(printf "%s\n" "$PHP_FILES" | grep -vxF "$excl" || true)
+  JS_FILES=$(printf "%s\n" "$JS_FILES" | grep -vxF "$excl" || true)
+  CSS_FILES=$(printf "%s\n" "$CSS_FILES" | grep -vxF "$excl" || true)
+done
+
+# Critical CSS マーカーを含むファイルは I1/I2/I7 のハードコード/外部化チェックから除外する
+# （Loader 等で「外部 CSS 到着前に描画必要」な意図的な例外。CLAUDE.md 参照）
+PHP_FILES_NON_CRITICAL=()
+for f in $PHP_FILES; do
+  if ! grep -q "Critical CSS" "$f" 2>/dev/null; then
+    PHP_FILES_NON_CRITICAL+=("$f")
+  fi
+done
+
 [ -z "$PHP_FILES" ] && [ -z "$JS_FILES" ] && [ -z "$CSS_FILES" ] && {
   echo "No PHP/JS/CSS files found in $TARGET"
   exit 0
@@ -224,8 +243,9 @@ done < <(grep -HnE '\$_POST\[' $PHP_FILES 2>/dev/null)
 while IFS=: read -r file line _; do
   [ -z "$file" ] && continue
   hit info "$file" "$line" "ハードコード hex カラー。CSS 変数に置換検討"
-done < <(grep -HnE '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b' $PHP_FILES 2>/dev/null \
-    | grep -vE '(<\?=|href=|src=|id=|name=|<script|<!--|&#x)' )
+done < <(grep -HnE '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b' "${PHP_FILES_NON_CRITICAL[@]}" 2>/dev/null \
+    | grep -vE '(<\?=|href=|src=|id=|name=|<script|<!--|&#x)' \
+    | grep -vE "['\"]#[0-9a-fA-F]+['\"]" )
 
 # I2: .php 内で rgba(数値, ...) 形式
 while IFS= read -r entry; do
@@ -234,7 +254,8 @@ while IFS= read -r entry; do
   echo "$_pe_content" | grep -qE 'rgba\(\s*0\s*,\s*0\s*,\s*0\s*,' && continue
   echo "$_pe_content" | grep -qE 'rgba\(\s*255\s*,\s*255\s*,\s*255\s*,' && continue
   hit info "$_pe_file" "$_pe_line" "rgba(数値...) をハードコード。rgba(var(--X-rgb), α) を使う"
-done < <(grep -HnE 'rgba\(\s*[0-9]+\s*,' $PHP_FILES 2>/dev/null)
+done < <(grep -HnE 'rgba\(\s*[0-9]+\s*,' "${PHP_FILES_NON_CRITICAL[@]}" 2>/dev/null \
+    | grep -vE "['\"]rgba\(")
 
 # =============================================================
 # 未使用ファイル (dead code)
@@ -257,17 +278,17 @@ done
 # 大きすぎるページ
 # =============================================================
 
-# I4: 500 行超の .php
+# I4: 800 行超の .php（CSS/JS は外部化済みの前提。判断フローは conventions.md 参照）
 for f in $PHP_FILES; do
   lines=$(wc -l < "$f" 2>/dev/null || echo 0)
-  if [ "$lines" -gt 500 ]; then
-    hit info "$f" "$lines" "500 行超 ($lines 行)。ロジックを models/ や include に分割検討"
+  if [ "$lines" -gt 800 ]; then
+    hit info "$f" "$lines" "800 行超 ($lines 行)。まずロジックを models/ や config/ helper に切り出し、次に templates/partials/ 化を検討"
   fi
 done
 
 # I7: $pageStyle = <<<'CSS' ... CSS; の行数が多いページ（30 行超）
 #     Loader 等 Critical CSS を除き、ページ固有 CSS は public/css/{page}.css に外出しする
-for f in $PHP_FILES; do
+for f in "${PHP_FILES_NON_CRITICAL[@]}"; do
   awk_result=$(awk '
     /\$pageStyle[ \t]*=[ \t]*<<<.?CSS.?/ { start=NR; inblock=1; next }
     inblock && /^CSS;/ { print start":"NR; inblock=0 }
@@ -298,7 +319,7 @@ done < <(
   | grep -vE 'h\s*\(' \
   | grep -vE '\(int\)|\(float\)|\(bool\)' \
   | grep -vE 'cspNonce|json_encode|asset\(|number_format|htmlspecialchars|charaIcon|fmtScore|scoreCls' \
-  | grep -vE "\['(id|[a-z_]*_id|count|total|rank|round|score|done|status|game_number|eliminated_round|player_count|player_mode|table_id|player_id)'\]" \
+  | grep -vE "\['(id|[a-z_]*_id|count|total|rank|round|score|done|status|game_number|eliminated_round|player_count|player_mode|table_id|player_id|games|tops|avg_rank|top_rate)'\]" \
   | grep -vE '\$[a-zA-Z_]+\[\$[a-zA-Z_]' \
   | grep -vE '\?\?'
 )
@@ -313,7 +334,7 @@ done < <(
   grep -HnE '<\?=\s*\$[a-zA-Z_]+\s*\?>' $PHP_FILES 2>/dev/null \
   | grep -vE 'h\s*\(' \
   | grep -vE '\(int\)|\(float\)' \
-  | grep -vE '<\?=\s*\$(i|j|k|g|n|m|idx|index|count|total|lines|len|num)\s*\?>' \
+  | grep -vE '<\?=\s*\$(i|j|k|g|n|m|idx|index|count|total|lines|len|num|rank|cnt|pct|cnt_[a-z]+)\s*\?>' \
   | grep -vE '<\?=\s*\$(id|pid|tid|tournamentId|playerId|tableId|round|nextRound|prevRound)\s*\?>' \
   | grep -vE '<\?=\s*\$(tournamentCount|playerCount|tableCount)\s*\?>' \
   | grep -vE '<\?=\s*\$[a-zA-Z_]*(Rounds?|Counts?|Scores?|Ranks?|Nums?|Idx|Ids?|Rates?|Width|Height|Totals?|Advances?|Done|Types?|Bar|Flags?|Number|Games?|Pct|Pass(es)?|Steps?|Sizes?)\s*\?>' \

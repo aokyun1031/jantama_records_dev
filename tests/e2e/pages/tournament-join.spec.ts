@@ -21,16 +21,19 @@ test.describe('参加表明（選手公開URL）', () => {
       4 // 4人だけ登録 → 残り選手は未参加状態
     );
 
-    // 大会詳細ページから参加中の選手IDを1人取得
-    await page.goto(`/tournament?id=${tournamentId}`);
-    const copyButtons = page.locator('.td-share-row.joined .td-share-copy');
-    const joinedHref = await copyButtons.first().getAttribute('data-copy-path');
-    joinedPlayerId = Number(joinedHref?.match(/player_id=(\d+)/)?.[1] ?? 0);
+    // 大会選手登録ページのチェックボックスから参加・未参加の player_id を取得
+    await page.goto(`/tournament_players?id=${tournamentId}`);
+    const joinedValue = await page
+      .locator('.player-select-option input[type="checkbox"]:checked')
+      .first()
+      .getAttribute('value');
+    joinedPlayerId = Number(joinedValue ?? 0);
 
-    // 未参加選手 (joined クラス無いもの)
-    const unjoinedButtons = page.locator('.td-share-row:not(.joined) .td-share-copy');
-    const unjoinedHref = await unjoinedButtons.first().getAttribute('data-copy-path');
-    unjoinedPlayerId = Number(unjoinedHref?.match(/player_id=(\d+)/)?.[1] ?? 0);
+    const unjoinedValue = await page
+      .locator('.player-select-option input[type="checkbox"]:not(:checked)')
+      .first()
+      .getAttribute('value');
+    unjoinedPlayerId = Number(unjoinedValue ?? 0);
 
     await page.close();
   });
@@ -62,7 +65,7 @@ test.describe('参加表明（選手公開URL）', () => {
     await page.click('.tj-btn-join');
     await page.waitForURL(/tournament_join/);
     await expect(page.locator('.tj-status-badge.joined')).toBeVisible();
-    await expect(page.locator('.edit-message.success')).toContainText('参加しました');
+    await expect(page.locator('.tj-flash.joined .tj-flash-title')).toContainText('参加表明 完了');
 
     page.once('dialog', (d) => d.accept());
     await page.click('.tj-btn-leave');

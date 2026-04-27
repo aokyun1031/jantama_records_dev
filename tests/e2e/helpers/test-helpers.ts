@@ -68,27 +68,14 @@ export async function createTestPlayer(
 }
 
 /**
- * 大会一覧ページから名前でカードを探し、管理ページリンクから ID を抽出する。
- */
-async function findTournamentIdByName(page: Page, name: string): Promise<number> {
-  await page.goto('/tournaments');
-  const link = page
-    .locator('.tournament-card', { hasText: name })
-    .locator('a.tournament-link', { hasText: '管理ページ' });
-  const href = await link.getAttribute('href');
-  if (!href) throw new Error(`大会 "${name}" の管理ページリンクが見つかりません`);
-  return extractIdFromUrl(href);
-}
-
-/**
  * テスト用大会をフォーム経由で作成し、ID を返す（選手は登録しない）。
  */
 export async function createTestTournament(page: Page, name: string): Promise<number> {
   await page.goto('/tournament_new');
   await page.fill('input[name="name"]', name);
   await page.click('button.btn-save');
-  await page.waitForURL(/\/tournaments(\?.*)?$/);
-  return findTournamentIdByName(page, name);
+  await page.waitForURL(/\/tournament\?id=\d+/);
+  return extractIdFromUrl(page.url());
 }
 
 /**
@@ -108,6 +95,6 @@ export async function createTestTournamentWithPlayers(
     await checkboxes.nth(i).check({ force: true });
   }
   await page.click('button.btn-save');
-  await page.waitForURL(/\/tournaments(\?.*)?$/, { timeout: 60000 });
-  return findTournamentIdByName(page, name);
+  await page.waitForURL(/\/tournament\?id=\d+/, { timeout: 60000 });
+  return extractIdFromUrl(page.url());
 }
