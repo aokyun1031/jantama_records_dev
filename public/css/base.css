@@ -228,6 +228,13 @@
   --ended-before-bg:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent);
   --ended-text-color:var(--text);
   --ended-text-shadow:none;
+
+  /* Discord ブランドカラー（player_edit.php の連携カード等） */
+  --discord-blurple:#5865F2;
+  --discord-blurple-rgb:88,101,242;
+  --discord-blurple-alt:#7289DA;
+  --discord-online:#43b581;
+  --discord-online-rgb:67,181,129;
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}

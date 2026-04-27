@@ -83,21 +83,21 @@ $pageStyle = <<<'CSS'
 .edit-form { max-width: 600px; }
 .edit-label { margin-bottom: 12px; }
 .edit-name-readonly { font-size: 0.8rem; color: var(--text-sub); margin-top: 6px; }
-.discord-section { background: linear-gradient(135deg, rgba(88,101,242,0.04), rgba(88,101,242,0.01)); margin-top: 32px; }
-.discord-card { display: flex; align-items: center; gap: 14px; padding: 18px 20px; background: linear-gradient(135deg, #5865F2 0%, #7289DA 100%); border-radius: 14px; box-shadow: 0 6px 24px rgba(88,101,242,0.25); position: relative; overflow: hidden; }
+.discord-section { background: linear-gradient(135deg, rgba(var(--discord-blurple-rgb),0.04), rgba(var(--discord-blurple-rgb),0.01)); margin-top: 32px; }
+.discord-card { display: flex; align-items: center; gap: 14px; padding: 18px 20px; background: linear-gradient(135deg, var(--discord-blurple) 0%, var(--discord-blurple-alt) 100%); border-radius: 14px; box-shadow: 0 6px 24px rgba(var(--discord-blurple-rgb),0.25); position: relative; overflow: hidden; }
 .discord-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 90% 0%, rgba(255,255,255,0.12), transparent 60%); pointer-events: none; }
 .discord-card-logo { width: 36px; height: 36px; color: #fff; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); position: relative; }
 .discord-card-body { flex: 1; min-width: 0; position: relative; }
 .discord-card-status { display: inline-flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,0.95); text-transform: uppercase; margin-bottom: 4px; }
-.discord-status-dot { display: inline-block; width: 8px; height: 8px; background: #43b581; border-radius: 50%; box-shadow: 0 0 0 2px rgba(67,181,129,0.3), 0 0 12px rgba(67,181,129,0.6); animation: discordPulse 2s ease-in-out infinite; }
+.discord-status-dot { display: inline-block; width: 8px; height: 8px; background: var(--discord-online); border-radius: 50%; box-shadow: 0 0 0 2px rgba(var(--discord-online-rgb),0.3), 0 0 12px rgba(var(--discord-online-rgb),0.6); animation: discordPulse 2s ease-in-out infinite; }
 @keyframes discordPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.6 } }
 .discord-card-username { font-size: 1.1rem; font-weight: 800; color: #fff; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
 .discord-card-username-id { font-size: 0.9rem; opacity: 0.8; font-family: monospace; }
 .discord-card-action { margin: 0; flex-shrink: 0; position: relative; }
 .btn-discord-unlink { padding: 6px 14px; background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; font-size: 0.75rem; font-weight: 700; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: background 0.2s, border-color 0.2s; backdrop-filter: blur(4px); }
 .btn-discord-unlink:hover { background: rgba(255,255,255,0.28); border-color: rgba(255,255,255,0.5); }
-.btn-discord-link { display: inline-flex; align-items: center; gap: 10px; padding: 12px 24px; background: #5865F2; color: #fff; border-radius: 10px; font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 3px 12px rgba(88,101,242,0.3); }
-.btn-discord-link:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(88,101,242,0.4); }
+.btn-discord-link { display: inline-flex; align-items: center; gap: 10px; padding: 12px 24px; background: var(--discord-blurple); color: #fff; border-radius: 10px; font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 3px 12px rgba(var(--discord-blurple-rgb),0.3); }
+.btn-discord-link:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(var(--discord-blurple-rgb),0.4); }
 .btn-discord-icon { width: 20px; height: 20px; }
 CSS;
 
