@@ -48,6 +48,37 @@ test.describe('セキュリティ', () => {
     expect(response.status()).toBe(403);
   });
 
+  // /dispatch_dm は JSON エンドポイント。validateCsrfToken() は
+  // hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'] ?? '') で
+  // 判定するため、セッション未初期化 + POST トークン未送信だと
+  // hash_equals('', '') が true となり CSRF 検証をすり抜ける潜在バグがあった。
+  // dispatch_dm.php は ensureCsrfToken() を validateCsrfToken() 前に呼ぶことで
+  // セッション側を常に非空にし、このバイパスを塞いでいる。
+  test('dispatch_dm: 新規セッション + CSRF トークン無しの POST が拒否される', async ({ playwright }) => {
+    const context = await playwright.request.newContext();
+    const response = await context.post('/dispatch_dm', {
+      form: { tournament_id: '1' },
+    });
+    expect(response.status()).toBe(403);
+    expect(await response.json()).toMatchObject({ ok: false, error: 'csrf' });
+    await context.dispose();
+  });
+
+  test('dispatch_dm: 不正な CSRF トークンの POST が拒否される', async ({ playwright }) => {
+    const context = await playwright.request.newContext();
+    const response = await context.post('/dispatch_dm', {
+      form: { tournament_id: '1', csrf_token: 'invalid_token' },
+    });
+    expect(response.status()).toBe(403);
+    expect(await response.json()).toMatchObject({ ok: false, error: 'csrf' });
+    await context.dispose();
+  });
+
+  test('dispatch_dm: GET メソッドは 405 で拒否される', async ({ request }) => {
+    const response = await request.get('/dispatch_dm');
+    expect(response.status()).toBe(405);
+  });
+
   test('ドットファイルへのアクセスが拒否される', async ({ request }) => {
     const response = await request.get('/.env');
     expect(response.status()).toBe(403);
