@@ -136,47 +136,6 @@
   pointer-events: none;
 }
 
-.tournaments-actions {
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 40px;
-}
-
-.tournaments-error {
-  text-align: center;
-  padding: 24px;
-  max-width: 700px;
-  margin: 0 auto 24px;
-  background: linear-gradient(135deg, rgba(var(--coral-rgb),0.1), rgba(var(--coral-rgb),0.05));
-  border: 1px solid rgba(var(--coral-rgb),0.3);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 0.9rem;
-}
-
-.tournaments-error-label {
-  font-weight: 700;
-  color: var(--coral);
-  margin-bottom: 8px;
-}
-
-.tournaments-error-detail {
-  font-size: 0.75rem;
-  color: var(--text-sub);
-}
-
-.tournaments-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-sub);
-  font-size: 0.9rem;
-}
-
-.edit-message { max-width: 600px; margin-left: auto; margin-right: auto; }
-
 @keyframes tournamentFadeIn {
   to {
     opacity: 1;

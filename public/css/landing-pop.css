@@ -103,7 +103,7 @@ a.site-logo:hover::before { transform: rotate(-8deg); transition: transform 0.4s
   color: #3a2d50 !important;
   background: transparent !important;
   border-radius: 0 !important;
-  border-bottom: 1px solid rgba(58,45,80,0.18) !important;
+  border-bottom: none !important;
   transition: color 0.2s !important;
 }
 .nav-panel-link::before {
@@ -113,6 +113,8 @@ a.site-logo:hover::before { transform: rotate(-8deg); transition: transform 0.4s
   flex-shrink: 0;
 }
 .nav-panel-link:hover { color: var(--pop-pink-d) !important; background: transparent !important; }
+/* ランディングの横並びナビではカテゴリ仕切りを表示しない（base.css の dropdown 時のみ表示） */
+.nav-panel-divider { display: none !important; }
 .footer { background: transparent !important; }
 .footer-copyright {
   color: #5a4a70 !important;
@@ -1439,7 +1441,7 @@ a.lp3-stat:hover .lp3-stat-num { color: var(--pop-pink-d); }
     align-items: center;
     max-width: calc(100% - 150px);
   }
-  .nav-panel-link { padding: 5px 10px !important; font-size: 0.82rem !important; border-bottom-width: 0 !important; }
+  .nav-panel-link { padding: 5px 10px !important; font-size: 0.82rem !important; }
   .nav-panel-link::before { width: 10px; height: 7px; }
 }
 @media (max-width: 380px) {

@@ -82,3 +82,30 @@ function extractUrl(string $input): string
     }
     return $input;
 }
+
+/**
+ * ページネーションのページ番号を GET から取得し、件数に応じてクランプする。
+ *
+ * 一覧ページ用ヘルパ。GET の `page` を整数として検証し、
+ * 1 未満は 1 に、`totalPages` を超えるものは `totalPages` にクランプする。
+ *
+ * @return array{page:int, totalPages:int, offset:int}
+ */
+function paginate(int $totalCount, int $perPage): array
+{
+    // 0 や負数が来た場合の防御。本来は呼び出し側のバグだが 500 は避ける。
+    $perPage = max(1, $perPage);
+    $page = (int) (filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1);
+    if ($page < 1) {
+        $page = 1;
+    }
+    $totalPages = $totalCount > 0 ? (int) ceil($totalCount / $perPage) : 1;
+    if ($page > $totalPages) {
+        $page = $totalPages;
+    }
+    return [
+        'page'       => $page,
+        'totalPages' => $totalPages,
+        'offset'     => ($page - 1) * $perPage,
+    ];
+}

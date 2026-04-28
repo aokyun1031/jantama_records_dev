@@ -33,6 +33,10 @@ model: sonnet
 16. 型キャストにスペースがあるか（`(int) $var` OK、`(int)$var` は PSR-12 違反）
 17. `$pageTitle` が設定されているか
 18. DB 接続で `getDbConnection()` を使っているか（直接 PDO 生成は違反）
+19. `LIKE` / `ILIKE` クエリでユーザー入力を扱う際、`%` `_` `\` のリテラル化が漏れていないか（`ESCAPE '|'` + `strtr` 方式が標準。`ESCAPE '\\'` は PDO パーサ問題を引き起こすため違反扱い。詳細は `security/SKILL.md`）
+20. `templates/partials/` 配下の partial を新規作成・編集している場合、親スコープから受け取る変数に `isset` + 型チェック + 早期 return ガードが冒頭にあるか（include 順誤りで PHP Notice / TypeError が出ない契約か）
+21. HTML 要素の `style="..."` 属性に CSS プロパティが書かれていないか（`var(--)` を使っていてもインライン style は禁止。modifier クラスで `components.css` に吸収する。例外: `style="animation-delay: <?= ... ?>s"` のような PHP ループ index 由来の動的値のみ）
+22. ヘルパ関数で除算・配列アクセス・型変換などの境界値（0, 負数, null, 空配列）に対するガードがあるか（`paginate()` の `$perPage = max(1, $perPage)` のような防御）
 
 ### 推奨チェック（警告）
 
@@ -41,6 +45,8 @@ model: sonnet
 - モデル層にビジネスロジックが集約されているか
 - エラーメッセージが `.claude/skills/add-page/SKILL.md` の規約に従っているか
 - `$pageStyle` のインライン CSS が 30 行以上ある場合は `public/css/{page}.css` に外部化を推奨（Loader 等 Critical CSS は例外）
+- 一覧ページで `.tournaments-actions` / `.tournaments-error` 等のページ固有名を借用していないか（共通の `.list-actions` / `.list-error` / `.list-empty` を使うべき。詳細は `design/SKILL.md`）
+- 一覧ページのページネーションは `paginate()` ヘルパ + `templates/partials/list-pagination.php` を流用しているか（独自実装は違反扱い）
 
 ## 出力形式
 

@@ -444,6 +444,14 @@ a.site-logo:hover{background:rgba(var(--accent-rgb),0.15);border-color:rgba(var(
 }
 .nav-panel-link:hover{background:rgba(var(--accent-rgb),0.08)}
 
+/* カテゴリ間の仕切り（縦並びパネル時は水平線、ランディングの横並び時は縦線に切り替え） */
+.nav-panel-divider{
+  display:block;
+  height:1px;
+  margin:6px 6px;
+  background:linear-gradient(to right,transparent,rgba(var(--accent-rgb),0.25),transparent);
+}
+
 /* Overlay */
 .nav-overlay{
   position:fixed;inset:0;z-index:98;

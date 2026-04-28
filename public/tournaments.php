@@ -41,6 +41,22 @@ if ($isFiltered) {
 }
 $matchedCount = count($tournaments);
 
+// --- ページネーション（フィルタ適用後の配列を分割） ---
+['page' => $page, 'totalPages' => $totalPages, 'offset' => $offset] = paginate($matchedCount, 10);
+$tournaments = array_slice($tournaments, $offset, 10);
+
+$pageBaseQuery = [];
+foreach ($selectedEventTypes as $v) {
+    $pageBaseQuery['event_types'][] = $v;
+}
+$pageUrl = function (int $p) use ($pageBaseQuery): string {
+    $q = $pageBaseQuery;
+    if ($p > 1) {
+        $q['page'] = $p;
+    }
+    return 'tournaments' . (empty($q) ? '' : '?' . http_build_query($q));
+};
+
 // --- テンプレート変数 ---
 $pageTitle = '大会一覧 - ' . SITE_NAME;
 $pageDescription = '麻雀トーナメントの大会一覧です。';
@@ -113,14 +129,14 @@ require __DIR__ . '/../templates/header.php';
 <?php endif; ?>
 
 <?php if ($error): ?>
-  <div class="tournaments-error">
-    <div class="tournaments-error-label">データベース接続エラー</div>
-    <div class="tournaments-error-detail">一時的にデータを取得できません。しばらくしてから再度お試しください。</div>
+  <div class="list-error">
+    <div class="list-error-label">データベース接続エラー</div>
+    <div class="list-error-detail">一時的にデータを取得できません。しばらくしてから再度お試しください。</div>
   </div>
 <?php elseif ($totalCount === 0): ?>
-  <div class="tournaments-empty">大会がまだ登録されていません。</div>
+  <div class="list-empty">大会がまだ登録されていません。</div>
 <?php elseif ($matchedCount === 0): ?>
-  <div class="tournaments-empty">選択した大会種別に該当する大会はありません。「クリア」を押すと全ての大会が表示されます。</div>
+  <div class="list-empty">選択した大会種別に該当する大会はありません。「クリア」を押すと全ての大会が表示されます。</div>
 <?php else: ?>
   <div class="tournaments-list">
     <?php foreach ($tournaments as $i => $t): ?>
@@ -157,11 +173,13 @@ require __DIR__ . '/../templates/header.php';
       </div>
     <?php endforeach; ?>
   </div>
+
+  <?php require __DIR__ . '/../templates/partials/list-pagination.php'; ?>
 <?php endif; ?>
 
-<div class="tournaments-actions">
+<div class="list-actions">
   <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
-  <a href="tournament_new" class="btn-cancel" style="background:var(--btn-secondary-bg);color:var(--btn-text-color);border-color:transparent;box-shadow:0 4px 16px rgba(var(--mint-rgb),0.3);">+ 大会を作成</a>
+  <a href="tournament_new" class="btn-cancel btn-cancel--primary">+ 大会を作成</a>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

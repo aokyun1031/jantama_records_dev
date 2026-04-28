@@ -32,13 +32,6 @@ if (mb_strlen($keyword) > 100) {
     $keyword = mb_substr($keyword, 0, 100);
 }
 
-// --- ページネーション ---
-$perPage = 30;
-$page = (int) (filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1);
-if ($page < 1) {
-    $page = 1;
-}
-
 $isFiltered = !empty($selectedEventTypes) || $status !== 'all' || $keyword !== '';
 
 $filters = [
@@ -51,14 +44,12 @@ $filters = [
     fn() => TableInfo::searchAllCount($filters)
 );
 $totalCount = $totalCount ?? 0;
-$totalPages = $totalCount > 0 ? (int) ceil($totalCount / $perPage) : 1;
-if ($page > $totalPages) {
-    $page = $totalPages;
-}
-$offset = ($page - 1) * $perPage;
+
+// --- ページネーション ---
+['page' => $page, 'totalPages' => $totalPages, 'offset' => $offset] = paginate($totalCount, 10);
 
 ['data' => $tables, 'error' => $error] = fetchData(
-    fn() => TableInfo::searchAll($filters, $perPage, $offset)
+    fn() => TableInfo::searchAll($filters, 10, $offset)
 );
 $tables = $tables ?? [];
 $error = $error ?? $errorCount;
@@ -172,12 +163,12 @@ require __DIR__ . '/../templates/header.php';
 <?php endif; ?>
 
 <?php if ($error): ?>
-  <div class="tournaments-error">
-    <div class="tournaments-error-label">データベース接続エラー</div>
-    <div class="tournaments-error-detail">一時的にデータを取得できません。しばらくしてから再度お試しください。</div>
+  <div class="list-error">
+    <div class="list-error-label">データベース接続エラー</div>
+    <div class="list-error-detail">一時的にデータを取得できません。しばらくしてから再度お試しください。</div>
   </div>
 <?php elseif ($totalCount === 0): ?>
-  <div class="tournaments-empty"><?= $isFiltered ? '条件に該当する卓はありません。' : '卓がまだ登録されていません。' ?></div>
+  <div class="list-empty"><?= $isFiltered ? '条件に該当する卓はありません。' : '卓がまだ登録されていません。' ?></div>
 <?php else: ?>
   <div class="tables-list">
     <?php foreach ($tables as $i => $row): ?>
@@ -196,6 +187,14 @@ require __DIR__ . '/../templates/header.php';
             }
         }
       ?>
+      <?php
+        $cardLabel = sprintf(
+            '%s %d回戦 %s を開く',
+            $row['tournament_name'],
+            (int) $row['round_number'],
+            $row['table_name']
+        );
+      ?>
       <div class="table-card<?= $row['done'] ? ' is-done' : '' ?>" style="animation-delay: <?= $i * 0.03 ?>s">
         <div class="table-card-header">
           <span class="table-card-status <?= $row['done'] ? 'done' : 'pending' ?>"><?= $row['done'] ? '完了' : '未完了' ?></span>
@@ -209,7 +208,7 @@ require __DIR__ . '/../templates/header.php';
 
         <div class="table-card-meta">
           <span class="table-card-round"><?= (int) $row['round_number'] ?>回戦</span>
-          <span class="table-card-name"><?= h($row['table_name']) ?></span>
+          <a href="table?id=<?= (int) $row['table_id'] ?>" class="table-card-name table-card-name--link" aria-label="<?= h($cardLabel) ?>"><?= h($row['table_name']) ?></a>
           <?php if ($schedText !== ''): ?>
             <span class="table-card-sched"><?= h($schedText) ?></span>
           <?php else: ?>
@@ -225,32 +224,14 @@ require __DIR__ . '/../templates/header.php';
             </a>
           <?php endforeach; ?>
         </div>
-
-        <div class="table-card-links">
-          <a href="table?id=<?= (int) $row['table_id'] ?>" class="tournament-link tournament-link--admin">&#x2699; 卓を開く</a>
-        </div>
       </div>
     <?php endforeach; ?>
   </div>
 
-  <?php if ($totalPages > 1): ?>
-    <nav class="tables-pagination" aria-label="ページ送り">
-      <?php if ($page > 1): ?>
-        <a href="<?= h($pageUrl($page - 1)) ?>" class="tables-page-link" rel="prev">&larr; 前へ</a>
-      <?php else: ?>
-        <span class="tables-page-link is-disabled" aria-disabled="true">&larr; 前へ</span>
-      <?php endif; ?>
-      <span class="tables-page-info"><?= $page ?> / <?= $totalPages ?> ページ</span>
-      <?php if ($page < $totalPages): ?>
-        <a href="<?= h($pageUrl($page + 1)) ?>" class="tables-page-link" rel="next">次へ &rarr;</a>
-      <?php else: ?>
-        <span class="tables-page-link is-disabled" aria-disabled="true">次へ &rarr;</span>
-      <?php endif; ?>
-    </nav>
-  <?php endif; ?>
+  <?php require __DIR__ . '/../templates/partials/list-pagination.php'; ?>
 <?php endif; ?>
 
-<div class="tournaments-actions">
+<div class="list-actions">
   <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
   <a href="tournaments" class="btn-cancel">大会一覧へ</a>
 </div>

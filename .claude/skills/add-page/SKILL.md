@@ -153,9 +153,70 @@ if ($input === '') {
 10. `README.md` のページ遷移セクションを更新
 11. `tests/e2e/pages/` にE2Eテストを追加（→ `testing` skill）
 
+## 一覧ページのテンプレート
+
+新規一覧ページ（players / tournaments / tables 系）を作る場合は以下の骨組みに従う:
+
+```php
+<?php
+declare(strict_types=1);
+require __DIR__ . '/../config/bootstrap.php';
+
+startSecureSession();
+$flash = consumeFlash();
+
+// --- フィルタ取得 ---
+// (filter_input + Enum::tryFrom などで GET を検証)
+
+// --- データ取得 + 件数取得 ---
+['data' => $totalCount] = fetchData(fn() => Model::searchAllCount($filters));
+$totalCount = $totalCount ?? 0;
+
+// --- ページネーション ---
+['page' => $page, 'totalPages' => $totalPages, 'offset' => $offset] = paginate($totalCount, 10);
+['data' => $items] = fetchData(fn() => Model::searchAll($filters, 10, $offset));
+
+// --- ページ送り URL ヘルパ（フィルタを保持しつつ page だけ書き換え） ---
+$pageBaseQuery = [/* event_types, q, status など */];
+$pageUrl = function (int $p) use ($pageBaseQuery): string {
+    $q = $pageBaseQuery;
+    if ($p > 1) { $q['page'] = $p; }
+    return '{page}' . (empty($q) ? '' : '?' . http_build_query($q));
+};
+
+$pageCss = ['css/forms.css', 'css/filters.css', 'css/{page}.css'];
+$pageScripts = ['js/filter-form.js'];
+require __DIR__ . '/../templates/header.php';
+?>
+<!-- 件数表示 / フィルタ UI / カードリスト -->
+<?php if (!$totalCount): ?>
+  <div class="list-empty">該当なし</div>
+<?php endif; ?>
+
+<!-- ページネーション（partial に共通化済み） -->
+<?php require __DIR__ . '/../templates/partials/list-pagination.php'; ?>
+
+<div class="list-actions">
+  <a href="/" class="btn-cancel">&larr; トップへ</a>
+  <a href="{new_page}" class="btn-cancel btn-cancel--primary">+ 新規追加</a>
+</div>
+```
+
+参考実装: `public/tournaments.php`, `public/tables.php`
+
+## partial を作成・利用するときの規約
+
+`templates/partials/{name}.php` を新規作成する／既存 partial を `require` する場合:
+
+- partial 内で親スコープから受け取る変数は **冒頭で `isset` + 型チェック + 早期 return ガード** する。include 順を間違えても安全に no-op するように
+- 期待する変数と型を PHPDoc 風コメントで明記する
+- 親スコープの変数を上書きしないよう、partial 専用の変数名は `_` 始まり等で区別すると安全
+
+参考: `templates/partials/list-pagination.php`
+
 ## 関連スキル
 
 - `security` — ヘルパー関数・CSRF・セッション
-- `design` — CSS 変数・コンポーネントパターン
+- `design` — CSS 変数・コンポーネントパターン・list-* 共通骨組み
 - `data-model` — モデル一覧・クエリパターン
 - `testing` — E2E テスト追加方法

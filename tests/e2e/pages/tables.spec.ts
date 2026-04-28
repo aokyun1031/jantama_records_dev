@@ -28,7 +28,7 @@ test.describe('卓一覧ページ', () => {
   });
 
   test('大会一覧へのリンクがある', async ({ page }) => {
-    await expect(page.locator('.tournaments-actions a[href="tournaments"]')).toBeVisible();
+    await expect(page.locator('.list-actions a[href="tournaments"]')).toBeVisible();
   });
 
   test.describe('フィルタ', () => {
@@ -102,10 +102,10 @@ test.describe('卓一覧ページ', () => {
     });
 
     test('ページ送り UI は件数次第で表示される', async ({ page }) => {
-      const pagination = page.locator('.tables-pagination');
+      const pagination = page.locator('.list-pagination');
       const exists = await pagination.count();
       if (exists > 0) {
-        await expect(pagination.locator('.tables-page-info')).toContainText('ページ');
+        await expect(pagination.locator('.list-page-info')).toContainText('ページ');
       }
     });
   });

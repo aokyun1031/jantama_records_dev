@@ -23,11 +23,11 @@ test.describe('大会一覧', () => {
   });
 
   test('トップページへのリンクがある', async ({ page }) => {
-    await expect(page.locator('.tournaments-actions a[href="/"]')).toBeVisible();
+    await expect(page.locator('.list-actions a[href="/"]')).toBeVisible();
   });
 
   test('大会作成ページへのリンクがある', async ({ page }) => {
-    await expect(page.locator('.tournaments-actions a[href="tournament_new"]')).toBeVisible();
+    await expect(page.locator('.list-actions a[href="tournament_new"]')).toBeVisible();
   });
 
   test.describe('大会種別フィルタ', () => {
@@ -140,7 +140,7 @@ test.describe('大会一覧', () => {
     test('該当大会が無い種別を選ぶと専用メッセージが表示される', async ({ page }) => {
       await page.goto('/tournaments?event_types%5B%5D=saikyoi&event_types%5B%5D=hooh&event_types%5B%5D=masters&event_types%5B%5D=hyakudanisen&event_types%5B%5D=petit');
       const hasCards = await page.locator('.tournament-card').count() > 0;
-      const hasEmpty = await page.locator('.tournaments-empty').isVisible().catch(() => false);
+      const hasEmpty = await page.locator('.list-empty').isVisible().catch(() => false);
       expect(hasCards || hasEmpty).toBe(true);
     });
   });

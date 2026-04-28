@@ -57,9 +57,9 @@ require __DIR__ . '/../templates/header.php';
   </div>
 <?php endif; ?>
 
-<div style="text-align: center; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+<div class="list-actions">
   <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
-  <a href="player_new" class="btn-cancel" style="background:var(--btn-secondary-bg);color:var(--btn-text-color);border-color:transparent;box-shadow:0 4px 16px rgba(var(--mint-rgb),0.3);">+ 選手を追加</a>
+  <a href="player_new" class="btn-cancel btn-cancel--primary">+ 選手を追加</a>
 </div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

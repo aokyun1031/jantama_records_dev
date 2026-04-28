@@ -78,6 +78,7 @@
 }
 
 .table-card {
+  position: relative;
   background: var(--card);
   backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
@@ -90,6 +91,13 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.table-card:hover {
+  border-color: rgba(var(--accent-rgb), 0.35);
+  box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.12);
+  transform: translateY(-2px);
 }
 
 .table-card.is-done {
@@ -130,6 +138,8 @@
   color: var(--text);
   flex: 1 1 auto;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .table-card-tournament:hover .table-card-tname {
@@ -179,6 +189,32 @@
   color: var(--text);
 }
 
+/* Stretched link: 卓名から ::after でカード全体を覆い、どこをクリックしても卓詳細へ。 */
+.table-card-name--link {
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.table-card-name--link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+}
+.table-card-name--link:hover {
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--purple);
+}
+.table-card-name--link:focus-visible {
+  outline: none;
+}
+.table-card-name--link:focus-visible::after {
+  outline: 2px solid rgba(var(--accent-rgb), 0.55);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
 .table-card-sched {
   margin-left: auto;
   font-family: 'Inter', sans-serif;
@@ -209,6 +245,8 @@
   color: var(--text);
   font-size: 0.78rem;
   transition: background 0.2s, border-color 0.2s;
+  position: relative;
+  z-index: 1;
 }
 
 .table-card-player:hover {
@@ -222,103 +260,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.table-card-links {
-  display: flex;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-/* --- ページネーション --- */
-.tables-pagination {
-  max-width: 700px;
-  margin: 8px auto 24px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-}
-
-.tables-page-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 16px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--purple);
-  background: rgba(var(--accent-rgb), 0.08);
-  border: 1px solid rgba(var(--accent-rgb), 0.2);
-  border-radius: 8px;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-}
-
-.tables-page-link:hover {
-  background: rgba(var(--accent-rgb), 0.16);
-  border-color: rgba(var(--accent-rgb), 0.4);
-  transform: translateY(-1px);
-}
-
-.tables-page-link.is-disabled {
-  color: var(--text-light);
-  background: transparent;
-  border-color: var(--glass-border);
-  pointer-events: none;
-  opacity: 0.55;
-}
-
-.tables-page-info {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.tournaments-actions {
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 40px;
-}
-
-.tournaments-error {
-  text-align: center;
-  padding: 24px;
-  max-width: 700px;
-  margin: 0 auto 24px;
-  background: linear-gradient(135deg, rgba(var(--coral-rgb), 0.1), rgba(var(--coral-rgb), 0.05));
-  border: 1px solid rgba(var(--coral-rgb), 0.3);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 0.9rem;
-}
-
-.tournaments-error-label {
-  font-weight: 700;
-  color: var(--coral);
-  margin-bottom: 8px;
-}
-
-.tournaments-error-detail {
-  font-size: 0.75rem;
-  color: var(--text-sub);
-}
-
-.tournaments-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-sub);
-  font-size: 0.9rem;
-}
-
-.edit-message {
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 @keyframes tableCardFadeIn {
