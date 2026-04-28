@@ -42,8 +42,9 @@ if ($isFiltered) {
 $matchedCount = count($tournaments);
 
 // --- ページネーション（フィルタ適用後の配列を分割） ---
-['page' => $page, 'totalPages' => $totalPages, 'offset' => $offset] = paginate($matchedCount, 10);
-$tournaments = array_slice($tournaments, $offset, 10);
+$perPage = 10;
+['page' => $page, 'totalPages' => $totalPages, 'offset' => $offset] = paginate($matchedCount, $perPage);
+$tournaments = array_slice($tournaments, $offset, $perPage);
 
 $pageBaseQuery = [];
 foreach ($selectedEventTypes as $v) {

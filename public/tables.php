@@ -46,10 +46,11 @@ $filters = [
 $totalCount = $totalCount ?? 0;
 
 // --- ページネーション ---
-['page' => $page, 'totalPages' => $totalPages, 'offset' => $offset] = paginate($totalCount, 10);
+$perPage = 10;
+['page' => $page, 'totalPages' => $totalPages, 'offset' => $offset] = paginate($totalCount, $perPage);
 
 ['data' => $tables, 'error' => $error] = fetchData(
-    fn() => TableInfo::searchAll($filters, 10, $offset)
+    fn() => TableInfo::searchAll($filters, $perPage, $offset)
 );
 $tables = $tables ?? [];
 $error = $error ?? $errorCount;
@@ -173,7 +174,6 @@ require __DIR__ . '/../templates/header.php';
   <div class="tables-list">
     <?php foreach ($tables as $i => $row): ?>
       <?php
-        $playerMode = max(count($row['players']), 1);
         $eventTypeLabel = $row['event_type'] !== '' ? (EventType::tryFrom($row['event_type'])?->label() ?? '') : '';
         $schedText = '';
         if (!empty($row['played_date'])) {
