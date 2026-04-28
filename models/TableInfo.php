@@ -339,6 +339,174 @@ class TableInfo
     }
 
     /**
+     * 全卓のフラット一覧を取得する（管理向け一覧ページ用）。
+     *
+     * フィルタ:
+     *   - event_types: EventType::value の配列（空なら全種別）
+     *   - status: 'all' | 'done' | 'pending'
+     *   - keyword: 大会名・卓名・選手呼称/名前への ILIKE 部分一致
+     *
+     * @param array{event_types?: string[], status?: string, keyword?: string} $filters
+     * @return array<int, array{
+     *   table_id:int, tournament_id:int, tournament_name:string, event_type:string,
+     *   round_number:int, table_name:string,
+     *   played_date:?string, day_of_week:string, played_time:string, done:bool,
+     *   players: array<int, array{player_id:int, name:string, icon:?string, seat_order:int}>
+     * }>
+     */
+    public static function searchAll(array $filters, int $limit, int $offset): array
+    {
+        [$where, $params] = self::buildSearchWhere($filters);
+
+        $pdo = getDbConnection();
+
+        // 親（卓）取得（ページング対象）
+        $sql = "
+            SELECT ti.id AS table_id, ti.tournament_id, t.name AS tournament_name,
+                   COALESCE(tm.value, '') AS event_type,
+                   ti.round_number, ti.table_name,
+                   ti.played_date, ti.day_of_week, ti.played_time, ti.done,
+                   t.created_at AS tournament_created_at
+            FROM tables_info ti
+            JOIN tournaments t ON t.id = ti.tournament_id
+            LEFT JOIN tournament_meta tm
+                  ON tm.tournament_id = t.id AND tm.key = 'event_type'
+            WHERE $where
+            ORDER BY t.created_at DESC, ti.tournament_id DESC,
+                     ti.round_number ASC, ti.table_name ASC, ti.id ASC
+            LIMIT ? OFFSET ?
+        ";
+        $stmt = $pdo->prepare($sql);
+        $bindParams = array_merge($params, [$limit, $offset]);
+        foreach ($bindParams as $i => $v) {
+            $stmt->bindValue($i + 1, $v, is_int($v) ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
+
+        if (empty($rows)) {
+            return [];
+        }
+
+        // 子（参加選手）を 1 クエリでまとめて取得
+        $tableIds = array_map(fn($r) => (int) $r['table_id'], $rows);
+        $in = implode(',', array_fill(0, count($tableIds), '?'));
+        $playerStmt = $pdo->prepare("
+            SELECT tp.table_id, tp.player_id, tp.seat_order,
+                   p.name, p.nickname, c.icon_filename AS character_icon
+            FROM table_players tp
+            JOIN players p ON p.id = tp.player_id
+            LEFT JOIN characters c ON c.id = p.character_id
+            WHERE tp.table_id IN ($in)
+            ORDER BY tp.table_id, tp.seat_order
+        ");
+        $playerStmt->execute($tableIds);
+        $playersByTable = [];
+        foreach ($playerStmt->fetchAll() as $p) {
+            $tid = (int) $p['table_id'];
+            $playersByTable[$tid][] = [
+                'player_id'  => (int) $p['player_id'],
+                'name'       => $p['nickname'] ?? $p['name'],
+                'icon'       => $p['character_icon'],
+                'seat_order' => (int) $p['seat_order'],
+            ];
+        }
+
+        $result = [];
+        foreach ($rows as $row) {
+            $tid = (int) $row['table_id'];
+            $result[] = [
+                'table_id'        => $tid,
+                'tournament_id'   => (int) $row['tournament_id'],
+                'tournament_name' => $row['tournament_name'],
+                'event_type'      => $row['event_type'],
+                'round_number'    => (int) $row['round_number'],
+                'table_name'      => $row['table_name'],
+                'played_date'     => $row['played_date'],
+                'day_of_week'     => $row['day_of_week'],
+                'played_time'     => $row['played_time'],
+                'done'            => (bool) $row['done'],
+                'players'         => $playersByTable[$tid] ?? [],
+            ];
+        }
+        return $result;
+    }
+
+    /**
+     * 全卓検索の総件数。`searchAll` と同じフィルタ条件で件数のみ返す。
+     *
+     * @param array{event_types?: string[], status?: string, keyword?: string} $filters
+     */
+    public static function searchAllCount(array $filters): int
+    {
+        [$where, $params] = self::buildSearchWhere($filters);
+
+        $pdo = getDbConnection();
+        $sql = "
+            SELECT COUNT(DISTINCT ti.id)
+            FROM tables_info ti
+            JOIN tournaments t ON t.id = ti.tournament_id
+            LEFT JOIN tournament_meta tm
+                  ON tm.tournament_id = t.id AND tm.key = 'event_type'
+            WHERE $where
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * searchAll / searchAllCount 共通の WHERE 句を組み立てる。
+     *
+     * @return array{0:string, 1:array<int|string>}
+     */
+    private static function buildSearchWhere(array $filters): array
+    {
+        $clauses = ['1=1'];
+        $params = [];
+
+        $eventTypes = $filters['event_types'] ?? [];
+        if (!empty($eventTypes)) {
+            $in = implode(',', array_fill(0, count($eventTypes), '?'));
+            $clauses[] = "COALESCE(tm.value, '') IN ($in)";
+            foreach ($eventTypes as $v) {
+                $params[] = (string) $v;
+            }
+        }
+
+        $status = $filters['status'] ?? 'all';
+        if ($status === 'done') {
+            $clauses[] = 'ti.done = true';
+        } elseif ($status === 'pending') {
+            $clauses[] = 'ti.done = false';
+        }
+
+        $keyword = trim((string) ($filters['keyword'] ?? ''));
+        if ($keyword !== '') {
+            // '|' をエスケープ文字に指定し、ユーザー入力中の % _ | をリテラル化する。
+            // 既定の '\' だと PDO の ? プレースホルダパーサが文字列リテラル内の
+            // バックスラッシュで誤動作（SQLSTATE[HY093]）するため '|' を採用。
+            $like = '%' . strtr($keyword, ['|' => '||', '%' => '|%', '_' => '|_']) . '%';
+            $clauses[] = "(
+                t.name ILIKE ? ESCAPE '|'
+                OR ti.table_name ILIKE ? ESCAPE '|'
+                OR EXISTS (
+                    SELECT 1 FROM table_players tp2
+                    JOIN players p2 ON p2.id = tp2.player_id
+                    WHERE tp2.table_id = ti.id
+                      AND (p2.name ILIKE ? ESCAPE '|' OR COALESCE(p2.nickname, '') ILIKE ? ESCAPE '|')
+                )
+            )";
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+        }
+
+        return [implode(' AND ', $clauses), $params];
+    }
+
+    /**
      * 特定大会で特定選手が参加した卓情報をラウンドごとに取得。
      * 同卓メンバーのスコア（ラウンド合計）・通過判定を含む。
      */

@@ -74,6 +74,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
   <a href="/" class="nav-panel-link">トップページ</a>
   <a href="/tournaments" class="nav-panel-link">大会一覧</a>
   <a href="/players" class="nav-panel-link">選手一覧</a>
+  <a href="/tables" class="nav-panel-link">卓一覧</a>
 </nav>
 <div class="nav-overlay" id="nav-overlay"></div>
 

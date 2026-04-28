@@ -176,6 +176,7 @@ index.php（トップ）
   │         ├→ player_edit.php（選手編集・削除）
   │         ├→ player_tournament.php（大会別戦績）
   │         └→ player_analysis.php（戦績分析）
+  ├→ tables.php（卓一覧：全卓フラットビュー、種別/状態/キーワード絞込）
   ├→ tournaments.php（大会一覧）
   │    ├→ tournament_new.php（大会作成）
   │    └→ tournament.php（大会管理）

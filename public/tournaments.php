@@ -44,8 +44,8 @@ $matchedCount = count($tournaments);
 // --- テンプレート変数 ---
 $pageTitle = '大会一覧 - ' . SITE_NAME;
 $pageDescription = '麻雀トーナメントの大会一覧です。';
-$pageCss = ['css/forms.css', 'css/tournaments.css'];
-$pageScripts = ['js/tournaments.js'];
+$pageCss = ['css/forms.css', 'css/filters.css', 'css/tournaments.css'];
+$pageScripts = ['js/filter-form.js'];
 
 require __DIR__ . '/../templates/header.php';
 ?>
