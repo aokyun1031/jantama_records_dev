@@ -235,6 +235,23 @@ while IFS= read -r entry; do
   hit warning "$_pe_file" "$_pe_line" "\$_POST 直接アクセス。sanitizeInput() を使う（配列は preg_replace で処理）"
 done < <(grep -HnE '\$_POST\[' $PHP_FILES 2>/dev/null)
 
+# W9: HTML 要素にインライン style="..." 属性
+# 動的値（animation-delay など PHP ループ index 由来）のみ許容。
+# 静的な装飾（background / color / box-shadow など）は modifier クラスへ吸収すべき。
+while IFS= read -r entry; do
+  [ -z "$entry" ] && continue
+  parse_entry "$entry"
+  # 許容パターン: animation-delay のみで、値が PHP 変数由来
+  echo "$_pe_content" | grep -qE 'style="animation-delay:[^;"]*<\?=[^"]*"' && continue
+  hit warning "$_pe_file" "$_pe_line" "インライン style 属性禁止。modifier クラスを components.css に追加して使う"
+done < <(grep -HnE '<[a-zA-Z][^>]*\sstyle="[^"]+"' $PHP_FILES 2>/dev/null)
+
+# W10: 一覧ページの借用クラス名（共通 list-* に統一済み）
+while IFS=: read -r file line _; do
+  [ -z "$file" ] && continue
+  hit warning "$file" "$line" "ページ固有の .tournaments-* / .tables-* 一覧クラスは廃止。共通の .list-actions / .list-error / .list-empty / .list-pagination を使う"
+done < <(grep -HnE 'class="[^"]*\b(tournaments-actions|tournaments-error|tournaments-error-label|tournaments-error-detail|tournaments-empty|tables-pagination|tables-page-link|tables-page-info)\b' $PHP_FILES 2>/dev/null)
+
 # =============================================================
 # CSS: ハードコードカラー
 # =============================================================

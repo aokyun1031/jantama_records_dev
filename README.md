@@ -185,6 +185,8 @@ index.php（トップ）
   │         ├→ table_new.php（卓作成）
   │         ├→ table.php（卓管理：日程・牌譜URL・結果登録・完了）
   │         └→ interview_edit.php（優勝インタビュー設定・大会完了）
+  ├→ tables.php（卓一覧：全大会横断、種別/状態/キーワード絞込・ページネーション）
+  │    └→ table.php（卓管理：上記と同じターゲット）
   ├→ dispatch_dm.php（Discord DM 配信エンドポイント）
   ├→ discord_oauth_redirect.php（Discord OAuth 認可開始）
   ├→ discord_oauth_callback.php（Discord OAuth コールバック）

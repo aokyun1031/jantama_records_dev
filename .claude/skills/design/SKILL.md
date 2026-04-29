@@ -142,6 +142,40 @@ background: rgba(var(--danger-rgb), 0.03);
 - 既存コンポーネントが `components.css` / `base.css` / `forms.css` に無いかを先に確認し、使えるものは再利用する
 - 複数ページで使い回す要素は `components.css` に昇格（例: `.page-hero` / `.page-hero-badge` / `.page-hero-title`）
 
+## インライン `style=""` 属性の禁止
+
+HTML 要素に直接 `style="background:var(--btn-secondary-bg);..."` 等を書かない。CSP nonce が効かず、CSS 変数を使っていても保守性が悪い。同じ装飾が複数ページで再現する場合は **modifier クラス**（BEM 風）として `components.css` に追加する。
+
+```html
+<!-- NG -->
+<a href="..." class="btn-cancel" style="background:var(--btn-secondary-bg);color:var(--btn-text-color);">+ 追加</a>
+
+<!-- OK: modifier クラス -->
+<a href="..." class="btn-cancel btn-cancel--primary">+ 追加</a>
+```
+
+`components.css` 側:
+```css
+.btn-cancel--primary{
+  background:var(--btn-secondary-bg);
+  color:var(--btn-text-color);
+  border-color:transparent;
+}
+```
+
+例外: `style="animation-delay: <?= $i * 0.05 ?>s"` のように **PHP ループ index に依存する動的値** はインライン記述可。
+
+## 一覧ページ共通の構造
+
+複数ある一覧ページ（players / tournaments / tables）は同じ骨組みを使う。以下を流用すること:
+
+- 下部のアクション群: `<div class="list-actions">` + `.btn-cancel` / `.btn-cancel--primary`
+- 空状態: `<div class="list-empty">...</div>`
+- DB エラー: `<div class="list-error"><div class="list-error-label">...</div><div class="list-error-detail">...</div></div>`
+- ページネーション: `templates/partials/list-pagination.php` を `require` する（`paginate()` ヘルパで `$page / $totalPages` を取得、親スコープで `$pageUrl` クロージャを定義）
+
+**ページ固有の `.tournaments-error` / `.tables-empty` 等を新規作成しない**。共通の `.list-*` を使う。
+
 ```php
 /* OK */
 $pageCss = ['css/forms.css', 'css/tournament.css'];

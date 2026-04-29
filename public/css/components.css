@@ -204,6 +204,80 @@
 }
 .btn-cancel:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.08)}
 
+/* Primary action variant — 一覧ページの「+ 追加」系で使う緑ボタン */
+.btn-cancel--primary{
+  background:var(--btn-secondary-bg);
+  color:var(--btn-text-color);
+  border-color:transparent;
+  box-shadow:0 4px 16px rgba(var(--mint-rgb),0.3);
+}
+.btn-cancel--primary:hover{box-shadow:0 6px 20px rgba(var(--mint-rgb),0.4)}
+
+/* List page shared blocks (一覧系ページ共通: actions / error / empty) */
+.list-actions{
+  text-align:center;
+  display:flex;justify-content:center;
+  gap:12px;flex-wrap:wrap;
+  margin-bottom:40px;
+}
+.list-error{
+  text-align:center;
+  padding:24px;
+  max-width:700px;margin:0 auto 24px;
+  background:linear-gradient(135deg,rgba(var(--coral-rgb),0.1),rgba(var(--coral-rgb),0.05));
+  border:1px solid rgba(var(--coral-rgb),0.3);
+  border-radius:var(--radius);
+  color:var(--text);
+  font-size:0.9rem;
+}
+.list-error-label{font-weight:700;color:var(--coral);margin-bottom:8px}
+.list-error-detail{font-size:0.75rem;color:var(--text-sub)}
+.list-empty{
+  text-align:center;
+  padding:40px 20px;
+  color:var(--text-sub);
+  font-size:0.9rem;
+}
+/* forms.css の .edit-message は flex 配置中央寄せだが、一覧ページでは max-width で抑える */
+.edit-message{max-width:600px;margin-left:auto;margin-right:auto}
+
+/* List pagination — 一覧系ページの「前へ / 次へ」ナビ */
+.list-pagination{
+  max-width:700px;
+  margin:8px auto 24px;
+  padding:0 16px;
+  display:flex;align-items:center;justify-content:center;
+  gap:16px;
+}
+.list-page-link{
+  display:inline-flex;align-items:center;
+  padding:8px 16px;
+  font-size:0.85rem;font-weight:700;
+  text-decoration:none;
+  color:var(--purple);
+  background:rgba(var(--accent-rgb),0.08);
+  border:1px solid rgba(var(--accent-rgb),0.2);
+  border-radius:8px;
+  transition:background 0.2s,border-color 0.2s,transform 0.15s;
+}
+.list-page-link:hover{
+  background:rgba(var(--accent-rgb),0.16);
+  border-color:rgba(var(--accent-rgb),0.4);
+  transform:translateY(-1px);
+}
+.list-page-link.is-disabled{
+  color:var(--text-light);
+  background:transparent;
+  border-color:var(--glass-border);
+  pointer-events:none;
+  opacity:0.55;
+}
+.list-page-info{
+  font-family:'Inter',sans-serif;
+  font-size:0.85rem;font-weight:700;
+  color:var(--text);
+}
+
 /* Character icon */
 .chara-icon{border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle}
 .chara-icon-none{border-radius:50%;background:var(--glass-border);display:inline-flex;align-items:center;justify-content:center;color:var(--text-sub);font-weight:700;line-height:1.1;text-align:center;flex-shrink:0;vertical-align:middle}

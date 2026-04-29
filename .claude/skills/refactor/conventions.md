@@ -35,6 +35,8 @@ scan.sh はここに挙げたルールのうち grep で検出可能なものを
 | W6 | POST 処理ページに `validatePost()` が無い（CSRF + Turnstile 検証漏れ） | scan.sh 自動 |
 | W7 | `<form method="post">` があるのに `$pageTurnstile = true` が未設定 | scan.sh 自動 |
 | W8 | `$_POST['key']` 直接アクセス（`sanitizeInput()` を使う。配列は `preg_replace`） | scan.sh 自動 |
+| W9 | HTML インライン `style="..."` 属性禁止。modifier クラスを `components.css` に追加。例外: `style="animation-delay:<?= ... ?>s"` のような PHP ループ index 由来の動的値のみ | scan.sh 自動 |
+| W10 | 一覧ページの `.tournaments-actions` / `.tournaments-error*` / `.tournaments-empty` / `.tables-pagination` 等のページ固有借用クラスは廃止。共通 `.list-actions` / `.list-error` / `.list-empty` / `.list-pagination` を使う | scan.sh 自動 |
 | — | GET は `requirePlayerId()` / `requireTournamentId()` / `filter_input()` で検証 | 手動レビュー |
 | — | `fetchData(fn() => ModelName::method())` を使う | 手動レビュー |
 | — | HTML 出力は `h()` でエスケープ | 手動レビュー |
