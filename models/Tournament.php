@@ -142,46 +142,35 @@ class Tournament
 
         $pdo = getDbConnection();
         $pdo->beginTransaction();
-        $stage = 'init';
         try {
-            $stage = 'select_current';
-            $stmt = $pdo->prepare('SELECT player_id FROM standings WHERE tournament_id = ?');
-            $stmt->execute([$id]);
-            $currentIds = array_map(fn($row) => (int) $row['player_id'], $stmt->fetchAll());
-
-            $toAdd = array_diff($playerIds, $currentIds);
-            $toRemove = array_diff($currentIds, $playerIds);
-
-            if ($toRemove) {
-                $stage = 'delete toRemove=' . json_encode(array_values($toRemove));
-                $placeholders = implode(',', array_fill(0, count($toRemove), '?'));
+            // 不要選手を削除（playerIds に含まれない選手）
+            // SELECT で現状取得 → 差分計算は PDO_PGSQL + Pooler 経由で
+            // portal が cleanup されず後続が 25P02 で死ぬため、DB 側で差分処理する
+            if (!empty($playerIds)) {
+                $placeholders = implode(',', array_fill(0, count($playerIds), '?'));
                 $stmt = $pdo->prepare(
-                    "DELETE FROM standings WHERE tournament_id = ? AND player_id IN ($placeholders)"
+                    "DELETE FROM standings
+                     WHERE tournament_id = ? AND player_id NOT IN ($placeholders)"
                 );
-                $stmt->execute(array_merge([$id], array_values($toRemove)));
+                $stmt->execute(array_merge([$id], $playerIds));
+            } else {
+                $stmt = $pdo->prepare('DELETE FROM standings WHERE tournament_id = ?');
+                $stmt->execute([$id]);
             }
 
-            $stage = 'insert prepare';
+            // 追加（既存ペアは ON CONFLICT で無視）
             $addStmt = $pdo->prepare(
                 'INSERT INTO standings (tournament_id, player_id, rank, total, pending, eliminated_round)
                  VALUES (?, ?, 0, 0, false, 0)
                  ON CONFLICT (tournament_id, player_id) DO NOTHING'
             );
-            foreach ($toAdd as $playerId) {
-                $stage = 'insert player_id=' . $playerId;
+            foreach ($playerIds as $playerId) {
                 $addStmt->execute([$id, $playerId]);
             }
 
-            $stage = 'commit';
             $pdo->commit();
         } catch (PDOException $e) {
-            error_log('[DB updatePlayers] stage=' . $stage
-                . ' code=' . $e->getCode()
-                . ' msg=' . $e->getMessage()
-                . ' tournament_id=' . $id
-                . ' playerIds=' . json_encode($playerIds)
-                . ' toAdd=' . json_encode($toAdd ?? [])
-                . ' toRemove=' . json_encode($toRemove ?? []));
+            error_log('[DB updatePlayers] code=' . $e->getCode() . ' msg=' . $e->getMessage());
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
