@@ -160,7 +160,8 @@ class Tournament
 
             $addStmt = $pdo->prepare(
                 'INSERT INTO standings (tournament_id, player_id, rank, total, pending, eliminated_round)
-                 VALUES (?, ?, 0, 0, false, 0)'
+                 VALUES (?, ?, 0, 0, false, 0)
+                 ON CONFLICT (tournament_id, player_id) DO NOTHING'
             );
             foreach ($toAdd as $playerId) {
                 $addStmt->execute([$id, $playerId]);
