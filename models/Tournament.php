@@ -142,7 +142,9 @@ class Tournament
 
         $pdo = getDbConnection();
         $pdo->beginTransaction();
+        $stage = 'init';
         try {
+            $stage = 'select_current';
             $stmt = $pdo->prepare('SELECT player_id FROM standings WHERE tournament_id = ?');
             $stmt->execute([$id]);
             $currentIds = array_map(fn($row) => (int) $row['player_id'], $stmt->fetchAll());
@@ -151,6 +153,7 @@ class Tournament
             $toRemove = array_diff($currentIds, $playerIds);
 
             if ($toRemove) {
+                $stage = 'delete toRemove=' . json_encode(array_values($toRemove));
                 $placeholders = implode(',', array_fill(0, count($toRemove), '?'));
                 $stmt = $pdo->prepare(
                     "DELETE FROM standings WHERE tournament_id = ? AND player_id IN ($placeholders)"
@@ -158,18 +161,30 @@ class Tournament
                 $stmt->execute(array_merge([$id], array_values($toRemove)));
             }
 
+            $stage = 'insert prepare';
             $addStmt = $pdo->prepare(
                 'INSERT INTO standings (tournament_id, player_id, rank, total, pending, eliminated_round)
                  VALUES (?, ?, 0, 0, false, 0)
                  ON CONFLICT (tournament_id, player_id) DO NOTHING'
             );
             foreach ($toAdd as $playerId) {
+                $stage = 'insert player_id=' . $playerId;
                 $addStmt->execute([$id, $playerId]);
             }
 
+            $stage = 'commit';
             $pdo->commit();
         } catch (PDOException $e) {
-            $pdo->rollBack();
+            error_log('[DB updatePlayers] stage=' . $stage
+                . ' code=' . $e->getCode()
+                . ' msg=' . $e->getMessage()
+                . ' tournament_id=' . $id
+                . ' playerIds=' . json_encode($playerIds)
+                . ' toAdd=' . json_encode($toAdd ?? [])
+                . ' toRemove=' . json_encode($toRemove ?? []));
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             throw $e;
         }
     }
