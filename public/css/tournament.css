@@ -170,6 +170,22 @@
 .td-table-player.sub .td-table-player-name { color: var(--gold); font-style: italic; }
 .td-table-sub-icon { width: 28px; height: 28px; border-radius: 50%; border: 1.5px dashed rgba(var(--gold-rgb), 0.5); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--gold); flex-shrink: 0; }
 
+/* --- ラウンド設定 事後編集 --- */
+.td-round-edit { margin-top: 10px; }
+.td-round-edit-summary { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); cursor: pointer; padding: 4px 0; }
+.td-round-edit-summary:hover { color: var(--text); }
+.td-round-edit-form { margin-top: 10px; padding: 14px 16px; background: var(--card); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); }
+.td-round-edit-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.td-radio-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.td-radio { display: none; }
+.td-radio-label { display: inline-block; padding: 6px 14px; border: 2px solid var(--input-border); border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 700; color: var(--text-sub); cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; }
+.td-radio:checked + .td-radio-label { border-color: var(--purple); background: rgba(var(--accent-rgb), 0.08); color: var(--text); }
+.td-radio-label:hover { border-color: var(--input-border-hover); }
+.td-select { padding: 6px 12px; border: 1.5px solid var(--input-border); border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; font-family: 'Noto Sans JP', sans-serif; background: var(--input-bg); color: var(--text); cursor: pointer; }
+.td-select:focus { outline: none; border-color: var(--input-border-focus); box-shadow: var(--input-focus-ring); }
+.td-round-edit-btn { padding: 6px 16px; background: var(--btn-primary-bg); color: var(--btn-text-color); border: none; border-radius: 8px; font-weight: 700; font-size: 0.78rem; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+.td-round-edit-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 12px rgba(var(--accent-rgb), 0.3); }
+
 /* --- 順位表 --- */
 .td-standings { margin-top: 32px; }
 .td-standings-title { font-weight: 800; font-size: 0.95rem; color: var(--text); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid rgba(var(--accent-rgb), 0.15); }

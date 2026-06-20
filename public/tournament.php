@@ -31,6 +31,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: tournaments');
                 exit;
             }
+        } elseif ($action === 'update_round_advance') {
+            $roundNumber = (int) sanitizeInput('round_number');
+            $advanceMode = sanitizeInput('advance_mode');
+            if (!in_array($advanceMode, ['per_table', 'overall'], true)) {
+                $advanceMode = 'per_table';
+            }
+            $advanceCount = (int) sanitizeInput('advance_count');
+            if ($advanceCount < 1) {
+                $advanceCount = 1;
+            }
+
+            $rk = 'round_' . $roundNumber;
+            $isFinalRound = ($meta[$rk . '_is_final'] ?? '0') === '1';
+            ['data' => $roundsForUpdate] = fetchData(fn() => TableInfo::byTournament($tournamentId));
+            $roundTablesForUpdate = $roundsForUpdate[$roundNumber] ?? [];
+            $roundAllDone = !empty($roundTablesForUpdate) && empty(array_filter($roundTablesForUpdate, fn($t) => !$t['done']));
+
+            if ($roundNumber < 1 || $isFinalRound || !$roundAllDone) {
+                $flash = 'このラウンドは設定を変更できません。';
+            } else {
+                TournamentMeta::set($tournamentId, $rk . '_advance_mode', $advanceMode);
+                TournamentMeta::set($tournamentId, $rk . '_advance_count', (string) $advanceCount);
+                Standing::resetRoundElimination($tournamentId, $roundNumber);
+                Standing::processRoundAdvancement($tournamentId, $roundNumber, $advanceCount, $advanceMode);
+                $_SESSION['flash'] = $roundNumber . '回戦の勝ち抜け設定を更新し、再判定しました。';
+                regenerateCsrfToken();
+                header('Location: tournament?id=' . $tournamentId);
+                exit;
+            }
         }
     }
 }
@@ -235,6 +264,27 @@ $statusClass = $tsEnum?->cssClass() ?? '';
           <?php endif; ?>
         </div>
       <?php endif; ?>
+      <?php if ($allCurrentDone && !$rIsFinal): ?>
+        <?php $roundPlayerCount = array_sum(array_map(fn($t) => count($t['players']), $currentRoundTables)); ?>
+        <details class="td-round-edit">
+          <summary class="td-round-edit-summary">&#x270F; 勝ち抜け設定を編集</summary>
+          <form method="post" action="tournament?id=<?= $tournamentId ?>" class="td-round-edit-form round-advance-form" data-player-mode="<?= (int) ($meta['player_mode'] ?? 4) ?>" data-total-players="<?= $roundPlayerCount ?>" data-current="<?= $rAdvance ?>">
+            <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
+            <input type="hidden" name="action" value="update_round_advance">
+            <input type="hidden" name="round_number" value="<?= $currentRound ?>">
+            <div class="td-round-edit-row">
+              <div class="td-radio-group">
+                <input type="radio" name="advance_mode" value="per_table" id="amode-table-<?= $currentRound ?>" class="td-radio" <?= $rAdvanceMode !== 'overall' ? 'checked' : '' ?>>
+                <label for="amode-table-<?= $currentRound ?>" class="td-radio-label">各卓</label>
+                <input type="radio" name="advance_mode" value="overall" id="amode-overall-<?= $currentRound ?>" class="td-radio" <?= $rAdvanceMode === 'overall' ? 'checked' : '' ?>>
+                <label for="amode-overall-<?= $currentRound ?>" class="td-radio-label">全体</label>
+              </div>
+              <select name="advance_count" class="td-select round-advance-select"></select>
+              <button type="submit" class="td-round-edit-btn">設定を更新して再判定</button>
+            </div>
+          </form>
+        </details>
+      <?php endif; ?>
       <div class="td-round-grid">
         <?php foreach ($currentRoundTables as $t): ?>
           <?php
@@ -313,6 +363,27 @@ $statusClass = $tsEnum?->cssClass() ?? '';
                   <span class="td-round-tag"><?= $prAdvanceMode === 'overall' ? '全体' : '各卓' ?>上位<?= $prAdvance ?>名勝ち抜け</span>
                 <?php endif; ?>
               </div>
+            <?php endif; ?>
+            <?php if (!$prIsFinal && $doneCount === count($tables)): ?>
+              <?php $prRoundPlayerCount = array_sum(array_map(fn($t) => count($t['players']), $tables)); ?>
+              <details class="td-round-edit">
+                <summary class="td-round-edit-summary">&#x270F; 勝ち抜け設定を編集</summary>
+                <form method="post" action="tournament?id=<?= $tournamentId ?>" class="td-round-edit-form round-advance-form" data-player-mode="<?= (int) ($meta['player_mode'] ?? 4) ?>" data-total-players="<?= $prRoundPlayerCount ?>" data-current="<?= $prAdvance ?>">
+                  <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token']) ?>">
+                  <input type="hidden" name="action" value="update_round_advance">
+                  <input type="hidden" name="round_number" value="<?= $roundNumber ?>">
+                  <div class="td-round-edit-row">
+                    <div class="td-radio-group">
+                      <input type="radio" name="advance_mode" value="per_table" id="amode-table-<?= $roundNumber ?>" class="td-radio" <?= $prAdvanceMode !== 'overall' ? 'checked' : '' ?>>
+                      <label for="amode-table-<?= $roundNumber ?>" class="td-radio-label">各卓</label>
+                      <input type="radio" name="advance_mode" value="overall" id="amode-overall-<?= $roundNumber ?>" class="td-radio" <?= $prAdvanceMode === 'overall' ? 'checked' : '' ?>>
+                      <label for="amode-overall-<?= $roundNumber ?>" class="td-radio-label">全体</label>
+                    </div>
+                    <select name="advance_count" class="td-select round-advance-select"></select>
+                    <button type="submit" class="td-round-edit-btn">設定を更新して再判定</button>
+                  </div>
+                </form>
+              </details>
             <?php endif; ?>
             <div class="td-round-grid">
               <?php foreach ($tables as $t): ?>
@@ -425,7 +496,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
 </div>
 
 <?php
-$pageScripts = ['js/dispatch-dm.js'];
+$pageScripts = ['js/dispatch-dm.js', 'js/round-advance-edit.js'];
 
 require __DIR__ . '/../templates/footer.php';
 ?>

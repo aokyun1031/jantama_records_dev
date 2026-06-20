@@ -37,11 +37,7 @@
 
     var values = [];
     if (mode === 'overall') {
-      for (var k = 1; k <= 4; k++) {
-        var v = k * playerMode;
-        if (v > totalPlayers - 1) break;
-        values.push(v);
-      }
+      for (var v = 1; v <= totalPlayers - 1; v++) values.push(v);
     } else {
       for (var i = 1; i <= playerMode - 1; i++) values.push(i);
     }
@@ -49,13 +45,19 @@
     values.forEach(function(v) {
       var opt = document.createElement('option');
       opt.value = v;
-      opt.textContent = '上位' + v + '名';
+      var label = '上位' + v + '名';
+      if (mode === 'overall') {
+        var elim = totalPlayers - v;
+        if (elim > 0) label += '勝ち抜け（下位' + elim + '名敗退）';
+      }
+      opt.textContent = label;
       selectAdvance.appendChild(opt);
     });
 
     var defaultVal;
     if (mode === 'overall') {
-      defaultVal = values.length >= 2 ? values[1] : (values[0] || 0);
+      var pref = playerMode * 2;
+      defaultVal = values.indexOf(pref) !== -1 ? pref : (values[0] || 0);
     } else {
       defaultVal = 2;
     }

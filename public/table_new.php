@@ -109,10 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($advanceCount < 1) $advanceCount = 1;
                 if ($gameCount < 1) $gameCount = 1;
 
-                if ($advanceMode === 'overall' && $advanceCount % $playerMode !== 0) {
-                    $validationError = '全体モードの勝ち抜け人数は対局人数の倍数で指定してください。';
-                }
-
                 if (!$validationError) {
                     try {
                         TableInfo::createBatch($tournamentId, $roundNumber, $tablesData);

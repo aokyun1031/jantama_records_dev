@@ -123,6 +123,19 @@ class Standing
     }
 
     /**
+     * 指定ラウンドで敗退済の選手を勝ち抜き中（eliminated_round = 0）に戻す。
+     * ラウンド設定を事後変更して勝ち抜き判定を再実行する前段で使う。
+     */
+    public static function resetRoundElimination(int $tournamentId, int $roundNumber): void
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare(
+            'UPDATE standings SET eliminated_round = 0 WHERE tournament_id = ? AND eliminated_round = ?'
+        );
+        $stmt->execute([$tournamentId, $roundNumber]);
+    }
+
+    /**
      * 優勝者（勝ち抜き中で最高ポイント）を取得する。
      */
     public static function champion(int $tournamentId): ?array
