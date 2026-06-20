@@ -3,7 +3,7 @@
 --
 
 
--- Dumped from database version 17.8 (a48d9ca)
+-- Dumped from database version 17.10 (21f7c76)
 -- Dumped by pg_dump version 17.9
 
 SET statement_timeout = 0;
@@ -60,6 +60,19 @@ ALTER SEQUENCE public.characters_id_seq OWNED BY public.characters.id;
 
 
 --
+-- Name: discord_scheduled_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.discord_scheduled_events (
+    entity_type character varying(16) NOT NULL,
+    entity_id integer NOT NULL,
+    discord_event_id character varying(32) NOT NULL,
+    guild_id character varying(32) NOT NULL,
+    last_synced_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: interviews; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -98,9 +111,6 @@ CREATE TABLE public.players (
     discord_user_id character varying(32),
     discord_username character varying(64)
 );
-
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_players_discord_user_id ON public.players (discord_user_id) WHERE discord_user_id IS NOT NULL;
 
 
 --
@@ -169,37 +179,6 @@ CREATE TABLE public.standings (
     eliminated_round integer DEFAULT 0,
     tournament_id integer NOT NULL
 );
-
-
---
--- Name: tournament_dm_dispatches; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.tournament_dm_dispatches (
-    tournament_id integer NOT NULL,
-    player_id integer NOT NULL,
-    sent_at timestamp with time zone DEFAULT now() NOT NULL,
-    status character varying(16) NOT NULL
-);
-
-ALTER TABLE ONLY public.tournament_dm_dispatches
-    ADD CONSTRAINT tournament_dm_dispatches_pkey PRIMARY KEY (tournament_id, player_id);
-
-
---
--- Name: discord_scheduled_events; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.discord_scheduled_events (
-    entity_type character varying(16) NOT NULL,
-    entity_id integer NOT NULL,
-    discord_event_id character varying(32) NOT NULL,
-    guild_id character varying(32) NOT NULL,
-    last_synced_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-ALTER TABLE ONLY public.discord_scheduled_events
-    ADD CONSTRAINT discord_scheduled_events_pkey PRIMARY KEY (entity_type, entity_id);
 
 
 --
@@ -303,6 +282,18 @@ ALTER SEQUENCE public.tables_info_id_seq OWNED BY public.tables_info.id;
 
 
 --
+-- Name: tournament_dm_dispatches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tournament_dm_dispatches (
+    tournament_id integer NOT NULL,
+    player_id integer NOT NULL,
+    sent_at timestamp with time zone DEFAULT now() NOT NULL,
+    status character varying(16) NOT NULL
+);
+
+
+--
 -- Name: tournament_meta; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -398,6 +389,14 @@ ALTER TABLE ONLY public.characters
 
 
 --
+-- Name: discord_scheduled_events discord_scheduled_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.discord_scheduled_events
+    ADD CONSTRAINT discord_scheduled_events_pkey PRIMARY KEY (entity_type, entity_id);
+
+
+--
 -- Name: interviews interviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -478,6 +477,14 @@ ALTER TABLE ONLY public.tables_info
 
 
 --
+-- Name: tournament_dm_dispatches tournament_dm_dispatches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tournament_dm_dispatches
+    ADD CONSTRAINT tournament_dm_dispatches_pkey PRIMARY KEY (tournament_id, player_id);
+
+
+--
 -- Name: tournament_meta tournament_meta_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -491,6 +498,13 @@ ALTER TABLE ONLY public.tournament_meta
 
 ALTER TABLE ONLY public.tournaments
     ADD CONSTRAINT tournaments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_players_discord_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_players_discord_user_id ON public.players USING btree (discord_user_id) WHERE (discord_user_id IS NOT NULL);
 
 
 --
@@ -595,11 +609,11 @@ ALTER TABLE ONLY public.tables_info
 
 
 --
--- Name: tournament_meta tournament_meta_tournament_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: tournament_dm_dispatches tournament_dm_dispatches_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.tournament_meta
-    ADD CONSTRAINT tournament_meta_tournament_id_fkey FOREIGN KEY (tournament_id) REFERENCES public.tournaments(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.tournament_dm_dispatches
+    ADD CONSTRAINT tournament_dm_dispatches_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.players(id) ON DELETE CASCADE;
 
 
 --
@@ -611,11 +625,11 @@ ALTER TABLE ONLY public.tournament_dm_dispatches
 
 
 --
--- Name: tournament_dm_dispatches tournament_dm_dispatches_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: tournament_meta tournament_meta_tournament_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.tournament_dm_dispatches
-    ADD CONSTRAINT tournament_dm_dispatches_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.players(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.tournament_meta
+    ADD CONSTRAINT tournament_meta_tournament_id_fkey FOREIGN KEY (tournament_id) REFERENCES public.tournaments(id) ON DELETE CASCADE;
 
 
 --

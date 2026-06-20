@@ -32,6 +32,8 @@ class DevDataSeeder extends AbstractSeed
         $this->execute('TRUNCATE TABLE
             interviews,
             tournament_meta,
+            tournament_dm_dispatches,
+            discord_scheduled_events,
             standings,
             round_results,
             table_paifu_urls,
