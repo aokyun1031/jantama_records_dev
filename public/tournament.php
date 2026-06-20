@@ -115,6 +115,18 @@ function formatTableDate(array $t): string {
     return $date . ($dow !== '' ? '（' . $dow . '）' : '') . ($time !== '' ? ' ' . $time : '');
 }
 
+// 勝ち抜けタグ表示ヘルパー: 全体モードは敗退人数の方が少なければ「下位N名敗退」表記にする
+function formatAdvanceTag(string $mode, int $advanceCount, int $totalPlayers): string {
+    if ($mode !== 'overall') {
+        return '各卓上位' . $advanceCount . '名勝ち抜け';
+    }
+    $eliminateCount = $totalPlayers - $advanceCount;
+    if ($totalPlayers > 0 && $eliminateCount < $advanceCount) {
+        return '下位' . $eliminateCount . '名敗退';
+    }
+    return '全体上位' . $advanceCount . '名勝ち抜け';
+}
+
 // ステータス表示ヘルパー
 $tsEnum = TournamentStatus::tryFrom($tournament['status']);
 $statusLabel = $tsEnum?->label() ?? $tournament['status'];
@@ -231,7 +243,8 @@ $statusClass = $tsEnum?->cssClass() ?? '';
           <?php if ($rIsFinal): ?>
             <span class="td-round-tag">総合ポイント1位が優勝</span>
           <?php elseif ($rAdvance > 0): ?>
-            <span class="td-round-tag"><?= $rAdvanceMode === 'overall' ? '全体' : '各卓' ?>上位<?= $rAdvance ?>名勝ち抜け</span>
+            <?php $roundPlayerCount = array_sum(array_map(fn($t) => count($t['players']), $currentRoundTables)); ?>
+            <span class="td-round-tag"><?= h(formatAdvanceTag($rAdvanceMode, $rAdvance, $roundPlayerCount)) ?></span>
           <?php endif; ?>
         </div>
       <?php endif; ?>
@@ -310,7 +323,8 @@ $statusClass = $tsEnum?->cssClass() ?? '';
                 <?php if ($prIsFinal): ?>
                   <span class="td-round-tag">総合ポイント1位が優勝</span>
                 <?php elseif ($prAdvance > 0): ?>
-                  <span class="td-round-tag"><?= $prAdvanceMode === 'overall' ? '全体' : '各卓' ?>上位<?= $prAdvance ?>名勝ち抜け</span>
+                  <?php $prRoundPlayerCount = array_sum(array_map(fn($t) => count($t['players']), $tables)); ?>
+                  <span class="td-round-tag"><?= h(formatAdvanceTag($prAdvanceMode, $prAdvance, $prRoundPlayerCount)) ?></span>
                 <?php endif; ?>
               </div>
             <?php endif; ?>
