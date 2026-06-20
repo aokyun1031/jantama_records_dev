@@ -314,3 +314,19 @@
   margin-bottom: 8px;
   line-height: 1.25;
 }
+
+/* 汎用チャートカード（Chart.js を埋め込むカード） */
+.chart-card {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: clamp(240px, 32vw, 360px);
+}

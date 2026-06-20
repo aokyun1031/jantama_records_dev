@@ -215,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
 $pageTitle = h($table['table_name']) . ' - ' . h($tournament['name']) . ' - ' . SITE_NAME;
 $pageDescription = $tournament['name'] . ' ' . $table['table_name'] . ' の対局情報・成績を管理します。';
 $pageCss = ['css/forms.css', 'css/table.css'];
-$pageScripts = !$isDone ? ['js/table.js'] : [];
+$pageScripts = !$isDone ? ['js/table.js'] : ($gameCount > 1 ? ['js/vendor/chart.umd.min.js', 'js/table-chart.js'] : []);
 
 $pageTurnstile = true;
 require __DIR__ . '/../templates/header.php';
@@ -333,6 +333,12 @@ require __DIR__ . '/../templates/header.php';
     <?php endfor; ?>
     <?php if ($gameCount > 1): ?>
       <div class="tb-section">
+        <div class="tb-section-title">点数推移</div>
+        <div class="chart-card">
+          <div class="chart-canvas-wrap"><canvas id="tableScoreChart" aria-label="局ごとの点数推移" role="img"></canvas></div>
+        </div>
+      </div>
+      <div class="tb-section">
         <div class="tb-section-title">合計</div>
         <div class="tb-score-grid">
           <?php
@@ -418,6 +424,32 @@ if (!$isDone) {
     ];
     $jsDataJson = json_encode($jsData, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
     $pageInlineScript = "window.__tableData = {$jsDataJson};";
+} elseif ($gameCount > 1) {
+    $chartLabels = [];
+    for ($g = 1; $g <= $gameCount; $g++) {
+        $chartLabels[] = $g . '局目';
+    }
+    $chartSeries = [];
+    foreach ($table['players'] as $p) {
+        $pid = (int) $p['player_id'];
+        $cumulative = 0.0;
+        $cumPoints = [];
+        $rawPoints = [];
+        for ($g = 1; $g <= $gameCount; $g++) {
+            $raw = (float) ($table['game_scores'][$g][$pid] ?? 0);
+            $cumulative += $raw;
+            $cumPoints[] = $cumulative;
+            $rawPoints[] = $raw;
+        }
+        $chartSeries[] = [
+            'name' => $p['nickname'] ?? $p['name'],
+            'cumulative' => $cumPoints,
+            'raw' => $rawPoints,
+        ];
+    }
+    $chartJsData = ['labels' => $chartLabels, 'series' => $chartSeries];
+    $chartJsDataJson = json_encode($chartJsData, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+    $pageInlineScript = "window.__tableChartData = {$chartJsDataJson};";
 }
 
 require __DIR__ . '/../templates/footer.php';
