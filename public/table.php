@@ -237,7 +237,7 @@ require __DIR__ . '/../templates/header.php';
   <?php endif; ?>
 
   <!-- 参加選手 -->
-  <?php $playerMode = (int) ($meta['player_mode'] ?? 4); ?>
+  <?php $playerMode = (int) ($meta[$rk . '_player_mode'] ?? $meta['player_mode'] ?? 4); ?>
   <?php $subCount = max(0, $playerMode - count($table['players'])); ?>
   <div class="tb-section">
     <div class="tb-section-title">参加選手</div>
@@ -411,7 +411,7 @@ if (!$isDone) {
         'gameCount' => $gameCount,
         'startPt' => (int) ($meta['starting_points'] ?? 25000),
         'returnPt' => (int) ($meta['return_points'] ?? 30000),
-        'pMode' => (int) ($meta['player_mode'] ?? 4),
+        'pMode' => $playerMode,
         'pCount' => count($table['players']),
         'hasSub' => $subCount > 0,
         'isDev' => $isDev,

@@ -93,8 +93,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$validationError) {
                 // ラウンド設定
+                $postPlayerMode = sanitizeInput('player_mode');
+                if (!in_array($postPlayerMode, ['3', '4'], true)) {
+                    $postPlayerMode = (string) $playerMode;
+                }
+                $roundPlayerMode = (int) $postPlayerMode;
                 // 決勝ラウンドは残り選手が1卓に収まる場合に自動判定
-                $isFinal = count($tournamentPlayers) <= $playerMode;
+                $isFinal = count($tournamentPlayers) <= $roundPlayerMode;
                 $advanceCount = (int) (sanitizeInput('advance_count') ?: 2);
                 $advanceMode = sanitizeInput('advance_mode');
                 if (!in_array($advanceMode, ['per_table', 'overall'], true)) {
@@ -120,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         TournamentMeta::set($tournamentId, $rk . '_advance_mode', $advanceMode);
                         TournamentMeta::set($tournamentId, $rk . '_game_count', (string) $gameCount);
                         TournamentMeta::set($tournamentId, $rk . '_game_type', $gameType);
+                        TournamentMeta::set($tournamentId, $rk . '_player_mode', $postPlayerMode);
                         announceDiscordRoundTablesAssigned($tournamentId, $roundNumber);
                         $_SESSION['flash'] = count($tablesData) . '卓を作成しました。';
                         regenerateCsrfToken();
@@ -184,6 +190,15 @@ require __DIR__ . '/../templates/header.php';
             <span class="tn-final-badge">決勝ラウンド（残り<?= count($tournamentPlayers) ?>名）</span>
           </div>
         <?php else: ?>
+          <div class="tn-option-group" id="player-mode-group">
+            <span class="tn-option-label">対局人数</span>
+            <div class="tn-radio-group">
+              <?php foreach (PlayerMode::cases() as $pm): ?>
+                <input type="radio" name="player_mode" value="<?= h($pm->value) ?>" id="pmode-<?= h($pm->value) ?>" class="tn-radio" <?= ((int) $pm->value === $playerMode) ? 'checked' : '' ?>>
+                <label for="pmode-<?= h($pm->value) ?>" class="tn-radio-label"><?= h($pm->label()) ?></label>
+              <?php endforeach; ?>
+            </div>
+          </div>
           <div class="tn-option-group" id="advance-group">
             <span class="tn-option-label">勝ち抜け</span>
             <div class="tn-radio-group">

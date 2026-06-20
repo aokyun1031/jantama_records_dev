@@ -283,7 +283,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
                   <?php endif; ?>
                 </li>
               <?php endforeach; ?>
-              <?php $subCount = max(0, (int) ($meta['player_mode'] ?? 4) - count($t['players'])); ?>
+              <?php $subCount = max(0, (int) ($meta[$rk . '_player_mode'] ?? $meta['player_mode'] ?? 4) - count($t['players'])); ?>
               <?php for ($s = 0; $s < $subCount; $s++): ?>
                 <li class="td-table-player sub">
                   <span class="td-table-sub-icon">?</span>
@@ -356,7 +356,7 @@ $statusClass = $tsEnum?->cssClass() ?? '';
                         <?php endif; ?>
                       </li>
                     <?php endforeach; ?>
-                    <?php $subCount = max(0, (int) ($meta['player_mode'] ?? 4) - count($t['players'])); ?>
+                    <?php $subCount = max(0, (int) ($meta[$prk . '_player_mode'] ?? $meta['player_mode'] ?? 4) - count($t['players'])); ?>
                     <?php for ($s = 0; $s < $subCount; $s++): ?>
                       <li class="td-table-player sub">
                         <span class="td-table-sub-icon">?</span>

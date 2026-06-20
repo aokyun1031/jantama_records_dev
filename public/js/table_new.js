@@ -134,6 +134,27 @@
     btnGen.addEventListener('click', generate);
   }
 
+  // 対局人数切替（3人打ち/4人打ち）: 卓構成をクリアして選択肢を再構築
+  var playerModeRadios = document.querySelectorAll('input[name="player_mode"]');
+  playerModeRadios.forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      playerMode = parseInt(radio.value, 10);
+      tables = [];
+      render();
+      updateData();
+      btnSave.disabled = true;
+      var summary = document.getElementById('generate-summary');
+      if (summary) summary.style.display = 'none';
+      if (btnGen) {
+        var notEnough = players.length < playerMode;
+        btnGen.disabled = notEnough;
+        if (infoEl) infoEl.textContent = notEnough ? '選手が' + playerMode + '人未満のため卓を作成できません。' : '';
+      }
+      rebuildAdvanceOptions();
+      updateAdvancePreview();
+    });
+  });
+
   // --- ユーティリティ ---
   function shuffle(arr) {
     var a = arr.slice();
