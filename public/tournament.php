@@ -72,7 +72,21 @@ if (!empty($rounds)) {
 }
 
 $allCurrentDone = $currentRoundTotal > 0 && $currentRoundDone === $currentRoundTotal;
-$nextRound = $currentRound + 1;
+['data' => $nextRound] = fetchData(fn() => TableInfo::nextRoundNumber($tournamentId));
+$nextRound = $nextRound ?? ($currentRound + 1);
+
+['data' => $nextRoundCandidates] = fetchData(fn() => ScheduleCandidate::byRound($tournamentId, $nextRound));
+$hasNextRoundCandidates = !empty($nextRoundCandidates);
+
+$nextRoundAllResponded = false;
+if ($hasNextRoundCandidates) {
+    ['data' => $nextRoundActivePlayers] = fetchData(fn() => Standing::activePlayersWithDetails($tournamentId));
+    $nextRoundActivePlayers = $nextRoundActivePlayers ?? [];
+    ['data' => $nextRoundRespondedIds] = fetchData(fn() => ScheduleResponse::respondedPlayerIds($tournamentId, $nextRound));
+    $nextRoundRespondedIds = $nextRoundRespondedIds ?? [];
+    $nextRoundAllResponded = !empty($nextRoundActivePlayers)
+        && empty(array_diff(array_column($nextRoundActivePlayers, 'id'), $nextRoundRespondedIds));
+}
 
 // 決勝完了判定
 $isFinalDone = false;
@@ -177,26 +191,66 @@ $statusClass = $tsEnum?->cssClass() ?? '';
 
     <?php elseif ($phase === 'round_complete' && $currentRound === 0): ?>
       <a href="tournament_players?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F465; 選手登録（<?= $playerCount ?>名）</a>
+      <?php if ($hasNextRoundCandidates && $nextRoundAllResponded): ?>
       <div class="td-cta">
-        <span class="td-cta-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+        <span class="td-cta-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
         <div class="td-cta-body">
-          <div class="td-cta-title">1回戦の卓を作成しましょう</div>
-          <div class="td-cta-desc"><?= $playerCount ?>名の選手が登録されています。<br>卓を作成して大会を開始しましょう。</div>
+          <div class="td-cta-title">全選手の回答が集まりました</div>
+          <div class="td-cta-desc">候補日程から卓を作成しましょう。</div>
         </div>
-        <a href="table_new?tournament_id=<?= $tournamentId ?>" class="td-cta-btn secondary">卓を作成</a>
+        <a href="table_new?tournament_id=<?= $tournamentId ?>" class="td-cta-btn">卓を作成</a>
       </div>
+      <?php elseif ($hasNextRoundCandidates): ?>
+      <div class="td-cta">
+        <span class="td-cta-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <div class="td-cta-body">
+          <div class="td-cta-title">候補日程の回答を集めましょう</div>
+          <div class="td-cta-desc">選手の参加可能日を確認してから卓を作成します。</div>
+        </div>
+        <a href="schedule_combine?tournament_id=<?= $tournamentId ?>&amp;round_number=<?= $nextRound ?>" class="td-cta-btn secondary">回答状況を確認</a>
+      </div>
+      <?php else: ?>
+      <div class="td-cta">
+        <span class="td-cta-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span>
+        <div class="td-cta-body">
+          <div class="td-cta-title">まず候補日程を設定しましょう</div>
+          <div class="td-cta-desc"><?= $playerCount ?>名の選手が登録されています。<br>候補日程を決めてから卓を作成します。</div>
+        </div>
+        <a href="schedule_candidates_new?tournament_id=<?= $tournamentId ?>" class="td-cta-btn secondary">候補日程を設定</a>
+      </div>
+      <?php endif; ?>
 
     <?php elseif ($phase === 'round_complete'): ?>
       <a href="tournament_players?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F465; 選手登録（<?= $playerCount ?>名）</a>
       <a href="tournament_view?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F441; 閲覧ページ</a>
+      <?php if ($hasNextRoundCandidates && $nextRoundAllResponded): ?>
       <div class="td-cta">
         <span class="td-cta-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
         <div class="td-cta-body">
-          <div class="td-cta-title"><?= $currentRound ?>回戦が完了しました</div>
-          <div class="td-cta-desc"><?= $nextRound ?>回戦の卓を作成して次のラウンドへ進みましょう。</div>
+          <div class="td-cta-title">全選手の回答が集まりました</div>
+          <div class="td-cta-desc">候補日程から<?= $nextRound ?>回戦の卓を作成しましょう。</div>
         </div>
-        <a href="table_new?tournament_id=<?= $tournamentId ?>" class="td-cta-btn secondary">卓を作成</a>
+        <a href="table_new?tournament_id=<?= $tournamentId ?>" class="td-cta-btn">卓を作成</a>
       </div>
+      <?php elseif ($hasNextRoundCandidates): ?>
+      <div class="td-cta">
+        <span class="td-cta-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <div class="td-cta-body">
+          <div class="td-cta-title"><?= $currentRound ?>回戦が完了しました</div>
+          <div class="td-cta-desc"><?= $nextRound ?>回戦の候補日程の回答を集めましょう。</div>
+        </div>
+        <a href="schedule_combine?tournament_id=<?= $tournamentId ?>&amp;round_number=<?= $nextRound ?>" class="td-cta-btn secondary">回答状況を確認</a>
+      </div>
+      <?php else: ?>
+      <div class="td-cta">
+        <span class="td-cta-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span>
+        <div class="td-cta-body">
+          <div class="td-cta-title"><?= $currentRound ?>回戦が完了しました</div>
+          <div class="td-cta-desc"><?= $nextRound ?>回戦の候補日程を設定しましょう。</div>
+        </div>
+        <a href="schedule_candidates_new?tournament_id=<?= $tournamentId ?>" class="td-cta-btn secondary">候補日程を設定</a>
+      </div>
+      <?php endif; ?>
 
     <?php elseif ($phase === 'current_round'): ?>
       <a href="tournament_players?id=<?= $tournamentId ?>" class="td-sub-link">&#x1F465; 選手登録（<?= $playerCount ?>名）</a>

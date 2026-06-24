@@ -2,7 +2,6 @@
   var content = document.querySelector('[data-csrf-token]');
   if (!content) return;
   var csrfToken = content.dataset.csrfToken || '';
-  var pending = content.dataset.dmDispatchPending === '1';
 
   var toast = null;
   function showToast(msg, isError) {
@@ -20,7 +19,7 @@
     }, 2400);
   }
 
-  function dispatch(tournamentId, playerId, btn) {
+  function dispatch(tournamentId, roundNumber, playerId, btn) {
     var origText = btn ? btn.textContent : '';
     if (btn) {
       btn.disabled = true;
@@ -30,9 +29,10 @@
     var body = new URLSearchParams();
     body.append('csrf_token', csrfToken);
     body.append('tournament_id', String(tournamentId));
+    body.append('round_number', String(roundNumber));
     if (playerId) body.append('player_id', String(playerId));
 
-    return fetch('/dispatch_dm', {
+    return fetch('/dispatch_schedule_dm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),
@@ -49,7 +49,6 @@
         if (data.failed) msg += ' / 失敗' + data.failed + '名';
         if (data.no_discord_id) msg += ' / 未登録' + data.no_discord_id + '名';
         showToast(msg, (data.failed || 0) > 0);
-        // 状態反映のためページリロード（トースト表示(2400ms)より後）
         setTimeout(function () { window.location.reload(); }, 2600);
       })
       .catch(function () {
@@ -58,23 +57,24 @@
       });
   }
 
-  // 個別ボタン / 全員ボタン共通ハンドラ
   document.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-dispatch-tournament]');
+    var btn = e.target.closest('[data-dispatch-schedule-tournament]');
     if (!btn) return;
     e.preventDefault();
-    var tid = parseInt(btn.dataset.dispatchTournament, 10);
-    var pid = btn.dataset.dispatchPlayer ? parseInt(btn.dataset.dispatchPlayer, 10) : 0;
-    if (!tid) return;
-    if (!confirm(pid ? 'この選手にDMを送信しますか？' : '未送信選手 全員にDMを送信しますか？')) return;
-    dispatch(tid, pid, btn);
+    var tid = parseInt(btn.dataset.dispatchScheduleTournament, 10);
+    var rnd = parseInt(btn.dataset.dispatchScheduleRound, 10);
+    var pid = btn.dataset.dispatchSchedulePlayer ? parseInt(btn.dataset.dispatchSchedulePlayer, 10) : 0;
+    if (!tid || !rnd) return;
+    if (!confirm(pid ? 'この選手にDMを送信しますか？' : '未回答選手を含む全選手にDMを送信しますか？')) return;
+    dispatch(tid, rnd, pid, btn);
   });
 
-  // 大会作成直後 → 自動発火（confirm スキップ）
-  if (pending) {
-    var tid = parseInt(content.dataset.tournamentId, 10);
-    if (tid) {
-      dispatch(tid, 0, null);
+  // 候補日程保存直後 → 自動発火（confirm スキップ、全選手対象）
+  if (content.dataset.dispatchSchedulePending === '1') {
+    var pendingTid = parseInt(content.dataset.tournamentId, 10);
+    var pendingRnd = parseInt(content.dataset.roundNumber, 10);
+    if (pendingTid && pendingRnd) {
+      dispatch(pendingTid, pendingRnd, 0, null);
     }
   }
 })();

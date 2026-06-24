@@ -72,6 +72,14 @@ function buildRuleTags(array $meta): array
 }
 
 /**
+ * `YYYY-MM-DD` 形式の日付文字列かどうかを検証する。
+ */
+function isValidDateString(string $date): bool
+{
+    return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $date);
+}
+
+/**
  * 入力文字列からURLを抽出する。
  * 「雀魂牌譜: https://...」のようなプレフィックス付きテキストからURLだけを取り出す。
  */

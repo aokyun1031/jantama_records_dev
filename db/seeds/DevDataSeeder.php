@@ -34,6 +34,8 @@ class DevDataSeeder extends AbstractSeed
             tournament_meta,
             tournament_dm_dispatches,
             discord_scheduled_events,
+            schedule_responses,
+            schedule_candidates,
             standings,
             round_results,
             table_paifu_urls,

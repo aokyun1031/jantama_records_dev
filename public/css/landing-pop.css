@@ -348,13 +348,7 @@ a.site-logo:hover::before { transform: rotate(-8deg); transition: transform 0.4s
 .lp3-divider-char.is-center { left: calc(50% - 20px); }
 .lp3-divider-char.is-right  { left: calc(50% + 44px); }
 
-/* アニメ割当 — 各キャラに付与された anim-lp3XXX クラスで切替 */
-.anim-lp3Fuwafuwa  { animation: lp3Fuwafuwa 4.4s ease-in-out infinite; }
-.anim-lp3Norinori  { animation: lp3Norinori 2.6s ease-in-out infinite; }
-.anim-lp3Gunyon    { animation: lp3Gunyon 3.0s cubic-bezier(0.35,0.9,0.4,1) infinite; }
-.anim-lp3Pyon      { animation: lp3Pyon 2.8s cubic-bezier(0.35,1.2,0.55,1) infinite; }
-.anim-lp3Indicator { animation: lp3Indicator 3.6s cubic-bezier(0.5,1.6,0.6,1) infinite; }
-.anim-lp3Yoisho    { animation: lp3Yoisho 3.4s cubic-bezier(0.4,0.9,0.45,1) infinite; }
+/* セクション区切りキャラのアニメーションは廃止（静止表示） */
 
 /* ---- 9種モーション keyframes（yui540.com 参考 / ゆったり動作）---- */
 

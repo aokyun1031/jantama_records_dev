@@ -20,7 +20,11 @@ fi
 if command -v php >/dev/null 2>&1; then
   OUT=$(php -l "$FILE" 2>&1)
 elif docker compose ps --status running 2>/dev/null | grep -q web; then
-  OUT=$(docker compose exec -T web php -l "$FILE" 2>&1)
+  # web コンテナは `.:/var/www/html` でマウントされているため、
+  # ホスト絶対パスをコンテナ内パスに変換してから渡す
+  PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  REL_FILE="${FILE#$PROJECT_ROOT/}"
+  OUT=$(docker compose exec -T web php -l "/var/www/html/$REL_FILE" 2>&1)
 else
   exit 0
 fi

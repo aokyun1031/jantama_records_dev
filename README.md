@@ -182,12 +182,16 @@ index.php（トップ）
   │         ├→ tournament_edit.php（大会情報編集）
   │         ├→ tournament_players.php（選手登録：運営一括）
   │         ├→ tournament_join.php（選手公開URL：参加表明）
-  │         ├→ table_new.php（卓作成）
+  │         ├→ schedule_candidates_new.php（候補日程設定：ラウンドごと）
+  │         ├→ schedule_combine.php（候補日程の回答状況確認・卓作成への導線）
+  │         │    └→ schedule_response.php（選手公開URL：参加可能日回答）
+  │         ├→ table_new.php（卓作成：候補日程からの自動生成 / ランダム / スイス / ポット分け）
   │         ├→ table.php（卓管理：日程・牌譜URL・結果登録・完了）
   │         └→ interview_edit.php（優勝インタビュー設定・大会完了）
   ├→ tables.php（卓一覧：全大会横断、種別/状態/キーワード絞込・ページネーション）
   │    └→ table.php（卓管理：上記と同じターゲット）
   ├→ dispatch_dm.php（Discord DM 配信エンドポイント）
+  ├→ dispatch_schedule_dm.php（候補日程回答依頼 DM 配信エンドポイント）
   ├→ discord_oauth_redirect.php（Discord OAuth 認可開始）
   ├→ discord_oauth_callback.php（Discord OAuth コールバック）
   ├→ tournament_view.php（大会結果閲覧）
@@ -390,6 +394,7 @@ npx wrangler deploy
 - **大会作成時 自動 DM 配信**: 大会作成完了 → 未参加 + Discord 連携済 の選手に Embed DM 送信（`POST /dispatch_dm` を JS 自動発火）
 - **個別 / 全員 再送**: `tournament.php` の「未送信全員にDM送信」or 個別ボタンで再送（履歴は `tournament_dm_dispatches` で重複防止）
 - **選手公開URL**: 受信した DM のリンクから `/tournament_join` 開く → 「参加する / 取消」ワンクリック
+- **候補日程回答依頼 DM 配信**: `schedule_combine.php` の「全選手にDM送信」or 個別「再送」ボタンで `/schedule_response` への個別URLを送信（送信履歴は保存せず、再送はボタン操作のみで抑制）
 
 ### 構成ファイル
 
@@ -399,6 +404,8 @@ npx wrangler deploy
 | `public/discord_oauth_callback.php` | code 受信 → token 交換 → User 情報保存 |
 | `public/dispatch_dm.php` | DM 送信エンドポイント（POST + CSRF） |
 | `public/tournament_join.php` | 選手公開URL（参加 / 取消） |
+| `public/dispatch_schedule_dm.php` | 候補日程回答依頼 DM 送信エンドポイント（POST + CSRF） |
+| `public/schedule_response.php` | 選手公開URL（候補日程への参加可能日回答） |
 | `config/discord.php` | Bot API / OAuth2 ヘルパ |
 
 ### 環境変数

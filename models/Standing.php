@@ -154,6 +154,24 @@ class Standing
     }
 
     /**
+     * 勝ち抜き中（未敗退）の選手をDM送信用の詳細付きで取得する。
+     */
+    public static function activePlayersWithDetails(int $tournamentId): array
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare('
+            SELECT p.id, p.name, p.nickname, p.discord_user_id, c.icon_filename AS character_icon
+            FROM standings s
+            JOIN players p ON p.id = s.player_id
+            LEFT JOIN characters c ON c.id = p.character_id
+            WHERE s.tournament_id = ? AND s.eliminated_round = 0
+            ORDER BY p.name
+        ');
+        $stmt->execute([$tournamentId]);
+        return $stmt->fetchAll();
+    }
+
+    /**
      * 選手ごとの合計ポイントをマップで取得する。
      *
      * @return array<int, float> player_id => total

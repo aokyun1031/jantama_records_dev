@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
             }
             if ($playedDate === '') {
                 $validationError = '日付を入力してください。';
-            } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $playedDate)) {
+            } elseif (!isValidDateString($playedDate)) {
                 $validationError = '日付の形式が不正です。';
             } elseif ($playedTime === '') {
                 $validationError = '時間を入力してください。';

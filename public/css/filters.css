@@ -283,6 +283,10 @@
   background: rgba(var(--mint-rgb), 0.85);
 }
 
+.filter-context-tag--tournament {
+  background: rgba(var(--coral-rgb), 0.85);
+}
+
 .filter-context-count {
   margin-left: auto;
   font-family: 'Inter', sans-serif;

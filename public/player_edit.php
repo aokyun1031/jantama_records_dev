@@ -15,6 +15,7 @@ $player = requirePlayer($playerId);
 
 // POST処理
 $flash = consumeFlash();
+$flashError = consumeFlashError();
 $success = isset($_GET['saved']) && $_GET['saved'] === '1';
 $validationError = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -116,6 +117,8 @@ require __DIR__ . '/../templates/header.php';
     <div class="edit-message success">保存しました。</div>
   <?php elseif ($flash): ?>
     <div class="edit-message success"><?= h($flash) ?></div>
+  <?php elseif ($flashError): ?>
+    <div class="edit-message error"><?= h($flashError) ?></div>
   <?php elseif ($validationError): ?>
     <div class="edit-message error"><?= h($validationError) ?></div>
   <?php endif; ?>

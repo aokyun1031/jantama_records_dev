@@ -182,37 +182,8 @@
 }
 
 .table-card-name {
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(var(--accent-rgb), 0.05);
+  font-weight: 700;
   color: var(--text);
-}
-
-/* Stretched link: 卓名から ::after でカード全体を覆い、どこをクリックしても卓詳細へ。 */
-.table-card-name--link {
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-.table-card-name--link::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-}
-.table-card-name--link:hover {
-  background: rgba(var(--accent-rgb), 0.14);
-  color: var(--purple);
-}
-.table-card-name--link:focus-visible {
-  outline: none;
-}
-.table-card-name--link:focus-visible::after {
-  outline: 2px solid rgba(var(--accent-rgb), 0.55);
-  outline-offset: -2px;
-  border-radius: var(--radius-sm);
 }
 
 .table-card-sched {

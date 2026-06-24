@@ -47,7 +47,7 @@ if (!$player) {
 // --- code を access_token に交換 ---
 $tokenData = discordOauthExchangeCode((string) $code);
 if (!$tokenData) {
-    $_SESSION['flash'] = 'Discord との連携に失敗しました（トークン取得エラー）。';
+    $_SESSION['flash_error'] = 'Discord との連携に失敗しました（トークン取得エラー）。';
     header('Location: player_edit?id=' . $playerId);
     exit;
 }
@@ -55,7 +55,7 @@ if (!$tokenData) {
 // --- Discord ユーザー情報取得 ---
 $user = discordOauthFetchUser((string) $tokenData['access_token']);
 if (!$user || empty($user['id'])) {
-    $_SESSION['flash'] = 'Discord との連携に失敗しました（ユーザー情報取得エラー）。';
+    $_SESSION['flash_error'] = 'Discord との連携に失敗しました（ユーザー情報取得エラー）。';
     header('Location: player_edit?id=' . $playerId);
     exit;
 }
@@ -69,7 +69,7 @@ if (mb_strlen($discordUsername) > 64) {
 // --- 既に他選手で登録済みかチェック ---
 ['data' => $existing] = fetchData(fn() => Player::findByDiscordUserId($discordUserId));
 if ($existing && (int) $existing['id'] !== $playerId) {
-    $_SESSION['flash'] = '既に別の選手「' . ($existing['nickname'] ?? $existing['name']) . '」に紐付け済みのDiscordアカウントです。';
+    $_SESSION['flash_error'] = '既に別の選手「' . ($existing['nickname'] ?? $existing['name']) . '」に紐付け済みのDiscordアカウントです。';
     header('Location: player_edit?id=' . $playerId);
     exit;
 }
@@ -80,7 +80,7 @@ try {
     $_SESSION['flash'] = 'Discord と連携しました: @' . $discordUsername;
 } catch (PDOException $e) {
     error_log('[Discord OAuth] save failed: ' . $e->getMessage());
-    $_SESSION['flash'] = 'Discord 連携の保存に失敗しました。';
+    $_SESSION['flash_error'] = 'Discord 連携の保存に失敗しました。';
 }
 
 header('Location: player_edit?id=' . $playerId);

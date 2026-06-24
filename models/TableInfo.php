@@ -5,6 +5,18 @@ declare(strict_types=1);
 class TableInfo
 {
     /**
+     * 大会の「次に作るラウンド番号」を返す（既存ラウンドの最大値+1、卓未作成なら1）。
+     */
+    public static function nextRoundNumber(int $tournamentId): int
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare('SELECT MAX(round_number) FROM tables_info WHERE tournament_id = ?');
+        $stmt->execute([$tournamentId]);
+        $max = $stmt->fetchColumn();
+        return ($max === false || $max === null) ? 1 : ((int) $max) + 1;
+    }
+
+    /**
      * 卓をIDで取得する。
      */
     public static function find(int $id): ?array
@@ -160,7 +172,7 @@ class TableInfo
     /**
      * 複数の卓を一括作成する。
      *
-     * @param array<array{name: string, player_ids: int[]}> $tables
+     * @param array<array{name: string, player_ids: int[], played_date?: ?string, day_of_week?: string, played_time?: string}> $tables
      */
     public static function createBatch(int $tournamentId, int $roundNumber, array $tables): void
     {
@@ -168,15 +180,18 @@ class TableInfo
         $pdo->beginTransaction();
         try {
             $tableStmt = $pdo->prepare(
-                "INSERT INTO tables_info (tournament_id, round_number, table_name, day_of_week)
-                 VALUES (?, ?, ?, '')"
+                'INSERT INTO tables_info (tournament_id, round_number, table_name, played_date, day_of_week, played_time)
+                 VALUES (?, ?, ?, ?, ?, ?)'
             );
             $playerStmt = $pdo->prepare(
                 'INSERT INTO table_players (table_id, player_id, seat_order) VALUES (?, ?, ?)'
             );
 
             foreach ($tables as $t) {
-                $tableStmt->execute([$tournamentId, $roundNumber, $t['name']]);
+                $tableStmt->execute([
+                    $tournamentId, $roundNumber, $t['name'],
+                    $t['played_date'] ?? null, $t['day_of_week'] ?? '', $t['played_time'] ?? '',
+                ]);
                 $tableId = (int) $pdo->lastInsertId();
                 foreach ($t['player_ids'] as $i => $playerId) {
                     $playerStmt->execute([$tableId, $playerId, $i + 1]);
@@ -464,6 +479,12 @@ class TableInfo
     {
         $clauses = ['1=1'];
         $params = [];
+
+        $tournamentId = $filters['tournament_id'] ?? null;
+        if ($tournamentId) {
+            $clauses[] = 'ti.tournament_id = ?';
+            $params[] = (int) $tournamentId;
+        }
 
         $eventTypes = $filters['event_types'] ?? [];
         if (!empty($eventTypes)) {

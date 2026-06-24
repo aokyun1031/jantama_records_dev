@@ -7,6 +7,18 @@ startSecureSession();
 
 $flash = consumeFlash();
 
+// --- 大会IDフィルタ（大会一覧ページからの絞込遷移用） ---
+$tournamentIdFilter = filter_input(INPUT_GET, 'tournament_id', FILTER_VALIDATE_INT) ?: null;
+$filterTournamentName = null;
+if ($tournamentIdFilter) {
+    ['data' => $filterTournament] = fetchData(fn() => Tournament::find($tournamentIdFilter));
+    if ($filterTournament) {
+        $filterTournamentName = $filterTournament['name'];
+    } else {
+        $tournamentIdFilter = null;
+    }
+}
+
 // --- 大会種別フィルタ ---
 $rawEventTypes = filter_input(INPUT_GET, 'event_types', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) ?? [];
 if (!is_array($rawEventTypes)) {
@@ -32,18 +44,24 @@ if (mb_strlen($keyword) > 100) {
     $keyword = mb_substr($keyword, 0, 100);
 }
 
-$isFiltered = !empty($selectedEventTypes) || $status !== 'all' || $keyword !== '';
+$isFiltered = !empty($selectedEventTypes) || $status !== 'all' || $keyword !== '' || $tournamentIdFilter !== null;
 
 $filters = [
-    'event_types' => $selectedEventTypes,
-    'status'      => $status,
-    'keyword'     => $keyword,
+    'tournament_id' => $tournamentIdFilter,
+    'event_types'   => $selectedEventTypes,
+    'status'        => $status,
+    'keyword'       => $keyword,
 ];
 
 ['data' => $totalCount, 'error' => $errorCount] = fetchData(
     fn() => TableInfo::searchAllCount($filters)
 );
 $totalCount = $totalCount ?? 0;
+
+['data' => $grandTotalCount] = $isFiltered
+    ? fetchData(fn() => TableInfo::searchAllCount([]))
+    : ['data' => $totalCount];
+$grandTotalCount = $grandTotalCount ?? 0;
 
 // --- ページネーション ---
 $perPage = 10;
@@ -57,6 +75,9 @@ $error = $error ?? $errorCount;
 
 // --- ページネーション URL ヘルパ ---
 $baseQuery = [];
+if ($tournamentIdFilter !== null) {
+    $baseQuery['tournament_id'] = $tournamentIdFilter;
+}
 foreach ($selectedEventTypes as $v) {
     $baseQuery['event_types'][] = $v;
 }
@@ -86,7 +107,10 @@ require __DIR__ . '/../templates/header.php';
 <div class="page-hero">
   <div class="page-hero-badge">TABLES</div>
   <h1 class="page-hero-title">卓一覧</h1>
-  <div class="tables-count"><?= (int) $totalCount ?> 卓<?= $isFiltered ? '（絞込中）' : '' ?></div>
+</div>
+
+<div class="list-actions">
+  <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
 </div>
 
 <?php if ($flash): ?>
@@ -96,6 +120,9 @@ require __DIR__ . '/../templates/header.php';
 <?php if (!$error): ?>
 <div class="event-filter-wrap" role="region" aria-label="卓を絞り込み">
   <form method="get" id="event-filter-form" class="event-filter-form<?= $isFiltered ? ' is-active' : '' ?>" action="tables">
+    <?php if ($tournamentIdFilter !== null): ?>
+      <input type="hidden" name="tournament_id" value="<?= $tournamentIdFilter ?>">
+    <?php endif; ?>
     <div class="event-filter-header">
       <svg class="event-filter-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
@@ -149,6 +176,9 @@ require __DIR__ . '/../templates/header.php';
 <div class="filter-context" role="status" aria-live="polite">
   <span class="filter-context-label">絞込</span>
   <span class="filter-context-types">
+    <?php if ($filterTournamentName !== null): ?>
+      <span class="filter-context-tag filter-context-tag--tournament"><?= h($filterTournamentName) ?></span>
+    <?php endif; ?>
     <?php foreach ($selectedEventTypes as $v): ?>
       <span class="filter-context-tag"><?= h(EventType::from($v)->label()) ?></span>
     <?php endforeach; ?>
@@ -159,7 +189,7 @@ require __DIR__ . '/../templates/header.php';
       <span class="filter-context-tag filter-context-tag--keyword">&#x1F50D; <?= h($keyword) ?></span>
     <?php endif; ?>
   </span>
-  <span class="filter-context-count"><?= (int) $totalCount ?>件</span>
+  <span class="filter-context-count"><?= (int) $totalCount ?>件 / <?= (int) $grandTotalCount ?>件中</span>
 </div>
 <?php endif; ?>
 
@@ -187,14 +217,6 @@ require __DIR__ . '/../templates/header.php';
             }
         }
       ?>
-      <?php
-        $cardLabel = sprintf(
-            '%s %d回戦 %s を開く',
-            $row['tournament_name'],
-            (int) $row['round_number'],
-            $row['table_name']
-        );
-      ?>
       <div class="table-card<?= $row['done'] ? ' is-done' : '' ?>" style="animation-delay: <?= $i * 0.03 ?>s">
         <div class="table-card-header">
           <span class="table-card-status <?= $row['done'] ? 'done' : 'pending' ?>"><?= $row['done'] ? '完了' : '未完了' ?></span>
@@ -208,7 +230,7 @@ require __DIR__ . '/../templates/header.php';
 
         <div class="table-card-meta">
           <span class="table-card-round"><?= (int) $row['round_number'] ?>回戦</span>
-          <a href="table?id=<?= (int) $row['table_id'] ?>" class="table-card-name table-card-name--link" aria-label="<?= h($cardLabel) ?>"><?= h($row['table_name']) ?></a>
+          <span class="table-card-name"><?= h($row['table_name']) ?></span>
           <?php if ($schedText !== ''): ?>
             <span class="table-card-sched"><?= h($schedText) ?></span>
           <?php else: ?>
@@ -230,10 +252,5 @@ require __DIR__ . '/../templates/header.php';
 
   <?php require __DIR__ . '/../templates/partials/list-pagination.php'; ?>
 <?php endif; ?>
-
-<div class="list-actions">
-  <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
-  <a href="tournaments" class="btn-cancel">大会一覧へ</a>
-</div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

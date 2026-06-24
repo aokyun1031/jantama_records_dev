@@ -70,7 +70,11 @@ require __DIR__ . '/../templates/header.php';
 <div class="page-hero">
   <div class="page-hero-badge">TOURNAMENTS</div>
   <h1 class="page-hero-title">大会一覧</h1>
-  <div class="tournaments-count"><?= $totalCount ?> 件の大会が登録されています</div>
+</div>
+
+<div class="list-actions">
+  <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
+  <a href="tournament_new" class="btn-cancel btn-cancel--primary">+ 大会を作成</a>
 </div>
 
 <?php if ($flash): ?>
@@ -169,6 +173,7 @@ require __DIR__ . '/../templates/header.php';
               <a href="tournament_view?id=<?= (int) $t['id'] ?>" class="tournament-link tournament-link--view">&#x1F441; 閲覧ページ</a>
             <?php endif; ?>
             <a href="tournament?id=<?= (int) $t['id'] ?>" class="tournament-link tournament-link--admin">&#x2699; 管理ページ</a>
+            <a href="tables?tournament_id=<?= (int) $t['id'] ?>" class="tournament-link tournament-link--admin">&#x1F4CB; 卓一覧</a>
           </div>
         </div>
       </div>
@@ -177,10 +182,5 @@ require __DIR__ . '/../templates/header.php';
 
   <?php require __DIR__ . '/../templates/partials/list-pagination.php'; ?>
 <?php endif; ?>
-
-<div class="list-actions">
-  <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
-  <a href="tournament_new" class="btn-cancel btn-cancel--primary">+ 大会を作成</a>
-</div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

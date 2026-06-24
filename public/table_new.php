@@ -32,8 +32,8 @@ $tournamentPlayers = array_values(array_filter(
 ));
 
 // 次のラウンド番号を自動決定
-['data' => $existingRounds] = fetchData(fn() => TableInfo::byTournament($tournamentId));
-$nextRound = empty($existingRounds) ? 1 : max(array_keys($existingRounds)) + 1;
+['data' => $nextRound] = fetchData(fn() => TableInfo::nextRoundNumber($tournamentId));
+$nextRound = $nextRound ?? 1;
 $prevRound = $nextRound - 1;
 
 // 前ラウンドの卓組み（同卓回避用）
@@ -45,6 +45,17 @@ if ($prevRound >= 1) {
 // 順位データ（成績考慮用）
 ['data' => $jsStandings] = fetchData(fn() => Standing::totalMap($tournamentId));
 $jsStandings = $jsStandings ?? [];
+
+// 候補日程（日程アンケートからの自動生成用）
+['data' => $scheduleCandidates] = fetchData(fn() => ScheduleCandidate::byRound($tournamentId, $nextRound));
+$scheduleCandidates = $scheduleCandidates ?? [];
+$hasScheduleCandidates = !empty($scheduleCandidates);
+$jsScheduleResponses = [];
+if ($hasScheduleCandidates) {
+    $candidateIds = array_column($scheduleCandidates, 'id');
+    ['data' => $jsScheduleResponses] = fetchData(fn() => ScheduleResponse::byCandidateIds($candidateIds));
+    $jsScheduleResponses = $jsScheduleResponses ?? [];
+}
 
 // POST処理
 $validationError = '';
@@ -84,7 +95,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
                 }
                 $allAssigned = array_merge($allAssigned, $playerIds);
-                $tablesData[] = ['name' => $name, 'player_ids' => $playerIds];
+
+                // 候補日程から自動生成した場合の日程情報（任意）
+                $playedDate = preg_replace('/[\x00-\x1F\x7F]/u', '', trim((string) ($t['played_date'] ?? '')));
+                $playedTime = preg_replace('/[\x00-\x1F\x7F]/u', '', trim((string) ($t['played_time'] ?? '')));
+                if ($playedDate !== '' && !isValidDateString($playedDate)) {
+                    $validationError = '日程の日付形式が不正です。';
+                    break;
+                }
+                if (mb_strlen($playedTime) > 5) {
+                    $validationError = '日程の形式が不正です。';
+                    break;
+                }
+                // day_of_week はクライアント値を信用せず日付から再計算する（改ざん防止）
+                $dayOfWeek = $playedDate !== '' ? DayOfWeek::fromDate($playedDate) : '';
+
+                $tablesData[] = [
+                    'name' => $name,
+                    'player_ids' => $playerIds,
+                    'played_date' => $playedDate !== '' ? $playedDate : null,
+                    'day_of_week' => $dayOfWeek,
+                    'played_time' => $playedTime,
+                ];
             }
 
             if (!$validationError && empty($tablesData)) {
@@ -239,11 +271,13 @@ require __DIR__ . '/../templates/header.php';
     <!-- 生成コントロール -->
     <div class="tn-section">
       <div class="tn-generate-row">
+        <?php if ($hasScheduleCandidates): ?>
+        <button type="button" class="tn-btn-generate" id="btn-generate-schedule">&#x1F4C5; 候補日程から自動生成</button>
+        <?php endif; ?>
         <button type="button" class="tn-btn-generate" id="btn-generate" <?= empty($tournamentPlayers) || count($tournamentPlayers) < $playerMode ? 'disabled' : '' ?>>
           &#x1F3B2; ランダムに卓を作成
         </button>
       </div>
-      <div class="tn-hint">ボタンを押すと選手をランダムに卓へ振り分けます。何度でも押し直せます。</div>
 
       <div class="tn-options">
         <div class="tn-option-group">
@@ -294,13 +328,17 @@ require __DIR__ . '/../templates/header.php';
 $jsPlayersJson = json_encode($jsPlayers, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 $jsPrevGroupsJson = json_encode($prevGroups ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 $jsStandingsJson = json_encode($jsStandings, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+$jsScheduleCandidatesJson = json_encode($scheduleCandidates, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+$jsScheduleResponsesJson = json_encode($jsScheduleResponses, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 $pageInlineScript = <<<JS
 window.__tableNewData = {
   players: {$jsPlayersJson},
   playerMode: {$playerMode},
   nextRound: {$nextRound},
   prevGroups: {$jsPrevGroupsJson},
-  standings: {$jsStandingsJson}
+  standings: {$jsStandingsJson},
+  scheduleCandidates: {$jsScheduleCandidatesJson},
+  scheduleResponses: {$jsScheduleResponsesJson}
 };
 JS;
 

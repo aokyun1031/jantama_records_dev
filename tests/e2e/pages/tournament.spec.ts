@@ -30,10 +30,23 @@ test.describe('大会詳細', () => {
     await expect(page.locator('.td-rules')).toBeVisible();
   });
 
-  test('卓作成を促すCTAバナーが表示される', async ({ page }) => {
+  test('候補日程未設定時は候補日程設定を促すCTAバナーが表示される', async ({ page }) => {
     const cta = page.locator('.td-cta');
     await expect(cta).toBeVisible();
-    await expect(cta).toContainText('卓を作成');
+    await expect(cta.locator('.td-cta-btn')).toContainText('候補日程を設定');
+  });
+
+  test('候補日程設定済みなら回答状況確認を促すCTAバナーに切り替わる', async ({ page }) => {
+    await page.goto(`/schedule_candidates_new?tournament_id=${tournamentId}`);
+    await page.fill('.sc-input-date', '2026-08-10');
+    await page.fill('.sc-input-time', '昼');
+    await page.click('.sc-btn-save');
+    await page.waitForURL(/schedule_combine/);
+
+    await page.goto(`/tournament?id=${tournamentId}`);
+    const cta = page.locator('.td-cta');
+    await expect(cta).toBeVisible();
+    await expect(cta.locator('.td-cta-btn')).toContainText('回答状況を確認');
   });
 
   test('大会名の横に編集アイコンがある', async ({ page }) => {

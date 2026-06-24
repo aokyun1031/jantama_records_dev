@@ -26,6 +26,11 @@ require __DIR__ . '/../templates/header.php';
   <div class="players-count"><?= count($players ?? []) ?> 名の選手が登録されています</div>
 </div>
 
+<div class="list-actions">
+  <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
+  <a href="player_new" class="btn-cancel btn-cancel--primary">+ 選手を追加</a>
+</div>
+
 <?php if ($flash): ?>
   <div class="edit-message success"><?= h($flash) ?></div>
 <?php endif; ?>
@@ -56,10 +61,5 @@ require __DIR__ . '/../templates/header.php';
   <?php endforeach; ?>
   </div>
 <?php endif; ?>
-
-<div class="list-actions">
-  <a href="/" class="btn-cancel">&#x2190; トップページに戻る</a>
-  <a href="player_new" class="btn-cancel btn-cancel--primary">+ 選手を追加</a>
-</div>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

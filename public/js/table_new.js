@@ -5,8 +5,15 @@
   var nextRound = data.nextRound || 1;
   var prevGroups = data.prevGroups || [];
   var standings = data.standings || {};
+  var scheduleCandidates = data.scheduleCandidates || [];
+  var scheduleResponses = data.scheduleResponses || {};
   var tables = [];
   var dragSrc = null;
+
+  var btnGenSchedule = document.getElementById('btn-generate-schedule');
+  if (btnGenSchedule) {
+    btnGenSchedule.addEventListener('click', generateFromSchedule);
+  }
 
   var advancePreview = document.getElementById('advance-preview');
   var selectAdvance = document.getElementById('select-advance');
@@ -287,6 +294,77 @@
     return tbls;
   }
 
+  // --- 候補日程からの自動生成 ---
+  function generateFromSchedule() {
+    var playersById = {};
+    players.forEach(function (p) { playersById[p.id] = p; });
+
+    // order: 候補一覧（sort_order順=設定時の並び順）でのインデックス。卓番号を日程の早い順に振るために使う
+    var candidateInfo = scheduleCandidates.map(function (c, idx) {
+      return { candidate: c, playerIds: (scheduleResponses[c.id] || []).slice(), order: idx };
+    });
+
+    var unassigned = players.map(function (p) { return p.id; });
+    var resultTables = [];
+    var tableSeq = 1;
+
+    // pool の選手を buildTables() で卓に分割し、schedule（候補日程、未定ならnull）を付与して resultTables に追加
+    function appendTablesForPool(pool, schedule, order) {
+      var ordered = pool.map(function (id) { return playersById[id]; });
+      var tbls = buildTables(ordered);
+      tbls.forEach(function (tbl) {
+        tbl.name = tableSeq + '卓';
+        tbl.playedDate = schedule ? schedule.played_date : null;
+        tbl.dayOfWeek = schedule ? schedule.day_of_week : '';
+        tbl.playedTime = schedule ? schedule.played_time : '';
+        tbl._scheduleOrder = order === undefined ? Infinity : order;
+        resultTables.push(tbl);
+        tableSeq++;
+      });
+    }
+
+    while (unassigned.length > 0) {
+      var best = null;
+      candidateInfo.forEach(function (ci) {
+        var avail = ci.playerIds.filter(function (id) { return unassigned.indexOf(id) !== -1; });
+        if (avail.length === 0) return;
+        if (!best || avail.length > best.avail.length) best = { ci: ci, avail: avail };
+      });
+
+      if (!best) break; // 残りはどの候補にも回答していない選手
+
+      appendTablesForPool(shuffle(best.avail), best.ci.candidate, best.ci.order);
+      unassigned = unassigned.filter(function (id) { return best.avail.indexOf(id) === -1; });
+    }
+
+    // どの候補にも回答していない選手は日程未定の卓にまとめる
+    // （既存卓のsub枠に詰めると、その日程に参加できない選手が混ざってしまうため避ける）
+    if (unassigned.length > 0) {
+      appendTablesForPool(shuffle(unassigned), null);
+    }
+
+    // 卓番号を日程の早い順（候補の設定順）に振り直す。日程未定は最後
+    resultTables.sort(function (a, b) { return a._scheduleOrder - b._scheduleOrder; });
+    resultTables.forEach(function (tbl, i) {
+      tbl.name = (i + 1) + '卓';
+      delete tbl._scheduleOrder;
+    });
+
+    tables = resultTables;
+
+    var subCount = 0;
+    tables.forEach(function (t) { t.slots.forEach(function (s) { if (s.sub) subCount++; }); });
+    var info = tables.length + '卓生成（候補日程から自動割当）';
+    if (subCount > 0) info += ' / 代打ち' + subCount + '名必要';
+    infoEl.textContent = info;
+    document.getElementById('generate-summary').style.display = '';
+
+    render();
+    updateData();
+    btnSave.disabled = false;
+    updateAdvancePreview();
+  }
+
   // --- メイン生成 ---
   function generate() {
     var rankModeEl = document.querySelector('input[name="ranking_mode"]:checked');
@@ -340,6 +418,20 @@
       header.className = 'tn-table-name';
       header.textContent = tbl.name;
       card.appendChild(header);
+
+      if (tbl.playedDate || tbl.playedTime) {
+        var sched = document.createElement('div');
+        sched.className = 'tn-table-schedule';
+        var label = '';
+        if (tbl.playedDate) {
+          var dParts = tbl.playedDate.split('-');
+          label += parseInt(dParts[1], 10) + '/' + parseInt(dParts[2], 10);
+          if (tbl.dayOfWeek) label += '(' + tbl.dayOfWeek.charAt(0) + ')';
+        }
+        if (tbl.playedTime) label += (label ? ' ' : '') + tbl.playedTime;
+        sched.textContent = label;
+        card.appendChild(sched);
+      }
 
       var slotsDiv = document.createElement('div');
       slotsDiv.className = 'tn-slots';
@@ -415,6 +507,9 @@
     for (var ti = 0; ti < tables.length; ti++) {
       var tbl = tables[ti];
       addHidden('tables[' + ti + '][name]', tbl.name);
+      if (tbl.playedDate) addHidden('tables[' + ti + '][played_date]', tbl.playedDate);
+      if (tbl.dayOfWeek) addHidden('tables[' + ti + '][day_of_week]', tbl.dayOfWeek);
+      if (tbl.playedTime) addHidden('tables[' + ti + '][played_time]', tbl.playedTime);
       for (var si = 0; si < tbl.slots.length; si++) {
         if (!tbl.slots[si].sub) addHidden('tables[' + ti + '][player_ids][]', tbl.slots[si].id);
       }

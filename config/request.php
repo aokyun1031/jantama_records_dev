@@ -71,3 +71,14 @@ function consumeFlash(): ?string
     unset($_SESSION['flash']);
     return $flash;
 }
+
+/**
+ * エラーフラッシュメッセージを取得して消費する。
+ * 外部コールバック（Discord OAuth等）からのリダイレクト先でエラーを表示する用途。
+ */
+function consumeFlashError(): ?string
+{
+    $flash = $_SESSION['flash_error'] ?? null;
+    unset($_SESSION['flash_error']);
+    return $flash;
+}

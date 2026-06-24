@@ -79,6 +79,33 @@ test.describe('セキュリティ', () => {
     expect(response.status()).toBe(405);
   });
 
+  // dispatch_schedule_dm.php も dispatch_dm.php と同様 ensureCsrfToken() を
+  // validateCsrfToken() 前に呼ぶ実装。同じバイパス回帰がないことを確認する。
+  test('dispatch_schedule_dm: 新規セッション + CSRF トークン無しの POST が拒否される', async ({ playwright }) => {
+    const context = await playwright.request.newContext();
+    const response = await context.post('/dispatch_schedule_dm', {
+      form: { tournament_id: '1', round_number: '1' },
+    });
+    expect(response.status()).toBe(403);
+    expect(await response.json()).toMatchObject({ ok: false, error: 'csrf' });
+    await context.dispose();
+  });
+
+  test('dispatch_schedule_dm: 不正な CSRF トークンの POST が拒否される', async ({ playwright }) => {
+    const context = await playwright.request.newContext();
+    const response = await context.post('/dispatch_schedule_dm', {
+      form: { tournament_id: '1', round_number: '1', csrf_token: 'invalid_token' },
+    });
+    expect(response.status()).toBe(403);
+    expect(await response.json()).toMatchObject({ ok: false, error: 'csrf' });
+    await context.dispose();
+  });
+
+  test('dispatch_schedule_dm: GET メソッドは 405 で拒否される', async ({ request }) => {
+    const response = await request.get('/dispatch_schedule_dm');
+    expect(response.status()).toBe(405);
+  });
+
   test('ドットファイルへのアクセスが拒否される', async ({ request }) => {
     const response = await request.get('/.env');
     expect(response.status()).toBe(403);

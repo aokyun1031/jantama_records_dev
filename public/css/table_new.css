@@ -51,6 +51,7 @@
 .tn-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 20px; }
 .tn-table { background: var(--card); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 16px; }
 .tn-table-name { font-weight: 800; font-size: 0.95rem; color: var(--text); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid rgba(var(--accent-rgb), 0.15); text-align: center; }
+.tn-table-schedule { font-size: 0.75rem; font-weight: 700; color: var(--purple); text-align: center; margin-bottom: 12px; }
 .tn-slots { display: flex; flex-direction: column; gap: 8px; }
 
 /* 選手スロット（ドラッグ可能） */

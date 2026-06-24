@@ -168,6 +168,52 @@ ALTER SEQUENCE public.round_results_id_seq OWNED BY public.round_results.id;
 
 
 --
+-- Name: schedule_candidates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.schedule_candidates (
+    id integer NOT NULL,
+    tournament_id integer NOT NULL,
+    round_number integer NOT NULL,
+    played_date date NOT NULL,
+    day_of_week character varying(10) DEFAULT ''::character varying NOT NULL,
+    played_time character varying(20) DEFAULT ''::character varying NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL
+);
+
+
+--
+-- Name: schedule_candidates_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.schedule_candidates_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: schedule_candidates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.schedule_candidates_id_seq OWNED BY public.schedule_candidates.id;
+
+
+--
+-- Name: schedule_responses; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.schedule_responses (
+    schedule_candidate_id integer NOT NULL,
+    player_id integer NOT NULL,
+    responded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: standings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -352,6 +398,13 @@ ALTER TABLE ONLY public.round_results ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: schedule_candidates id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schedule_candidates ALTER COLUMN id SET DEFAULT nextval('public.schedule_candidates_id_seq'::regclass);
+
+
+--
 -- Name: table_paifu_urls id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -437,6 +490,22 @@ ALTER TABLE ONLY public.round_results
 
 
 --
+-- Name: schedule_candidates schedule_candidates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schedule_candidates
+    ADD CONSTRAINT schedule_candidates_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: schedule_responses schedule_responses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schedule_responses
+    ADD CONSTRAINT schedule_responses_pkey PRIMARY KEY (schedule_candidate_id, player_id);
+
+
+--
 -- Name: standings standings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -508,6 +577,20 @@ CREATE UNIQUE INDEX idx_players_discord_user_id ON public.players USING btree (d
 
 
 --
+-- Name: idx_schedule_candidates_tournament_round; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_schedule_candidates_tournament_round ON public.schedule_candidates USING btree (tournament_id, round_number);
+
+
+--
+-- Name: idx_schedule_responses_player; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_schedule_responses_player ON public.schedule_responses USING btree (player_id);
+
+
+--
 -- Name: idx_table_players_table_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -558,6 +641,30 @@ ALTER TABLE ONLY public.round_results
 
 ALTER TABLE ONLY public.round_results
     ADD CONSTRAINT round_results_tournament_id_fkey FOREIGN KEY (tournament_id) REFERENCES public.tournaments(id) ON DELETE CASCADE;
+
+
+--
+-- Name: schedule_candidates schedule_candidates_tournament_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schedule_candidates
+    ADD CONSTRAINT schedule_candidates_tournament_id_fkey FOREIGN KEY (tournament_id) REFERENCES public.tournaments(id) ON DELETE CASCADE;
+
+
+--
+-- Name: schedule_responses schedule_responses_schedule_candidate_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schedule_responses
+    ADD CONSTRAINT schedule_responses_schedule_candidate_id_fkey FOREIGN KEY (schedule_candidate_id) REFERENCES public.schedule_candidates(id) ON DELETE CASCADE;
+
+
+--
+-- Name: schedule_responses schedule_responses_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.schedule_responses
+    ADD CONSTRAINT schedule_responses_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.players(id) ON DELETE CASCADE;
 
 
 --

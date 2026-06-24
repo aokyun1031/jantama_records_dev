@@ -1,0 +1,30 @@
+/* ======================
+   schedule_response.css
+   選手公開URL（参加可能日回答）ページ
+   ====================== */
+
+.sr-hero{text-align:center;padding:40px 20px 24px}
+.sr-badge{display:inline-block;background:var(--badge-bg);color:var(--badge-color);font-size:0.7rem;font-weight:700;padding:4px 14px;border-radius:20px;margin-bottom:16px;letter-spacing:2px;box-shadow:0 2px 12px rgba(var(--accent-rgb),0.3)}
+.sr-title{font-family:'Noto Sans JP',sans-serif;font-size:clamp(1.4rem,5vw,2rem);font-weight:900;color:var(--text);margin:0 0 4px}
+.sr-subtitle{font-size:0.85rem;color:var(--text-sub);margin-bottom:12px}
+.sr-rules{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.sr-rule-tag{font-size:0.7rem;font-weight:600;color:var(--text-sub);background:rgba(var(--accent-rgb),0.08);border-radius:10px;padding:3px 10px}
+
+.sr-content{max-width:640px;margin:0 auto 40px;padding:0 16px}
+
+.sr-self-card{background:var(--card);border:1px solid rgba(var(--accent-rgb),0.25);border-radius:var(--radius);padding:24px;margin-bottom:20px;text-align:center;box-shadow:var(--shadow-sm)}
+.sr-self-icon{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:12px;box-shadow:0 4px 16px rgba(var(--accent-rgb),0.2)}
+.sr-self-noicon{width:64px;height:64px;border-radius:50%;background:var(--glass-border);display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--text-sub);margin-bottom:12px}
+.sr-self-name{font-size:1.05rem;font-weight:800;color:var(--text)}
+
+.sr-hint{font-size:0.8rem;color:var(--text-sub);margin-bottom:12px}
+
+.sr-candidate-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.sr-candidate-option{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--card);border:1.5px solid var(--glass-border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color 0.2s,background 0.2s}
+.sr-candidate-option:hover{border-color:var(--input-border-hover)}
+.sr-candidate-option input[type="checkbox"]{width:20px;height:20px;accent-color:var(--purple);flex-shrink:0}
+.sr-candidate-option:has(input:checked){border-color:var(--purple);background:rgba(var(--accent-rgb),0.06)}
+.sr-candidate-label{font-size:0.9rem;font-weight:700;color:var(--text)}
+
+.sr-btn-save{display:inline-block;width:100%;max-width:280px;margin:0 auto;display:block;padding:16px 32px;border:none;border-radius:14px;font-weight:800;font-size:1rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;background:var(--btn-primary-bg);color:var(--btn-text-color);box-shadow:0 4px 16px rgba(var(--accent-rgb),0.3);transition:transform 0.2s,box-shadow 0.2s}
+.sr-btn-save:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(var(--accent-rgb),0.4)}

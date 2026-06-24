@@ -24,11 +24,12 @@ if (!validateCsrfToken()) {
 
 // --- 入力検証 ---
 $tournamentId = filter_input(INPUT_POST, 'tournament_id', FILTER_VALIDATE_INT);
+$roundNumber = filter_input(INPUT_POST, 'round_number', FILTER_VALIDATE_INT);
 $onlyPlayerId = filter_input(INPUT_POST, 'player_id', FILTER_VALIDATE_INT);
 
-if (!$tournamentId) {
+if (!$tournamentId || !$roundNumber) {
     http_response_code(400);
-    echo json_encode(['ok' => false, 'error' => 'tournament_id required'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+    echo json_encode(['ok' => false, 'error' => 'tournament_id and round_number required'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
     exit;
 }
 
@@ -45,6 +46,13 @@ if ($tournament['status'] === TournamentStatus::Completed->value) {
     exit;
 }
 
+['data' => $candidates] = fetchData(fn() => ScheduleCandidate::byRound($tournamentId, $roundNumber));
+if (empty($candidates)) {
+    http_response_code(400);
+    echo json_encode(['ok' => false, 'error' => 'no schedule candidates'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+    exit;
+}
+
 // --- 送信対象決定 ---
 if ($onlyPlayerId) {
     ['data' => $player] = fetchData(fn() => Player::find($onlyPlayerId));
@@ -53,47 +61,48 @@ if ($onlyPlayerId) {
         echo json_encode(['ok' => false, 'error' => 'player not found'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
         exit;
     }
+    ['data' => $tournamentPlayerIds] = fetchData(fn() => Tournament::playerIds($tournamentId));
+    if (!in_array($onlyPlayerId, $tournamentPlayerIds ?? [], true)) {
+        http_response_code(404);
+        echo json_encode(['ok' => false, 'error' => 'player not in tournament'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+        exit;
+    }
     $targets = [$player];
 } else {
-    ['data' => $targets] = fetchData(fn() => Tournament::dmTargets($tournamentId));
+    ['data' => $targets] = fetchData(fn() => Standing::activePlayersWithDetails($tournamentId));
     $targets = $targets ?? [];
 }
 
 // --- DM送信 ---
-$ruleTags = buildRuleTags($tournament['meta']);
-$ruleSummary = implode(' / ', $ruleTags);
-
 $counts = dispatchDmToTargets(
     $targets,
-    function (array $p) use ($tournamentId, $tournament, $ruleSummary) {
-        $playerId = (int) $p['id'];
-        $joinUrl = SITE_URL . '/tournament_join?tournament_id=' . $tournamentId . '&player_id=' . $playerId;
+    function (array $p) use ($tournamentId, $roundNumber, $tournament) {
+        $responseUrl = SITE_URL . '/schedule_response?tournament_id=' . $tournamentId
+            . '&round_number=' . $roundNumber . '&player_id=' . (int) $p['id'];
         $embed = [
-            'title' => '🀄 ' . $tournament['name'],
-            'description' => $ruleSummary !== '' ? 'ルール: ' . $ruleSummary : '',
+            'title' => '📅 ' . $roundNumber . '回戦 参加可能日アンケート',
+            'description' => $tournament['name'],
             'color' => 0x9b8ce8,
-            'url' => $joinUrl,
+            'url' => $responseUrl,
             'fields' => [
                 [
-                    'name' => '参加表明',
-                    'value' => '下のボタンから参加 / 不参加 を選択してください。',
+                    'name' => '参加可能日の回答',
+                    'value' => '下のURLから参加可能な日程を選択してください。',
                     'inline' => false,
                 ],
                 [
                     'name' => 'URL',
-                    'value' => $joinUrl,
+                    'value' => $responseUrl,
                     'inline' => false,
                 ],
             ],
             'footer' => ['text' => SITE_NAME],
         ];
-        // クライアントで Embed 非表示の選手にも本文が届くように content も併送する
-        $content = "🀄 **{$tournament['name']}** の参加表明URLが届きました。\n"
-            . "こちらから参加 / 不参加 を選択してください:\n"
-            . $joinUrl;
+        $content = "📅 **{$tournament['name']}** {$roundNumber}回戦の参加可能日アンケートが届きました。\n"
+            . "こちらから参加可能な日程を選択してください:\n"
+            . $responseUrl;
         return ['embed' => $embed, 'content' => $content];
-    },
-    fn(int $playerId, string $status) => Tournament::recordDmDispatch($tournamentId, $playerId, $status)
+    }
 );
 
 echo json_encode(['ok' => true] + $counts, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);

@@ -30,12 +30,15 @@ erDiagram
     tournaments ||--o{ tournament_meta           : ""
     tournaments ||--o{ interviews                : ""
     tournaments ||--o{ tournament_dm_dispatches  : ""
+    tournaments ||--o{ schedule_candidates       : ""
     players     ||--o{ round_results             : ""
     players     ||--o{ standings                 : ""
     players     ||--o{ table_players             : ""
     players     ||--o{ tournament_dm_dispatches  : ""
+    players     ||--o{ schedule_responses        : ""
     tables_info ||--o{ table_players             : ""
     tables_info ||--o{ table_paifu_urls          : ""
+    schedule_candidates ||--o{ schedule_responses : ""
     characters  ||--o{ players                   : ""
 ```
 
@@ -91,6 +94,14 @@ erDiagram
 ### インタビュー
 
 優勝者インタビュー Q&A を `interviews` に順序付きで保持（`sort_order`）。大会に紐づくので CASCADE 削除。
+
+### 日程調整
+
+卓作成前に、ラウンドごとの候補日程（例: 6/22昼, 6/22夜...）を `schedule_candidates` に登録し、選手が参加可能な候補を `schedule_responses` で複数選択回答する（投票方式、トークンレス公開URL）。
+
+- 選手の回答は「参加可能」のみ記録。不参加は単に行が存在しないだけで表現する
+- 候補日程を変更（`schedule_candidates` の置き換え）すると、既存の `schedule_responses` は CASCADE で削除される（再回答が必要）
+- 回答結果から卓を自動生成する処理はアプリ側（JS）で行い、DB には候補と回答のみ保持する
 
 ## データライフサイクル
 
@@ -151,7 +162,7 @@ erDiagram
 
 ## テーブル詳細
 
-全 10 テーブル（`phinxlog` は Phinx 管理用のため除外）。カラムの型・NOT NULL・DEFAULT は [`db/current_schema.sql`](../db/current_schema.sql) を参照。ここでは **役割・意味・他カラムとの関係** を記述する。
+全 12 テーブル（`phinxlog` は Phinx 管理用のため除外）。カラムの型・NOT NULL・DEFAULT は [`db/current_schema.sql`](../db/current_schema.sql) を参照。ここでは **役割・意味・他カラムとの関係** を記述する。
 
 ### `tournaments` — 大会マスター
 
@@ -283,3 +294,27 @@ erDiagram
 | `player_id` (PK/FK) | 送信先選手 |
 | `sent_at` | 最終送信時刻 |
 | `status` | `sent` / `failed` / `no_discord_id` のいずれか（DM拒否設定や ID 未登録は `failed` / `no_discord_id`） |
+
+### `schedule_candidates` — 候補日程
+
+主催者がラウンドごとに登録する候補日程。卓作成前の日程調整アンケートの選択肢。
+
+| カラム | 役割・意味 |
+|---|---|
+| `id` (PK) | 候補 ID |
+| `tournament_id` (FK) | 所属大会 |
+| `round_number` | どのラウンドの候補か |
+| `played_date` | 候補日（必須） |
+| `day_of_week` | 曜日の文字列。`played_date` から自動算出して保存 |
+| `played_time` | 時間帯（自由記述、例: `昼`, `夜`, `19:00`） |
+| `sort_order` | 表示順（登録順） |
+
+### `schedule_responses` — 候補日程への参加可能回答
+
+選手が `schedule_candidates` の中から「参加可能」と回答した候補。複合主キー `(schedule_candidate_id, player_id)` で同一候補への重複回答を防止。
+
+| カラム | 役割・意味 |
+|---|---|
+| `schedule_candidate_id` (PK/FK) | 回答対象の候補日程 |
+| `player_id` (PK/FK) | 回答した選手 |
+| `responded_at` | 回答時刻 |

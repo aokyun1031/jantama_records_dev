@@ -979,3 +979,42 @@ function discordSendDmEmbed(string $userId, array $embed, string $content = ''):
 
     return true;
 }
+
+/**
+ * 対象選手リストへ一括でDM(Embed)を送信する。
+ *
+ * @param array<int, array{id:int|string, discord_user_id:?string}> $targets
+ * @param callable(array):array{embed:array,content:string} $buildMessage 選手データからembed/contentを構築
+ * @param ?callable(int,string):void $afterSend 送信後フック（選手ID, status: sent|failed|no_discord_id）
+ * @return array{sent:int,failed:int,no_discord_id:int}
+ */
+function dispatchDmToTargets(array $targets, callable $buildMessage, ?callable $afterSend = null): array
+{
+    $counts = ['sent' => 0, 'failed' => 0, 'no_discord_id' => 0];
+
+    foreach ($targets as $p) {
+        $playerId = (int) $p['id'];
+        $discordUserId = (string) ($p['discord_user_id'] ?? '');
+
+        if ($discordUserId === '') {
+            $counts['no_discord_id']++;
+            if ($afterSend) {
+                $afterSend($playerId, 'no_discord_id');
+            }
+            continue;
+        }
+
+        ['embed' => $embed, 'content' => $content] = $buildMessage($p);
+        $ok = discordSendDmEmbed($discordUserId, $embed, $content);
+        $status = $ok ? 'sent' : 'failed';
+        $counts[$status]++;
+        if ($afterSend) {
+            $afterSend($playerId, $status);
+        }
+
+        // Discord レート制限 (50 req/sec) 余裕を持って 100ms 間隔
+        usleep(100000);
+    }
+
+    return $counts;
+}
