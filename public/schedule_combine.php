@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = sanitizeInput('action');
         if ($action === 'respond_for_player' && $tournament['status'] !== TournamentStatus::Completed->value) {
             $targetPlayerId = (int) sanitizeInput('player_id');
-            $candidateIds = array_unique(array_map('intval', $_POST['candidate_ids'] ?? []));
+            $candidateIds = array_unique(array_map('intval', postArray('candidate_ids')));
             $validCandidateIds = array_map(fn($c) => (int) $c['id'], $candidates);
 
             ['data' => $tournamentPlayerIds] = fetchData(fn() => Tournament::playerIds($tournamentId));

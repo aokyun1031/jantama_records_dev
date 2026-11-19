@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // バリデーションエラー
     } else {
         $roundNumber = $nextRound;
-        $postTables = $_POST['tables'] ?? [];
+        $postTables = postArray('tables');
 
         $validIds = $activePlayerIds;
         $tablesData = [];
@@ -84,8 +84,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $validationError = '卓を作成してください。';
         } else {
             foreach ($postTables as $t) {
-                $name = preg_replace('/[\x00-\x1F\x7F]/u', '', trim($t['name'] ?? ''));
-                $playerIds = array_map('intval', $t['player_ids'] ?? []);
+                // tables[0]=x のように卓が配列でない・player_ids が配列でない入力は不正として扱う
+                if (!is_array($t)) {
+                    $validationError = '卓名が不正です。';
+                    break;
+                }
+                $name = sanitizeValue($t['name'] ?? '');
+                $rawPlayerIds = $t['player_ids'] ?? [];
+                $playerIds = is_array($rawPlayerIds) ? array_map('intval', $rawPlayerIds) : [];
                 if ($name === '' || mb_strlen($name) > 20) {
                     $validationError = '卓名が不正です。';
                     break;
@@ -113,8 +119,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $allAssigned = array_merge($allAssigned, $playerIds);
 
                 // 候補日程から自動生成した場合の日程情報（任意）
-                $playedDate = preg_replace('/[\x00-\x1F\x7F]/u', '', trim((string) ($t['played_date'] ?? '')));
-                $playedTime = preg_replace('/[\x00-\x1F\x7F]/u', '', trim((string) ($t['played_time'] ?? '')));
+                $playedDate = sanitizeValue($t['played_date'] ?? '');
+                $playedTime = sanitizeValue($t['played_time'] ?? '');
                 if ($playedDate !== '' && !isValidDateString($playedDate)) {
                     $validationError = '日程の日付形式が不正です。';
                     break;

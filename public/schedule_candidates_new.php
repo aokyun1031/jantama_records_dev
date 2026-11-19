@@ -31,14 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($validationError) {
         // バリデーションエラー
     } else {
-        $postedDates = $_POST['played_date'] ?? [];
-        $postedTimes = $_POST['played_time'] ?? [];
+        $postedDates = postArray('played_date');
+        $postedTimes = postArray('played_time');
         $candidates = [];
         $seen = [];
 
         for ($i = 0; $i < count($postedDates); $i++) {
-            $date = preg_replace('/[\x00-\x1F\x7F]/u', '', trim((string) ($postedDates[$i] ?? '')));
-            $time = preg_replace('/[\x00-\x1F\x7F]/u', '', trim((string) ($postedTimes[$i] ?? '')));
+            $date = sanitizeValue($postedDates[$i] ?? '');
+            $time = sanitizeValue($postedTimes[$i] ?? '');
             if ($date === '' && $time === '') {
                 continue; // 空行スキップ
             }

@@ -51,6 +51,18 @@ test.describe('セキュリティ', () => {
     expect(response.status()).toBe(403);
   });
 
+  // csrf_token[]=x のように配列で送ると hash_equals() が TypeError になり 500 を返していた。
+  // 配列は不一致として扱い、通常の CSRF エラー（403）になることを確認する。
+  test('CSRF トークンを配列で送っても 500 にならず拒否される', async ({ playwright }) => {
+    const context = await playwright.request.newContext();
+    const response = await context.post('/player_new', {
+      data: 'csrf_token%5B%5D=x&name=test',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+    expect(response.status()).toBe(403);
+    await context.dispose();
+  });
+
   // /dispatch_dm は JSON エンドポイント。他の POST ページと同じ validatePost()（CSRF + Turnstile）で
   // 検証する。CSRF 判定は hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'] ?? '') のため、
   // セッション未初期化 + POST トークン未送信だと hash_equals('', '') が true となり検証をすり抜ける

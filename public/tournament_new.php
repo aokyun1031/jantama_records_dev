@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $postOpenTanyao = sanitizeInput('open_tanyao');
         $postHanRestriction = sanitizeInput('han_restriction');
         $postBust = sanitizeInput('bust');
-        $postPlayerIds = array_map('intval', $_POST['player_ids'] ?? []);
+        $postPlayerIds = array_map('intval', postArray('player_ids'));
 
         // バリデーション
         $validPlayerModes = ['3', '4'];

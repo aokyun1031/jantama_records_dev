@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($validationError) {
         // バリデーションエラー
     } else {
-        $postPlayerIds = array_map('intval', $_POST['player_ids'] ?? []);
+        $postPlayerIds = array_map('intval', postArray('player_ids'));
         $meta = $tournament['meta'];
         $playerMode = (int) ($meta['player_mode'] ?? 4);
 

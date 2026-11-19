@@ -1,4 +1,5 @@
 import { test, expect } from '../helpers/fixtures';
+import { NONEXISTENT_ID, expectNotFound } from '../helpers/test-helpers';
 
 test.describe('インタビューページ', () => {
   test.beforeEach(async ({ page }) => {
@@ -21,5 +22,13 @@ test.describe('インタビューページ', () => {
 
   test('トップページへの戻るリンクがある', async ({ page }) => {
     await expect(page.locator('a.site-logo')).toBeVisible();
+  });
+
+  test('存在しないIDで404', async ({ page }) => {
+    await expectNotFound(page, `/interview?id=${NONEXISTENT_ID}`);
+  });
+
+  test('IDなしで404', async ({ page }) => {
+    await expectNotFound(page, '/interview');
   });
 });
