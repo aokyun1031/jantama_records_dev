@@ -30,6 +30,15 @@ test.describe('大会ビュー（公開ページ）', () => {
     await expect(page.locator('#standings-section')).toBeVisible();
   });
 
+  // $medals が未定義のまま参照され、上位 3 名の順位欄が空になっていた不具合の回帰テスト
+  test('総合ポイントの上位3名にメダルが表示される', async ({ page }) => {
+    const medals = page.locator('#standings .standing-item .standing-rank .medal');
+    await expect(medals).toHaveCount(3);
+    await expect(medals.nth(0)).toHaveText('🥇');
+    await expect(medals.nth(1)).toHaveText('🥈');
+    await expect(medals.nth(2)).toHaveText('🥉');
+  });
+
   test('対戦結果タブが存在する', async ({ page }) => {
     await expect(page.locator('.tab-btn')).not.toHaveCount(0);
   });

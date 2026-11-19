@@ -282,6 +282,9 @@ foreach ($roundSettings as $rn => $rs) {
     <?php
       $maxBar = 130;
       $shownDivider = false;
+      // 上位 3 名の順位表示。以前は round_details.php（partial）側の定義に依存しており、
+      // そちらが未使用として削除された際に未定義になっていたため、使う場所で定義する
+      $medals = ['🥇', '🥈', '🥉'];
       foreach ($allStandings ?? [] as $i => $s):
         $displayName = $s['nickname'] ?? $s['name'];
         $total = (float) $s['total'];
