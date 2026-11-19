@@ -1,4 +1,7 @@
 const STATIC_EXT = /\.(css|js|png|jpg|jpeg|webp|svg|woff2|ico)(\?.*)?$/i;
+// `/page.php/x.css` のように PHP ページへ PATH_INFO を付けた URL は末尾が静的拡張子でも動的ページ。
+// 静的アセット扱いにすると、他人のセッション向け HTML を 1 年キャッシュして配ってしまう。
+const PHP_PATH = /\.php(\/|$)/i;
 const ALLOWED_METHODS = new Set(["GET", "HEAD", "POST"]);
 
 export default {
@@ -13,7 +16,7 @@ export default {
 
     try {
       // 静的アセット → Cache API でキャッシュ
-      if (request.method === "GET" && STATIC_EXT.test(url.pathname)) {
+      if (request.method === "GET" && STATIC_EXT.test(url.pathname) && !PHP_PATH.test(url.pathname)) {
         return await handleStatic(request, originUrl, ctx);
       }
 
@@ -97,6 +100,20 @@ async function handleStatic(request, originUrl, ctx) {
     return response;
   }
 
+  // オリジンが HTML を返した・キャッシュ不可を指定した・Cookie を発行した応答は静的アセットではない。
+  // 拡張子だけで判断せず、キャッシュせずにそのまま返す。
+  const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
+  const originCacheControl = (response.headers.get("Cache-Control") || "").toLowerCase();
+  if (
+    contentType.startsWith("text/html") ||
+    /no-store|private/.test(originCacheControl) ||
+    response.headers.has("Set-Cookie")
+  ) {
+    const uncached = new Response(response.body, response);
+    uncached.headers.set("Cache-Control", "no-store");
+    return uncached;
+  }
+
   // エッジキャッシュ用に s-maxage を追加
   const newResponse = new Response(response.body, response);
   newResponse.headers.set(
@@ -128,12 +145,21 @@ async function proxyToOrigin(request, workerUrl, originUrl) {
   const newResponse = new Response(response.body, response);
 
   // リダイレクトのLocationヘッダーを書き換え（オリジンURLを隠す）
+  // Apache は Host から `http://<オリジン>/...` を組み立てるため、ORIGIN（https）との文字列一致では
+  // 拾えない。スキームを問わずホストが一致する絶対 URL を Worker のオリジンへ差し替える。
   const location = newResponse.headers.get("Location");
-  if (location && location.includes(originUrl.origin)) {
-    newResponse.headers.set(
-      "Location",
-      location.replace(originUrl.origin, workerUrl.origin)
-    );
+  if (location && /^https?:\/\//i.test(location)) {
+    try {
+      const target = new URL(location);
+      if (target.host === originUrl.host) {
+        newResponse.headers.set(
+          "Location",
+          workerUrl.origin + target.pathname + target.search + target.hash
+        );
+      }
+    } catch (e) {
+      // 解釈できない Location はそのまま返す
+    }
   }
 
   // 動的ページはキャッシュしない

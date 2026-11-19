@@ -6,6 +6,9 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 const SITE_NAME = '雀魂部屋主催';
 
+// 1 ラウンドあたりの対局数の上限（卓作成フォームの選択肢と、卓ページの入力欄生成の両方で使う）
+const MAX_GAME_COUNT = 4;
+
 // .envファイルから環境変数を読み込む（既存の環境変数は上書きしない）
 $envFile = dirname(__DIR__);
 if (file_exists($envFile . '/.env')) {

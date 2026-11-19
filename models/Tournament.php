@@ -284,13 +284,41 @@ class Tournament
     }
 
     /**
-     * 大会を完了にする。
+     * 決勝ラウンドの全卓が完了しているかを返す（大会を完了にできる前提条件）。
+     *
+     * 最新ラウンドが決勝指定（round_N_is_final = 1）で、そのラウンドに未完了の卓が無いこと。
+     * 卓が 1 つも無い大会は false。
      */
-    public static function complete(int $id): void
+    public static function isFinalRoundDone(int $id): bool
     {
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('UPDATE tournaments SET status = ? WHERE id = ?');
-        $stmt->execute([TournamentStatus::Completed->value, $id]);
+        $stmt = $pdo->prepare('
+            SELECT round_number, COUNT(*) FILTER (WHERE done = false) AS undone
+            FROM tables_info
+            WHERE tournament_id = ?
+            GROUP BY round_number
+            ORDER BY round_number DESC
+            LIMIT 1
+        ');
+        $stmt->execute([$id]);
+        $latest = $stmt->fetch();
+        if (!$latest || (int) $latest['undone'] > 0) {
+            return false;
+        }
+        return TournamentMeta::get($id, 'round_' . (int) $latest['round_number'] . '_is_final') === '1';
+    }
+
+    /**
+     * 大会を完了にする（開催中の場合のみ）。
+     *
+     * @return bool 完了に更新できたら true。開催中でない（準備中・完了済み）場合は false
+     */
+    public static function complete(int $id): bool
+    {
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare('UPDATE tournaments SET status = ? WHERE id = ? AND status = ?');
+        $stmt->execute([TournamentStatus::Completed->value, $id, TournamentStatus::InProgress->value]);
+        return $stmt->rowCount() === 1;
     }
 
     /**

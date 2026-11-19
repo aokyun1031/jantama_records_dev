@@ -402,9 +402,9 @@ npx wrangler deploy
 |---|---|
 | `public/discord_oauth_redirect.php` | OAuth 認可開始（state HMAC 署名） |
 | `public/discord_oauth_callback.php` | code 受信 → token 交換 → User 情報保存 |
-| `public/dispatch_dm.php` | DM 送信エンドポイント（POST + CSRF） |
+| `public/dispatch_dm.php` | DM 送信エンドポイント（POST + CSRF + Turnstile） |
 | `public/tournament_join.php` | 選手公開URL（参加 / 取消） |
-| `public/dispatch_schedule_dm.php` | 候補日程回答依頼 DM 送信エンドポイント（POST + CSRF） |
+| `public/dispatch_schedule_dm.php` | 候補日程回答依頼 DM 送信エンドポイント（POST + CSRF + Turnstile） |
 | `public/schedule_response.php` | 選手公開URL（候補日程への参加可能日回答） |
 | `config/discord.php` | Bot API / OAuth2 ヘルパ |
 

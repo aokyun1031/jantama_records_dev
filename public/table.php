@@ -24,7 +24,8 @@ $isDev = !isProduction();
 
 $meta = $tournament['meta'];
 $rk = 'round_' . $table['round_number'];
-$gameCount = max(1, (int) ($meta[$rk . '_game_count'] ?? 1));
+// 保存済みの値が範囲外でも入力欄を際限なく生成しないよう上限で打ち切る
+$gameCount = max(1, min(MAX_GAME_COUNT, (int) ($meta[$rk . '_game_count'] ?? 1)));
 
 // 牌譜URL取得
 $paifuUrls = TablePaifuUrl::byTable($tableId);

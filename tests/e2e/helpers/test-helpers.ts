@@ -1,4 +1,4 @@
-import { type Page, type Browser, expect } from '@playwright/test';
+import { type Page, type Browser, type APIResponse, expect } from '@playwright/test';
 import { blockHeavyResources } from './fixtures';
 
 export { TEST_PREFIX, NONEXISTENT_ID } from './constants';
@@ -97,4 +97,75 @@ export async function createTestTournamentWithPlayers(
   await page.click('button.btn-save');
   await page.waitForURL(/\/tournament\?id=\d+/, { timeout: 60000 });
   return extractIdFromUrl(page.url());
+}
+
+/**
+ * 大会に登録済みの選手 ID 一覧を取得する。
+ */
+export async function getTournamentPlayerIds(page: Page, tournamentId: number): Promise<string[]> {
+  await page.goto(`/tournament_players?id=${tournamentId}`);
+  return page
+    .locator('.player-select-option input[type="checkbox"]:checked')
+    .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value));
+}
+
+/**
+ * 卓作成フォームへ直接 POST する（フォームの JS を通さずサーバ側バリデーションを検証するため）。
+ * 成功時は 302、バリデーションエラー時は 200 + エラーメッセージ入り HTML が返る。
+ */
+export async function postTableNew(
+  page: Page,
+  tournamentId: number,
+  tables: { name: string; playerIds: string[] }[],
+  settings: Record<string, string> = {}
+): Promise<APIResponse> {
+  await page.goto(`/table_new?tournament_id=${tournamentId}`);
+  const csrfToken = await page.locator('#table-form input[name="csrf_token"]').inputValue();
+
+  const body = new URLSearchParams();
+  body.append('csrf_token', csrfToken);
+  tables.forEach((t, i) => {
+    body.append(`tables[${i}][name]`, t.name);
+    t.playerIds.forEach((id) => body.append(`tables[${i}][player_ids][]`, id));
+  });
+  Object.entries({ game_count: '2', advance_count: '2', ...settings }).forEach(([k, v]) => body.append(k, v));
+
+  return page.request.post(`/table_new?tournament_id=${tournamentId}`, {
+    data: body.toString(),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    maxRedirects: 0,
+  });
+}
+
+/**
+ * 残り選手が 1 卓に収まる大会で、決勝卓の作成から対局結果の入力までを行い「決勝完了」状態にする。
+ * 大会を完了にできるのは決勝ラウンドの全卓が完了した後だけなので、完了系のテストの前提に使う。
+ */
+export async function playFinalToCompletion(page: Page, tournamentId: number): Promise<void> {
+  // 決勝は全員が 1 卓に自動配置される
+  await page.goto(`/table_new?tournament_id=${tournamentId}`);
+  await expect(page.locator('.tn-table')).toHaveCount(1);
+  await page.click('#btn-save');
+  await page.waitForURL(/\/tournament\?id=\d+/, { timeout: 60000 });
+
+  const href = await page.locator('.td-table-card').first().getAttribute('href');
+  await page.goto(`/table?id=${extractIdFromUrl(href!)}`);
+
+  const paifuInputs = page.locator('#table-form input.tb-paifu-input');
+  const paifuCount = await paifuInputs.count();
+  for (let i = 0; i < paifuCount; i++) {
+    await paifuInputs.nth(i).fill(`https://example.com/paifu/final-${i + 1}`);
+  }
+  const scoreInputs = page.locator('#table-form input.tb-score-input');
+  const scoreCount = await scoreInputs.count();
+  const scorePool = [25.0, 10.0, -5.0, -30.0];
+  for (let i = 0; i < scoreCount; i++) {
+    await scoreInputs.nth(i).fill(scorePool[i % scorePool.length].toString());
+  }
+
+  const doneBtn = page.locator('#table-form button[value="game_data"]');
+  await expect(doneBtn).toBeEnabled();
+  page.once('dialog', (dialog) => dialog.accept());
+  await doneBtn.click();
+  await page.waitForURL(/\/tournament\?id=\d+/, { timeout: 60000 });
 }
