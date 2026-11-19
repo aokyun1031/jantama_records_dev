@@ -73,6 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tablesData = [];
         $allAssigned = [];
 
+        // 対局人数（卓の人数上限の検証に使うため、卓の検証より先に確定させる）
+        $postPlayerMode = sanitizeInput('player_mode');
+        if (!in_array($postPlayerMode, ['3', '4'], true)) {
+            $postPlayerMode = (string) $playerMode;
+        }
+        $roundPlayerMode = (int) $postPlayerMode;
+
         if (empty($postTables)) {
             $validationError = '卓を作成してください。';
         } else {
@@ -88,6 +95,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if (array_diff($playerIds, $validIds)) {
                     $validationError = '不正な選手が含まれています。';
+                    break;
+                }
+                // 卓内の重複は集計（勝ち抜け判定）を狂わせるため拒否する
+                if (count($playerIds) !== count(array_unique($playerIds))) {
+                    $validationError = '同じ選手が同じ卓に重複しています。';
+                    break;
+                }
+                if (count($playerIds) > $roundPlayerMode) {
+                    $validationError = '卓の人数が対局人数を超えています。';
                     break;
                 }
                 if (array_intersect($playerIds, $allAssigned)) {
@@ -125,11 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$validationError) {
                 // ラウンド設定
-                $postPlayerMode = sanitizeInput('player_mode');
-                if (!in_array($postPlayerMode, ['3', '4'], true)) {
-                    $postPlayerMode = (string) $playerMode;
-                }
-                $roundPlayerMode = (int) $postPlayerMode;
                 // 決勝ラウンドは残り選手が1卓に収まる場合に自動判定
                 $isFinal = count($tournamentPlayers) <= $roundPlayerMode;
                 $advanceCount = (int) (sanitizeInput('advance_count') ?: 2);
@@ -143,8 +154,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!in_array($gameType, $validGameTypes, true)) {
                     $gameType = $meta['round_type'] ?? 'hanchan';
                 }
-                if ($advanceCount < 1) $advanceCount = 1;
-                if ($gameCount < 1) $gameCount = 1;
+                // フォームの選択肢と同じ範囲に収める（上限なしだと卓ページの入力欄が際限なく生成される）
+                // 勝ち抜け人数: 各卓モードは 1〜対局人数-1、全体モードは 1〜残り人数-1
+                $maxAdvance = max(1, ($advanceMode === 'overall' ? count($tournamentPlayers) : $roundPlayerMode) - 1);
+                $advanceCount = max(1, min($advanceCount, $maxAdvance));
+                $gameCount = max(1, min($gameCount, MAX_GAME_COUNT));
 
                 if (!$validationError) {
                     try {
@@ -163,6 +177,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         regenerateCsrfToken();
                         header('Location: tournament?id=' . $tournamentId);
                         exit;
+                    } catch (DomainException $e) {
+                        // 前ラウンド未完了・他のリクエストが先に同ラウンドを作成済み
+                        $validationError = $e->getMessage();
                     } catch (PDOException $e) {
                         error_log('[DB] ' . $e->getMessage());
                         $validationError = '卓の作成に失敗しました。';
@@ -249,10 +266,9 @@ require __DIR__ . '/../templates/header.php';
         <div class="tn-option-group">
           <span class="tn-option-label">対局数</span>
           <select name="game_count" class="tn-select">
-            <option value="1">1回</option>
-            <option value="2" selected>2回</option>
-            <option value="3">3回</option>
-            <option value="4">4回</option>
+            <?php for ($i = 1; $i <= MAX_GAME_COUNT; $i++): ?>
+              <option value="<?= $i ?>" <?= $i === 2 ? 'selected' : '' ?>><?= $i ?>回</option>
+            <?php endfor; ?>
           </select>
         </div>
         <div class="tn-option-group">

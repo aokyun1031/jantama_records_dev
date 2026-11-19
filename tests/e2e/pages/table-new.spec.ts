@@ -5,6 +5,9 @@ import {
   createOptimizedPage,
   createTestTournamentWithPlayers,
   expectNotFound,
+  extractIdFromUrl,
+  getTournamentPlayerIds,
+  postTableNew,
 } from '../helpers/test-helpers';
 
 test.describe.configure({ mode: 'serial', timeout: 90000 });
@@ -106,5 +109,65 @@ test.describe('卓作成（候補日程あり）', () => {
     await expect(page.locator('.tn-table')).not.toHaveCount(0);
     await expect(page.locator('.tn-table-schedule').first()).not.toBeEmpty();
     await expect(page.locator('#btn-save')).toBeEnabled();
+  });
+});
+
+// フォームの JS を通さない直接 POST に対する検証。画面の選択肢の外の値や不正な卓構成は
+// サーバ側で拒否・補正されなければならない。
+test.describe('卓作成（サーバ側検証）', () => {
+  let tournamentId: number;
+  let playerIds: string[];
+
+  test.beforeAll(async ({ browser }) => {
+    const page = await createOptimizedPage(browser);
+    tournamentId = await createTestTournamentWithPlayers(
+      page,
+      `${TEST_PREFIX}table_new_validate_${Date.now()}`
+    );
+    playerIds = await getTournamentPlayerIds(page, tournamentId);
+    await page.close();
+  });
+
+  test('同じ選手が同じ卓に重複していると拒否される', async ({ page }) => {
+    const response = await postTableNew(page, tournamentId, [
+      { name: 'A', playerIds: [playerIds[0], playerIds[0], playerIds[1], playerIds[2]] },
+    ]);
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain('同じ選手が同じ卓に重複しています');
+  });
+
+  test('対局人数を超える卓は拒否される', async ({ page }) => {
+    const response = await postTableNew(page, tournamentId, [
+      { name: 'A', playerIds: playerIds.slice(0, 5) },
+    ]);
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain('卓の人数が対局人数を超えています');
+  });
+
+  test('対局数は上限（4回）に補正され、卓ページの入力欄が増えすぎない', async ({ page }) => {
+    const response = await postTableNew(
+      page,
+      tournamentId,
+      [
+        { name: 'A', playerIds: playerIds.slice(0, 4) },
+        { name: 'B', playerIds: playerIds.slice(4, 8) },
+      ],
+      { game_count: '50000', advance_count: '999999999999999999999' }
+    );
+    expect(response.status()).toBe(302);
+
+    await page.goto(`/tournament?id=${tournamentId}`);
+    const href = await page.locator('.td-table-card').first().getAttribute('href');
+    await page.goto(`/table?id=${extractIdFromUrl(href!)}`);
+    await expect(page.locator('#table-form input.tb-paifu-input')).toHaveCount(4);
+  });
+
+  test('前のラウンドに未完了の卓があると次のラウンドを作成できない', async ({ page }) => {
+    // 前テストで 1 回戦の卓を作成済み（未完了）
+    const response = await postTableNew(page, tournamentId, [
+      { name: 'A', playerIds: playerIds.slice(0, 4) },
+    ]);
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain('前のラウンドに未完了の卓があります');
   });
 });

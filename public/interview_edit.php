@@ -16,6 +16,10 @@ $tournament = requireTournamentWithMeta($tournamentId);
 // 既存インタビューを取得
 ['data' => $interviews] = fetchData(fn() => Interview::byTournament($tournamentId));
 
+// 大会を完了にできるのは「開催中」かつ「決勝ラウンドの全卓が完了」のときだけ
+['data' => $isFinalRoundDone] = fetchData(fn() => Tournament::isFinalRoundDone($tournamentId));
+$canComplete = $tournament['status'] === TournamentStatus::InProgress->value && $isFinalRoundDone === true;
+
 $validationError = '';
 $success = false;
 
@@ -63,16 +67,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'complete') {
             // インタビューが1つ以上あるか確認
             ['data' => $currentItems] = fetchData(fn() => Interview::byTournament($tournamentId));
-            if (empty($currentItems)) {
+            if (!$canComplete) {
+                // 完了は取り消せないため、決勝が終わっていない大会・完了済みの大会では受け付けない
+                $validationError = '決勝ラウンドの全卓が完了している開催中の大会のみ完了できます。';
+            } elseif (empty($currentItems)) {
                 $validationError = 'インタビューを1つ以上登録してから大会を完了してください。';
             } else {
                 try {
-                    Tournament::complete($tournamentId);
-                    announceDiscordTournamentCompleted($tournamentId);
-                    $_SESSION['flash'] = '大会を完了しました！';
-                    regenerateCsrfToken();
-                    header('Location: tournament?id=' . $tournamentId);
-                    exit;
+                    // 並行リクエストで先に完了されていた場合は false（告知の二重投稿を防ぐ）
+                    if (Tournament::complete($tournamentId)) {
+                        announceDiscordTournamentCompleted($tournamentId);
+                        $_SESSION['flash'] = '大会を完了しました！';
+                        regenerateCsrfToken();
+                        header('Location: tournament?id=' . $tournamentId);
+                        exit;
+                    }
+                    $validationError = 'この大会は既に完了しています。';
+                    $canComplete = false;
                 } catch (PDOException $e) {
                     error_log('[DB] ' . $e->getMessage());
                     $validationError = '大会の完了に失敗しました。';
@@ -144,7 +155,7 @@ require __DIR__ . '/../templates/header.php';
     </div>
   </form>
 
-  <?php if ($tournament['status'] !== TournamentStatus::Completed->value): ?>
+  <?php if ($canComplete): ?>
     <!-- 大会完了 -->
     <div class="iv-complete-section">
       <div class="iv-complete-title">大会を完了する</div>

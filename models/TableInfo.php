@@ -179,6 +179,23 @@ class TableInfo
         $pdo = getDbConnection();
         $pdo->beginTransaction();
         try {
+            // 同じ大会への卓作成を直列化する。並行リクエストが同じラウンドを二重に作成すると、
+            // 同名の卓が重複して完了済み卓の結果を上書きできてしまうため、行ロック後に状態を確認する。
+            $pdo->prepare('SELECT id FROM tournaments WHERE id = ? FOR UPDATE')->execute([$tournamentId]);
+            $stateStmt = $pdo->prepare(
+                'SELECT COALESCE(MAX(round_number), 0) AS max_round,
+                        COUNT(*) FILTER (WHERE done = false) AS undone
+                 FROM tables_info WHERE tournament_id = ?'
+            );
+            $stateStmt->execute([$tournamentId]);
+            $state = $stateStmt->fetch();
+            if ((int) $state['max_round'] + 1 !== $roundNumber) {
+                throw new DomainException('このラウンドの卓は既に作成されています。ページを再読み込みしてください。');
+            }
+            if ((int) $state['undone'] > 0) {
+                throw new DomainException('前のラウンドに未完了の卓があります。全卓の完了後に次のラウンドを作成してください。');
+            }
+
             $tableStmt = $pdo->prepare(
                 'INSERT INTO tables_info (tournament_id, round_number, table_name, played_date, day_of_week, played_time)
                  VALUES (?, ?, ?, ?, ?, ?)'
@@ -199,7 +216,7 @@ class TableInfo
             }
 
             $pdo->commit();
-        } catch (PDOException $e) {
+        } catch (PDOException | DomainException $e) {
             $pdo->rollBack();
             throw $e;
         }
