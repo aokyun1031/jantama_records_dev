@@ -100,6 +100,7 @@ graph TB
         Docker["Docker Compose\nweb :8080"]:::devStyle
         LocalPg[("ローカル Postgres\nコンテナ :5432")]:::dbStyle
         E2E(["Playwright E2E\n（手動実行）"]):::devStyle
+        E2EStack["E2E 専用スタック\nweb :8081 + Postgres"]:::devStyle
     end
 
     GitHub["GitHub\nmain ブランチ"]:::deployStyle
@@ -121,7 +122,7 @@ graph TB
     GitHub -->|"main マージ時\n自動デプロイ"| App
     Monitor -->|"死活監視"| PHP
 
-    E2E -. "Docker 起動中に実行" .-> Docker
+    E2E -. "起動・シード投入・実行" .-> E2EStack
 ```
 
 ### 技術スタック
@@ -297,19 +298,31 @@ Neon dev                  ← Codespaces が接続
 
 ## E2Eテスト
 
-Playwright による自動テスト。Docker 起動中に実行する。
+Playwright による自動テスト。開発用とは別の **E2E 専用スタック**（`docker-compose.test.yml`、`http://localhost:8081`）に対して実行する。Docker が動いていれば、スタックの起動・シード投入はテスト実行時に自動で行われる。
 
 ```bash
 # 初回セットアップ
 cd tests/e2e && npm install && npx playwright install chromium --with-deps
 
-# テスト実行
+# テスト実行（スタックの起動 → シード入れ直し → 隔離の確認 → テスト）
 npx playwright test              # 全テスト
 npx playwright test --headed     # ブラウザ表示あり
 npx playwright test pages/       # ページテストのみ
 npx playwright test features/    # 機能テストのみ
 npx playwright test --ui         # UIモード
+
+# スタックの停止（次回の実行時にまた自動で起動する）
+npm run stack:down
 ```
+
+E2E 専用スタックは、テストが外部に副作用を出さないよう隔離してある。
+
+- コードはイメージに焼くため、開発者の `.env`（Discord の Bot トークン等）はコンテナに入らない
+- Discord 関連の環境変数は渡さず、`discord.com` はコンテナ内で `127.0.0.1` に向けてある
+- DB はホストにポートを出さず、実行のたびに `db/seed_data.sql` の状態へ戻す
+- 実行前に `/__e2e_canary` で上記を確認し、1 つでも満たさなければテストを 1 件も実行せずに中断する
+
+ポート 8081 が使用中の場合は `E2E_PORT=18081 npx playwright test` のように変更できる。接続先を別の URL に向ける手段は用意していない（隔離を確認できない環境に書き込みテストを流さないため）。
 
 push 前に各自で `cd tests/e2e && npx playwright test` を手動実行する運用。
 

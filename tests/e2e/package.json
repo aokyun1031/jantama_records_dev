@@ -7,17 +7,16 @@
     "test:ui": "npx playwright test --ui",
     "test:pages": "npx playwright test pages/",
     "test:features": "npx playwright test features/",
-    "test:seed": "docker compose -f ../../docker-compose.yml exec web php vendor/bin/phinx seed:run",
-    "test:fresh": "npm run test:seed && npm test",
+    "stack:up": "docker compose -f ../../docker-compose.test.yml up -d --build --wait",
+    "stack:down": "docker compose -f ../../docker-compose.test.yml down -v",
     "setup": "npx playwright install chromium --with-deps",
     "lint": "npx eslint .",
     "typecheck": "npx tsc --noEmit"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
-    "dotenv": "^17.4.1",
+    "@types/node": "^22.20.5",
     "eslint": "^10.2.0",
-    "pg": "^8.20.0",
     "typescript-eslint": "^8.58.1"
   }
 }

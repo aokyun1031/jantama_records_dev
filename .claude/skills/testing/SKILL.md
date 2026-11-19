@@ -12,8 +12,11 @@ description: E2Eテスト（Playwright）の構成・規約・追加手順。ペ
 - `tests/e2e/helpers/` — 共通ユーティリティ
   - `fixtures.ts` — カスタム `test` fixture（外部リソース・画像ブロックで高速化）
   - `test-helpers.ts` — `createTestPlayer`, `createTestTournamentWithPlayers`, `createOptimizedPage`, `expectStatus`, `TEST_PREFIX`
-- `tests/e2e/global-setup.ts` — Neon ウォームアップ（`/players` に事前アクセス）
-- `tests/e2e/playwright.config.ts` — `testMatch: ['pages/**/*.spec.ts', 'features/**/*.spec.ts']`、`baseURL = E2E_BASE_URL || http://localhost:8080`
+  - `stack.ts` — E2E 専用スタックの接続情報（`BASE_URL`, `COMPOSE_FILE`）
+- `tests/e2e/support/e2e-canary.php` — 隔離を確認する診断エンドポイント（E2E 専用スタックにだけ `/__e2e_canary` としてマウントされる）
+- `tests/e2e/global-setup.ts` — E2E 専用スタックの起動（`--build`）→ `phinx seed:run` → 隔離の確認。どれかに失敗したらテストは実行されない
+- `tests/e2e/playwright.config.ts` — `testMatch: ['pages/**/*.spec.ts', 'features/**/*.spec.ts']`、`baseURL = http://localhost:${E2E_PORT:-8081}`
+- `docker-compose.test.yml`（リポジトリ直下）— E2E 専用スタック。開発用の `docker-compose.yml` とは別プロジェクト
 
 ## 実行
 
@@ -21,10 +24,7 @@ description: E2Eテスト（Playwright）の構成・規約・追加手順。ペ
 # セットアップ（初回のみ）
 cd tests/e2e && npm install && npx playwright install chromium --with-deps
 
-# DB にテストデータを入れる（シード依存のテストが id=1 等を参照するため必須）
-docker compose exec web php vendor/bin/phinx seed:run
-
-# 全テスト
+# 全テスト（スタックの起動とシードの入れ直しは global-setup が行う）
 npx playwright test
 
 # 特定ファイル
@@ -33,12 +33,26 @@ npx playwright test pages/players.spec.ts
 # ブラウザ表示・UIモード
 npx playwright test --headed
 npx playwright test --ui
+
+# スタックの停止
+npm run stack:down
 ```
 
 前提:
-- `docker compose up -d` で web / db コンテナが起動していること
-- 初回、または `docker compose down -v` 後は `phinx seed:run` が必要（`player?id=1` など既存データ前提のテストが多い）
+- Docker が動いていること（スタック自体は実行時に自動で起動する。開発用スタックの起動は不要）
+- シードは実行のたびに入れ直される（`player?id=1` など既存データ前提のテストが多い）。前回の実行で作ったテストデータは残らないので、後始末の処理は持たない
 - E2E は手動実行（push 前に各自で回す運用）
+
+## 隔離（必ず守る）
+
+E2E は書き込みを伴い、大会作成などは Discord 告知の処理を呼ぶ。開発者の `.env` には実際の Bot トークンが入り得るため、E2E は隔離した専用スタックでしか走らせない。
+
+- コードはイメージに焼く（bind mount しない）。`.dockerignore` が `.env` を除外するのでコンテナに入らない
+- Discord 関連の環境変数は渡さない。`discord.com` はコンテナ内で `127.0.0.1` に向ける
+- DB はホストにポートを出さない
+- `global-setup.ts` が `/__e2e_canary` の結果を期待値と照合し、違えば中断する
+- 接続先を別の URL へ切り替える環境変数は作らない。変えられるのはホスト側のポート（`E2E_PORT`）だけ
+- 環境変数や外部サービス連携を追加したら、`docker-compose.test.yml` と `e2e-canary.php` の確認項目も見直す
 
 ## テストファイルの基本構造
 
