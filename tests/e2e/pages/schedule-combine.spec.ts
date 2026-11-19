@@ -42,15 +42,21 @@ test.describe('候補日程の回答状況確認', () => {
 
   test('未回答選手の代理で回答を登録できる', async ({ page }) => {
     await page.goto(`/schedule_combine?tournament_id=${tournamentId}&round_number=1`);
-    const beforeCount = await page.locator('.sb-player-card').count();
+    // .sb-player-card は「未回答選手」と「回答済み選手の回答を編集」の両方で使われる。
+    // 代理登録すると選手は未回答 → 回答済みへ移るので、未回答側（ボタンが「代理で登録」）だけを数える
+    const unanswered = page.locator('.sb-player-card').filter({ hasText: '代理で登録' });
+    const answered = page.locator('.sb-responded-details .sb-player-card');
+    const beforeUnanswered = await unanswered.count();
+    const beforeAnswered = await answered.count();
 
-    const firstCard = page.locator('.sb-player-card').first();
+    const firstCard = unanswered.first();
     await firstCard.locator('input[type="checkbox"]').first().check();
     await firstCard.locator('.sb-btn-respond-save').click();
     await page.waitForURL(/schedule_combine/);
 
     await expect(page.locator('.edit-message.success')).toContainText('回答を登録しました');
-    await expect(page.locator('.sb-player-card')).toHaveCount(beforeCount - 1);
+    await expect(unanswered).toHaveCount(beforeUnanswered - 1);
+    await expect(answered).toHaveCount(beforeAnswered + 1);
   });
 
   test('候補未選択で代理登録するとエラー', async ({ page }) => {
