@@ -1,4 +1,6 @@
-FROM php:8.2-apache
+# パッチ版まで固定する（可変タグ php:8.2-apache だと Render 側のイメージキャッシュで古い PHP が使われ得る）。
+# PHP のセキュリティリリースが出たらこのタグを更新して再デプロイすること。
+FROM php:8.2.35-apache
 
 # PostgreSQL用の拡張機能をインストール
 RUN apt-get update && apt-get install -y libpq-dev unzip \
