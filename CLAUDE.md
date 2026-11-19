@@ -31,12 +31,15 @@ php vendor/bin/phinx status / migrate / seed:run / create MigrationName
 # ローカルで seed:run すると DevDataSeeder が TRUNCATE → db/seed_data.sql を流し込む
 # → テストデータを壊しても seed:run で毎回クリーンに復元できる
 
-# E2E（ホスト実行、Docker 起動前提）
+# E2E（ホスト実行。E2E 専用スタック docker-compose.test.yml を自動で起動・シード投入する）
 cd tests/e2e && npm install && npx playwright install chromium --with-deps
 npx playwright test [pages/xxx.spec.ts] [--headed|--ui]
+npm run stack:down                        # E2E 専用スタックの停止
 ```
 
 E2E は手動実行。push 前に `cd tests/e2e && npx playwright test` を各自で走らせる。詳細は `tests/e2e/` と `testing` skill。
+
+E2E は開発用スタック（`docker-compose.yml`、:8080）ではなく、隔離した専用スタック（`docker-compose.test.yml`、:8081）に対して走る。開発者の `.env` も Discord の設定も入らず、実行のたびにシードを入れ直す。開発用スタックや外部の DB に向けて E2E を流さない。
 
 ## 環境
 

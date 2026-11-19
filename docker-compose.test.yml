@@ -1,0 +1,61 @@
+# E2E テスト専用スタック。開発用の docker-compose.yml とは別プロジェクトとして起動する。
+#
+# 開発用スタックとの違い（テストが外部に副作用を出さないための隔離）:
+#   - コードは bind mount せずイメージに焼く。.dockerignore が .env を除外するので、
+#     開発者の .env（Discord の Bot トークンや本番の接続文字列）がコンテナに入らない
+#   - 環境変数はこのファイルに書いたものだけ。Discord 関連は 1 つも渡さない
+#   - discord.com を 127.0.0.1 に向け、設定が紛れ込んでも外へ届かないようにする
+#   - DB はホストにポートを出さず、tmpfs 上に毎回作り直す
+#
+# 起動・停止は tests/e2e の global-setup.ts と npm scripts（stack:up / stack:down）が行う。
+name: jantama-e2e
+
+services:
+  web:
+    build: .
+    # 本番の start.sh（phinx migrate）は通さない。スキーマは db の initdb.d、データは seed:run で入れる。
+    # phinx.php は .dockerignore で除外されているので、seed:run 用にテンプレートから用意する。
+    command:
+      - sh
+      - -c
+      - "[ -f phinx.php ] || cp phinx.php.example phinx.php; exec apache2-foreground"
+    ports:
+      - "127.0.0.1:${E2E_PORT:-8081}:80"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/jantama
+      PGSSLMODE: disable
+      SITE_URL: http://localhost:${E2E_PORT:-8081}
+    extra_hosts:
+      - "discord.com:127.0.0.1"
+      - "discordapp.com:127.0.0.1"
+    volumes:
+      # seeder とダンプは本番イメージに入れない（.dockerignore）ので、テスト時だけ読み取り専用で渡す
+      - ./db/seeds:/var/www/html/db/seeds:ro
+      - ./db/seed_data.sql:/var/www/html/db/seed_data.sql:ro
+      # 隔離できているかを global-setup が確かめるための診断エンドポイント（このスタックにしか存在しない）
+      - ./tests/e2e/support/e2e-canary.php:/var/www/html/public/__e2e_canary.php:ro
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/health') === 'ok' ? 0 : 1);"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: jantama
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    # コンテナを作り直すたびに空になる。スキーマは起動時に initdb.d が適用する
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./db/current_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jantama"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
