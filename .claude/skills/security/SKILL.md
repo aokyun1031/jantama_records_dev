@@ -130,6 +130,35 @@ $flash = consumeFlash(); // 取得して即削除
 - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
 - `Content-Security-Policy` で外部リソースを制限
 
+## fetch で POST する JSON エンドポイント
+
+`dispatch_dm.php` / `dispatch_schedule_dm.php` のように JS から fetch で叩くエンドポイントも、フォームと同じ `validatePost()`（CSRF + Turnstile）で検証する。`validateCsrfToken()` だけにしない（Turnstile を素通りする書き込み口になる）。
+
+- JS 側は `window.appTurnstile`（`templates/footer.php` が本番のみ定義）からトークンを取得し、`cf-turnstile-response` として送る。`dispatch-dm.js` の `withTurnstileToken()` を参照
+- Turnstile トークンは 1 回の検証で消費されるため、送信が失敗したら `window.appTurnstile.reset()` で取り直す
+- ページ表示直後に裏で自動実行されるエンドポイントでは `regenerateCsrfToken()` を呼ばない（セッション ID とトークンが差し替わり、同じセッションで開いている他ページのフォームが 403 になる）
+
+## Discord 送信（config/discord.php）
+
+大会名・卓名・選手名・牌譜 URL は誰でも編集できる値。Discord へ送る前に必ず次を通す。
+
+| 関数 | 用途 |
+|---|---|
+| `discordAllowedMentions($userIds)` | 送信ボディの `allowed_mentions`。未指定だと本文中の `@everyone` / `<@id>` がすべて通知になるため、全送信で必ず付ける。通知するのは連携済み選手の ID だけ |
+| `discordMentionIds($rows)` | 行の配列から `discord_user_id` を取り出す（上の引数用） |
+| `discordEscape($text)` | メッセージ本文・Embed の description に埋め込むユーザー入力の Markdown / メンション記法を無害化 |
+| `discordLinkUrl($url)` | マスクリンク `[text](url)` に入れる URL。http(s) 以外は空文字（リンクにしない） |
+
+- チャンネル投稿は `discordPostChannelMessage($channelId, $content, $mentionUserIds)` の第 3 引数で通知対象を渡す
+- 新しい送信関数・メッセージ組み立て関数を足すときも同じ 4 つを使う
+
+## サーバ側での状態・範囲の検証
+
+画面の選択肢やボタンの出し分けは検証にならない（直接 POST できる）。取り消せない操作と、後続ページの負荷を決める値はサーバ側で確認する。
+
+- 大会の完了: `Tournament::isFinalRoundDone()` が true の開催中の大会だけ（`interview_edit.php`）
+- 卓作成: 卓内の重複選手・卓人数の上限・対局数（`MAX_GAME_COUNT`）・勝ち抜け人数を検証し、前ラウンド完了と同一ラウンドの二重作成は `TableInfo::createBatch()` が大会行をロックして確認する（違反時は `DomainException`）
+
 ## エラーハンドリング
 
 - DB操作は `fetchData()` で囲む（例外キャッチ + ログ記録）
@@ -144,9 +173,11 @@ $flash = consumeFlash(); // 取得して即削除
 4. POST入力は `sanitizeInput()` で取得しているか
 5. HTML出力は全て `h()` でエスケープしているか
 6. `json_encode` に `JSON_HEX_TAG` フラグを付けているか
-7. POSTフォームに CSRF トークン（`ensureCsrfToken` + `validateCsrfToken`）を実装しているか
+7. POSTフォーム・fetch の POST エンドポイントとも `ensureCsrfToken` + `validatePost()`（CSRF + Turnstile）で検証しているか
 8. POST成功後に PRG リダイレクト + `regenerateCsrfToken()` しているか
 9. セッションは `startSecureSession()` で開始しているか
 10. URLに `.php` を付けていないか
 11. エラー時にスタックトレースや接続情報が漏れないか
 12. E2E テストにセキュリティテストを追加したか
+13. Discord へ送る文字列は `discordEscape()`、送信ボディは `discordAllowedMentions()` を通しているか
+14. 取り消せない操作・ループ回数を決める値は、画面の出し分けに頼らずサーバ側で状態と範囲を検証しているか

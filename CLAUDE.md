@@ -41,6 +41,7 @@ E2E は手動実行。push 前に `cd tests/e2e && npx playwright test` を各�
 ## 環境
 
 - 本番: Render → Neon production（push で `start.sh` が migrate 自動実行）
+- `Dockerfile` の PHP イメージはパッチ版まで固定（`php:8.2.x-apache`）。PHP のセキュリティリリースが出たらタグを更新して再デプロイする
 - 開発（使い分け）:
   - **ローカル Docker Compose** → ローカル Postgres コンテナ（`docker-compose.yml` の `db` サービス、volume `pgdata` で永続化）
   - **GitHub Codespaces** → Neon dev ブランチ（Neon 無料枠の compute 節約目的でローカル優先）
@@ -69,6 +70,9 @@ E2E は手動実行。push 前に `cd tests/e2e && npx playwright test` を各�
 - GET: `requirePlayerId()` / `requireTournamentId()` / `filter_input()`
 - POST: `sanitizeInput($key)`（配列は `preg_replace('/[\x00-\x1F\x7F]/u', '', trim(...))`）
 - POST ページ: `startSecureSession()` + `ensureCsrfToken()` + `validatePost()`
+- fetch で POST する JSON エンドポイントも `validatePost()`（`validateCsrfToken()` のみは不可）。JS は `window.appTurnstile` のトークンを `cf-turnstile-response` で送る
+- Discord 送信: ユーザー入力由来の文字列は `discordEscape()`、送信ボディには `discordAllowedMentions()` を必ず付ける
+- 取り消せない操作・ループ回数を決める値（大会完了、対局数 `MAX_GAME_COUNT` 等）はサーバ側で状態と範囲を検証する
 - POST 成功: `$_SESSION['flash'] = ...` → `regenerateCsrfToken()` → PRG リダイレクト
 - Turnstile: `$pageTurnstile = true` のみで footer.php が一括埋込
 - 出力: `h($value)` でエスケープ

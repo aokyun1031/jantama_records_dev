@@ -56,7 +56,8 @@ Tournament::dmTargets($id);                                     // DM送信対�
 Tournament::recordDmDispatch($id, $playerId, $status);          // DM送信履歴を記録（status: sent|failed|no_discord_id）
 Tournament::dmDispatchesByPlayer($id);                          // player_id => status のマップ
 Tournament::start($id);                                         // ステータスを開催中に
-Tournament::complete($id);                                      // ステータスを完了に
+Tournament::isFinalRoundDone($id);                              // 決勝ラウンドの全卓が完了しているか（大会完了の前提条件）
+Tournament::complete($id);                                      // ステータスを完了に（開催中の場合のみ。更新できたら true）
 Tournament::processRoundCompletion($tournamentId, $roundNum);   // ラウンド完了処理（勝ち抜き判定含む）
 Tournament::delete($id);                                        // 削除（CASCADE）
 Tournament::byPlayer($playerId);                                // 特定選手が参加した大会一覧
@@ -93,7 +94,7 @@ TableInfo::playerGroupsByRound($tournamentId, $roundNumber);    // 卓ごとの�
 TableInfo::searchAll($filters, $limit, $offset);                // 全卓フラット検索（tables.php 用、tournament_id/event_types/status/keyword）
 TableInfo::searchAllCount($filters);                            // searchAll の件数（ページネーション用）
 TableInfo::create($tournamentId, $roundNumber, $tableName, $playerIds); // 卓作成
-TableInfo::createBatch($tournamentId, $roundNumber, $tables);   // 複数卓一括作成（$tables[]に played_date/day_of_week/played_time を含められる、任意）
+TableInfo::createBatch($tournamentId, $roundNumber, $tables);   // 複数卓一括作成（$tables[]に played_date/day_of_week/played_time を含められる、任意）。大会行をロックし、前ラウンド未完了・同一ラウンド作成済みなら DomainException
 TableInfo::nextRoundNumber($tournamentId);                      // 次に作るラウンド番号（既存最大+1、卓未作成なら1）
 TableInfo::updateSchedule($id, $playedDate, $dayOfWeek, $playedTime); // 対局日更新
 TableInfo::markDone($id);                                       // 卓を完了に
