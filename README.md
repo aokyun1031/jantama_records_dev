@@ -159,6 +159,7 @@ graph TB
 ├── tests/e2e/         E2Eテスト（Playwright）
 ├── cloudflare-worker/ Cloudflare Workerリバースプロキシ
 ├── docs/              ドキュメント（DB設計書等）
+│   └── renewal/       リニューアルの決定記録
 └── .devcontainer/     GitHub Codespaces設定
 ```
 
