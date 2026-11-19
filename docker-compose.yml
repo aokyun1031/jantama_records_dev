@@ -4,8 +4,9 @@ services:
     # ローカル開発では本番の start.sh（phinx migrate 実行）をスキップし、
     # Apache のみ起動する。スキーマは db サービスの initdb.d で構築される。
     command: apache2-foreground
+    # ローカル開発用（Turnstile なし）なので、同一 LAN から到達できないようループバックにだけ公開する
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
     volumes:
       - .:/var/www/html
     env_file:
@@ -16,8 +17,9 @@ services:
 
   db:
     image: postgres:17-alpine
+    # 開発用の固定パスワードなので、ループバックにだけ公開する
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: jantama
       POSTGRES_USER: postgres

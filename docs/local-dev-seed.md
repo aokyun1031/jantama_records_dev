@@ -39,6 +39,8 @@ docker compose up -d
 docker compose exec web php vendor/bin/phinx seed:run   # TRUNCATE CASCADE → 再投入
 ```
 
+`DevDataSeeder` は全テーブルを TRUNCATE するため、**接続先がローカル（ホスト名 `db` / `localhost`）のときだけ**実行できる。`.env` が Neon を向いたままだとエラーで止まる（`APP_ENV=production` では常に拒否）。Neon dev を意図的にダンプの状態へ巻き戻す場合のみ、`SEED_ALLOW_REMOTE=1` を付けて実行する。本番イメージには `db/seeds/` と `db/seed_data.sql` を含めない（`.dockerignore`）。
+
 スキーマも含めて完全リセット:
 
 ```bash

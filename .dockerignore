@@ -20,3 +20,7 @@ cloudflare-worker/
 # OS
 .DS_Store
 Thumbs.db
+
+# ローカル開発専用のデータ投入（全テーブルを TRUNCATE する seeder とそのダンプ）。本番イメージには入れない
+db/seeds/
+db/seed_data.sql
