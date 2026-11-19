@@ -38,7 +38,9 @@ npx playwright test [pages/xxx.spec.ts] [--headed|--ui]
 npm run stack:down                        # E2E 専用スタックの停止
 ```
 
-E2E は手動実行。push 前に `cd tests/e2e && npx playwright test` を各自で走らせる。詳細は `tests/e2e/` と `testing` skill。
+E2E は push 前に `cd tests/e2e && npx playwright test` を各自で走らせる。詳細は `tests/e2e/` と `testing` skill。
+
+PR と `main` への push では GitHub Actions（`.github/workflows/ci.yml`）が、E2E コードの lint・型チェック、PHP の構文チェック、E2E、`tests/characterization` の照合を実行する。
 
 E2E は開発用スタック（`docker-compose.yml`、:8080）ではなく、隔離した専用スタック（`docker-compose.test.yml`、:8081）に対して走る。開発者の `.env` も Discord の設定も入らず、実行のたびにシードを入れ直す。開発用スタックや外部の DB に向けて E2E を流さない。
 
