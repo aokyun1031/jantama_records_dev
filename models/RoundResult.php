@@ -32,7 +32,11 @@ class RoundResult
     public static function saveScores(int $tournamentId, int $roundNumber, array $scores, int $gameNumber = 1): void
     {
         $pdo = getDbConnection();
-        $pdo->beginTransaction();
+        // 呼び出し側（TableInfo::completeWithResults 等）が既にトランザクションを開始している場合はそれに参加する
+        $ownsTransaction = !$pdo->inTransaction();
+        if ($ownsTransaction) {
+            $pdo->beginTransaction();
+        }
         try {
             $stmt = $pdo->prepare('
                 INSERT INTO round_results (tournament_id, player_id, round_number, game_number, score)
@@ -49,9 +53,13 @@ class RoundResult
                     $s['score'],
                 ]);
             }
-            $pdo->commit();
+            if ($ownsTransaction) {
+                $pdo->commit();
+            }
         } catch (PDOException $e) {
-            $pdo->rollBack();
+            if ($ownsTransaction) {
+                $pdo->rollBack();
+            }
             throw $e;
         }
     }

@@ -72,6 +72,17 @@ function buildRuleTags(array $meta): array
 }
 
 /**
+ * http / https の URL として妥当かを検証する。
+ *
+ * FILTER_VALIDATE_URL だけでは javascript: や data: も通るため、リンク（href）として
+ * 出力する URL・Discord へ送る URL は必ずこちらで検証する。
+ */
+function isHttpUrl(string $url): bool
+{
+    return preg_match('#^https?://#i', $url) === 1 && filter_var($url, FILTER_VALIDATE_URL) !== false;
+}
+
+/**
  * `YYYY-MM-DD` 形式の日付文字列かどうかを検証する。
  */
 function isValidDateString(string $date): bool

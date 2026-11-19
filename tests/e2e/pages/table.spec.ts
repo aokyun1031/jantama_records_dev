@@ -1,4 +1,5 @@
 import { test, expect } from '../helpers/fixtures';
+import type { APIResponse, Page } from '@playwright/test';
 import {
   TEST_PREFIX,
   NONEXISTENT_ID,
@@ -7,6 +8,31 @@ import {
   expectNotFound,
   extractIdFromUrl,
 } from '../helpers/test-helpers';
+
+/**
+ * 対局結果を直接 POST する（画面の検算 JS を通さず、サーバ側の検証を確かめるため）。
+ * スコアは 1 局あたり scores を先頭から順に割り当てる。
+ */
+async function postGameData(
+  page: Page,
+  tableId: number,
+  paifuUrl: string,
+  scores: number[]
+): Promise<APIResponse> {
+  await page.goto(`/table?id=${tableId}`);
+  const csrfToken = await page.locator('#table-form input[name="csrf_token"]').inputValue();
+  const names = (selector: string) =>
+    page.locator(selector).evaluateAll((els) => els.map((el) => (el as HTMLInputElement).name));
+
+  const form: Record<string, string> = { csrf_token: csrfToken, action: 'game_data' };
+  (await names('#table-form input.tb-paifu-input')).forEach((name) => {
+    form[name] = paifuUrl;
+  });
+  (await names('#table-form input.tb-score-input')).forEach((name, i) => {
+    form[name] = String(scores[i % scores.length]);
+  });
+  return page.request.post(`/table?id=${tableId}`, { form, maxRedirects: 0 });
+}
 
 test.describe.configure({ mode: 'serial', timeout: 90000 });
 test.describe('卓管理', () => {
@@ -69,6 +95,28 @@ test.describe('卓管理', () => {
     }
     await expect(page.locator('[data-sum-box]').first()).toHaveClass(/tb-sum-ng/);
     await expect(doneBtn).toBeDisabled();
+  });
+
+  test('http(s) 以外の牌譜URLはサーバ側で拒否される', async ({ page }) => {
+    const response = await postGameData(page, tableId, 'javascript://example.com/%0aalert(1)', [25, 10, -5, -30]);
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain('有効なURLを入力してください');
+  });
+
+  test('合計が 0 にならないスコアはサーバ側で拒否される', async ({ page }) => {
+    const response = await postGameData(page, tableId, 'https://example.com/paifu/x', [25, 10, -5, -20]);
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain('スコアの合計が 0 になっていません');
+  });
+
+  test('範囲外のスコアはサーバ側で拒否される', async ({ page }) => {
+    const response = await postGameData(page, tableId, 'https://example.com/paifu/x', [5000, -5000, 0, 0]);
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain('のスコアが不正です');
+
+    // どの検証でも弾かれた場合は何も保存されず、卓は未完了のまま
+    await page.goto(`/table?id=${tableId}`);
+    await expect(page.locator('#table-form')).toHaveCount(1);
   });
 
   test('対局結果を保存して卓を完了にできる', async ({ page }) => {
