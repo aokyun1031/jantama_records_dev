@@ -1,6 +1,6 @@
 # 雀魂部屋主催 - 麻雀トーナメント戦績サイト
 
-PHP 8.2 / Apache / PostgreSQL（Neon）/ Phinx / Docker Compose / Render。フレームワーク不使用。
+PHP 8.5 / Apache / PostgreSQL（Neon）/ Phinx / Docker Compose / Render。フレームワーク不使用。
 
 ## ディレクトリ
 
@@ -41,7 +41,7 @@ E2E は手動実行。push 前に `cd tests/e2e && npx playwright test` を各�
 ## 環境
 
 - 本番: Render → Neon production（push で `start.sh` が migrate 自動実行）
-- `Dockerfile` の PHP イメージはパッチ版まで固定（`php:8.2.x-apache`）。PHP のセキュリティリリースが出たらタグを更新して再デプロイする
+- `Dockerfile` の PHP イメージはパッチ版まで固定（`php:8.5.x-apache`）。PHP のセキュリティリリースが出たらタグを更新して再デプロイする
 - 開発（使い分け）:
   - **ローカル Docker Compose** → ローカル Postgres コンテナ（`docker-compose.yml` の `db` サービス、volume `pgdata` で永続化）
   - **GitHub Codespaces** → Neon dev ブランチ（Neon 無料枠の compute 節約目的でローカル優先）
