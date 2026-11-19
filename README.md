@@ -87,7 +87,7 @@ graph TB
     end
 
     subgraph App["Render 本番サーバー"]
-        PHP["PHP 8.2 / Apache"]:::serverStyle
+        PHP["PHP 8.5 / Apache"]:::serverStyle
     end
 
     subgraph DB["Neon PostgreSQL"]
@@ -128,7 +128,7 @@ graph TB
 
 | 領域 | 使用技術 |
 |---|---|
-| アプリケーション | PHP 8.2 / Apache |
+| アプリケーション | PHP 8.5 / Apache |
 | フロントエンド | HTML / CSS / JavaScript（フレームワーク不使用）、Google Fonts（Noto Sans JP, Inter） |
 | データベース | PostgreSQL（Neon） |
 | マイグレーション | Phinx |
