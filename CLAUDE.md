@@ -13,6 +13,7 @@ PHP 8.5 / Apache / PostgreSQL（Neon）/ Phinx / Docker Compose / Render。フ�
 - `db/migrations/`, `db/seeds/` — Phinx
 - `cloudflare-worker/` — CDN リバースプロキシ
 - `tests/e2e/` — Playwright E2E
+- `tests/characterization/` — 現行モデルの戻り値の記録（`node tests/characterization/run.mjs check` で照合。モデルに public static メソッドを足したら `legacy-export.php` の対象か除外一覧に加える。詳細は同ディレクトリの README）
 
 `public/` 外は Web から到達不能。
 
