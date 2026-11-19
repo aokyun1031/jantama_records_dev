@@ -15,7 +15,10 @@ description: セキュリティチェックリスト。コードレビューや�
 | `ensureCsrfToken()` | CSRFトークン生成（セッションに保存） |
 | `validateCsrfToken()` | POSTのCSRFトークンを `hash_equals` で検証 |
 | `regenerateCsrfToken()` | トークン再生成 + `session_regenerate_id(true)` |
-| `sanitizeInput($key)` | POST入力の制御文字除去 + trim |
+| `sanitizeInput($key)` | POST入力の制御文字除去 + trim（配列・不正な UTF-8 は空文字） |
+| `sanitizeValue($value)` | 値 1 件の制御文字除去 + trim。配列パラメータの各要素に使う |
+| `postArray($key)` | 配列で送られる POST パラメータを取得（配列以外は空配列） |
+| `isHttpUrl($url)` | http / https の URL かを検証（`javascript:` 等を弾く） |
 | `abort404()` | 404レスポンスを返して処理終了 |
 | `requirePlayerId()` | GETの`id`を `FILTER_VALIDATE_INT` で検証（≤0も拒否） |
 | `requirePlayer($id)` | DB取得 + 見つからなければ404 |
@@ -106,6 +109,8 @@ $flash = consumeFlash(); // 取得して即削除
 
 `sanitizeInput($key)` が以下を行う。直接 `$_POST` を使わない。
 
+配列パラメータ（`player_ids[]`、`tables[0][name]` 等）は `postArray($key)` で取得し、各要素を `sanitizeValue()` / `intval` に通す。`trim($_POST['x'])` や `array_map('intval', $_POST['x'])` のように直接渡すと、文字列と配列を入れ替えた入力で TypeError（HTTP 500）になる。
+
 - `$_POST[$key]` の取得（未設定なら空文字）
 - 制御文字（`\x00-\x1F`, `\x7F`）の除去
 - 前後の空白トリム
@@ -170,7 +175,7 @@ $flash = consumeFlash(); // 取得して即削除
 1. `declare(strict_types=1)` があるか
 2. ユーザー入力はプリペアドステートメントで処理しているか
 3. GETパラメータは `requirePlayerId()` や `filter_input()` で検証しているか
-4. POST入力は `sanitizeInput()` で取得しているか
+4. POST入力は `sanitizeInput()`（配列は `postArray()` + `sanitizeValue()`）で取得しているか
 5. HTML出力は全て `h()` でエスケープしているか
 6. `json_encode` に `JSON_HEX_TAG` フラグを付けているか
 7. POSTフォーム・fetch の POST エンドポイントとも `ensureCsrfToken` + `validatePost()`（CSRF + Turnstile）で検証しているか
@@ -181,3 +186,4 @@ $flash = consumeFlash(); // 取得して即削除
 12. E2E テストにセキュリティテストを追加したか
 13. Discord へ送る文字列は `discordEscape()`、送信ボディは `discordAllowedMentions()` を通しているか
 14. 取り消せない操作・ループ回数を決める値は、画面の出し分けに頼らずサーバ側で状態と範囲を検証しているか
+15. リンクとして出力する URL・外部へ送る URL は `isHttpUrl()` で検証しているか

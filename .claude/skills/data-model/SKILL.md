@@ -80,7 +80,7 @@ Standing::processRoundAdvancement($tournamentId, $roundNum, $advanceCount); // �
 ```php
 RoundResult::byRound($tournamentId, $roundNumber);  // 特定ラウンド成績（ニックネーム・アイコン付き）
 RoundResult::byPlayer($tournamentId, $playerId);    // 特定選手の全ラウンド成績
-RoundResult::saveScores($tournamentId, $roundNumber, $scores); // スコア一括保存（UPSERT）
+RoundResult::saveScores($tournamentId, $roundNumber, $scores); // スコア一括保存（UPSERT）。呼び出し側がトランザクション中ならそれに参加する
 ```
 
 ### TableInfo
@@ -97,7 +97,8 @@ TableInfo::create($tournamentId, $roundNumber, $tableName, $playerIds); // 卓�
 TableInfo::createBatch($tournamentId, $roundNumber, $tables);   // 複数卓一括作成（$tables[]に played_date/day_of_week/played_time を含められる、任意）。大会行をロックし、前ラウンド未完了・同一ラウンド作成済みなら DomainException
 TableInfo::nextRoundNumber($tournamentId);                      // 次に作るラウンド番号（既存最大+1、卓未作成なら1）
 TableInfo::updateSchedule($id, $playedDate, $dayOfWeek, $playedTime); // 対局日更新
-TableInfo::markDone($id);                                       // 卓を完了に
+TableInfo::markDone($id);                                       // 卓を完了に（結果の保存を伴う場合は completeWithResults を使う）
+TableInfo::completeWithResults($id, $tournamentId, $roundNumber, $urls, $allGameScores); // 牌譜URL・スコア保存 + 完了 + 順位再計算を 1 トランザクションで。既に完了済みなら false
 TableInfo::delete($id);                                         // 卓削除（CASCADE）
 
 // 牌譜URL（ゲーム別）
