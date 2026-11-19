@@ -14,7 +14,8 @@ export default defineConfig({
     baseURL: BASE_URL,
     locale: 'ja-JP',
     navigationTimeout: 60000,
-    reducedMotion: 'reduce',
+    // reducedMotion は use 直下では無視される（型エラーになり、実行時も効かない）。contextOptions に置く
+    contextOptions: { reducedMotion: 'reduce' },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },
