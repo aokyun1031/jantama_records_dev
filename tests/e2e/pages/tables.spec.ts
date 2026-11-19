@@ -9,7 +9,7 @@ test.describe('卓一覧ページ', () => {
     await expect.soft(page).toHaveTitle(/卓一覧/);
     await expect(page.locator('.page-hero-badge')).toContainText('TABLES');
     await expect(page.locator('.page-hero-title')).toContainText('卓一覧');
-    await expect(page.locator('.tables-count')).toBeVisible();
+    await expect(page.locator('.list-actions')).toBeVisible();
   });
 
   test('卓カードが表示される', async ({ page }) => {
@@ -22,13 +22,18 @@ test.describe('卓一覧ページ', () => {
     await expect(firstCard.locator('.table-card-round')).toContainText('回戦');
   });
 
+  // 卓カードは閲覧用。卓の管理ページ（table?id=）へのリンクは持たず、大会の閲覧ページと選手ページへ遷移する
   test('卓カードのリンクが正しい', async ({ page }) => {
-    const href = await page.locator('.table-card a[href^="table?id="]').first().getAttribute('href');
-    expect(href).toMatch(/^table\?id=\d+$/);
+    const firstCard = page.locator('.table-card').first();
+    const tournamentHref = await firstCard.locator('a.table-card-tournament').getAttribute('href');
+    expect(tournamentHref).toMatch(/^tournament_view\?id=\d+$/);
+    const playerHref = await firstCard.locator('a.table-card-player').first().getAttribute('href');
+    expect(playerHref).toMatch(/^player\?id=\d+$/);
+    await expect(firstCard.locator('a[href^="table?id="]')).toHaveCount(0);
   });
 
-  test('大会一覧へのリンクがある', async ({ page }) => {
-    await expect(page.locator('.list-actions a[href="tournaments"]')).toBeVisible();
+  test('トップページへのリンクがある', async ({ page }) => {
+    await expect(page.locator('.list-actions a[href="/"]')).toBeVisible();
   });
 
   test.describe('フィルタ', () => {
@@ -96,9 +101,15 @@ test.describe('卓一覧ページ', () => {
   });
 
   test.describe('ページネーション', () => {
-    test('総件数が0でなければ件数表記が表示される', async ({ page }) => {
-      const text = await page.locator('.tables-count').textContent();
-      expect(text).toMatch(/\d+\s*卓/);
+    // 件数は絞込中のみ「N件 / M件中」の形で表示される（絞込なしでは件数表記を出さない）
+    test('絞込中は該当件数と総件数が表示される', async ({ page }) => {
+      await page.goto('/tables?status=done');
+      const text = await page.locator('.filter-context-count').textContent();
+      expect(text).toMatch(/\d+件 \/ \d+件中/);
+    });
+
+    test('絞込なしでは件数表記が表示されない', async ({ page }) => {
+      await expect(page.locator('.filter-context-count')).toHaveCount(0);
     });
 
     test('ページ送り UI は件数次第で表示される', async ({ page }) => {

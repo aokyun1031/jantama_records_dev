@@ -31,13 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = sanitizeInput('action');
 
         if ($action === 'save') {
-            $questions = $_POST['questions'] ?? [];
-            $answers = $_POST['answers'] ?? [];
+            $questions = postArray('questions');
+            $answers = postArray('answers');
             $items = [];
             $hasError = false;
             for ($i = 0; $i < count($questions); $i++) {
-                $q = preg_replace('/[\x00-\x1F\x7F]/u', '', trim($questions[$i] ?? ''));
-                $a = preg_replace('/[\x00-\x1F\x7F]/u', '', trim($answers[$i] ?? ''));
+                $q = sanitizeValue($questions[$i] ?? '');
+                $a = sanitizeValue($answers[$i] ?? '');
                 if ($q === '') {
                     continue;
                 }
@@ -231,10 +231,14 @@ $pageInlineScript = <<<JS
   if (items.length === 0) items.push({ question: '', answer: '' });
   render();
 
+  // 属性値（value="..."）にも連結するため、引用符も含めてエスケープする
   function esc(s) {
-    var d = document.createElement('div');
-    d.appendChild(document.createTextNode(s || ''));
-    return d.innerHTML;
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 })();
 JS;

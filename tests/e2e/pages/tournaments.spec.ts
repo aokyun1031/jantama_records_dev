@@ -10,7 +10,9 @@ test.describe('大会一覧', () => {
   test('ページが正しく表示される', async ({ page }) => {
     await expect(page.locator('.page-hero-badge')).toContainText('TOURNAMENTS');
     await expect(page.locator('.page-hero-title')).toContainText('大会一覧');
-    await expect(page.locator('.tournaments-count')).toBeVisible();
+    await expect(page.locator('.list-actions')).toBeVisible();
+    // 件数は絞込中のみ表示される（絞込なしでは件数表記を出さない）
+    await expect(page.locator('.filter-context-count')).toHaveCount(0);
   });
 
   test('大会カードが表示される', async ({ page }) => {

@@ -41,7 +41,7 @@ $validationError = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $validationError = validatePost();
     if (!$validationError) {
-        $candidateIds = array_unique(array_map('intval', $_POST['candidate_ids'] ?? []));
+        $candidateIds = array_unique(array_map('intval', postArray('candidate_ids')));
         $validIds = array_map(fn($c) => (int) $c['id'], $candidates);
 
         if (empty($candidateIds)) {

@@ -3,9 +3,10 @@ declare(strict_types=1);
 require __DIR__ . '/../config/bootstrap.php';
 
 $tournamentId = requireTournamentId();
-['data' => $tournamentData] = fetchData(fn() => Tournament::find($tournamentId));
-$tournamentName = $tournamentData['name'] ?? '';
-$eventType = EventType::tryFrom(TournamentMeta::get($tournamentId, 'event_type'));
+// 存在しない大会は 404（メタ取得も fetchData 経由にして DB 例外で 500 にならないようにする）
+$tournament = requireTournamentWithMeta($tournamentId);
+$tournamentName = $tournament['name'];
+$eventType = EventType::tryFrom($tournament['meta']['event_type'] ?? '');
 
 ['data' => $finalists] = fetchData(fn() => Standing::finalists($tournamentId));
 ['data' => $interviews] = fetchData(fn() => Interview::byTournament($tournamentId));

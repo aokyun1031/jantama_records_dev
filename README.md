@@ -358,7 +358,7 @@ npx wrangler deploy
 
 静的アセット（CSS / JS / 画像）を Cloudflare のエッジにキャッシュする。
 
-- 静的アセット → エッジキャッシュ（`CF-Cache-Status: HIT`）
+- 静的アセット → エッジキャッシュ（`CF-Cache-Status: HIT`）。`?v=` 付きの URL は、値がオリジンのファイル更新時刻（`Last-Modified`）と一致する場合だけキャッシュする
 - PHP ページ → キャッシュせず Render に転送（`Cache-Control: no-store`）
 - Cron Triggers → 5 分ごと `/health` ping（Render スリープ防止・DB 非依存で Neon compute 消費なし）+ JST 3:00 にトップページ HTML を KV に更新
 - Workers KV → オリジンダウン時にトップページのフォールバック表示

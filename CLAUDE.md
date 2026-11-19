@@ -68,7 +68,8 @@ E2E は手動実行。push 前に `cd tests/e2e && npx playwright test` を各�
 - DB 接続は `getDbConnection()`（直接 PDO 生成禁止）
 - プリペアドステートメント必須（ユーザー入力を含む SQL）
 - GET: `requirePlayerId()` / `requireTournamentId()` / `filter_input()`
-- POST: `sanitizeInput($key)`（配列は `preg_replace('/[\x00-\x1F\x7F]/u', '', trim(...))`）
+- POST: `sanitizeInput($key)`。配列パラメータは `postArray($key)` で取得し、各要素は `sanitizeValue($v)`（`$_POST` を直接 `trim` / `array_map` しない。型違いで 500 になる）
+- リンク（`href`）として出力する URL・Discord へ送る URL は `isHttpUrl()` で検証（`FILTER_VALIDATE_URL` 単独は `javascript:` を通す）
 - POST ページ: `startSecureSession()` + `ensureCsrfToken()` + `validatePost()`
 - fetch で POST する JSON エンドポイントも `validatePost()`（`validateCsrfToken()` のみは不可）。JS は `window.appTurnstile` のトークンを `cf-turnstile-response` で送る
 - Discord 送信: ユーザー入力由来の文字列は `discordEscape()`、送信ボディには `discordAllowedMentions()` を必ず付ける

@@ -35,6 +35,10 @@ function ensureCsrfToken(): string
 function validateCsrfToken(): bool
 {
     $token = $_POST['csrf_token'] ?? '';
+    // csrf_token[]=x のように配列で送られた場合は不一致として扱う（hash_equals は文字列以外で TypeError）
+    if (!is_string($token)) {
+        return false;
+    }
     return hash_equals($_SESSION['csrf_token'] ?? '', $token);
 }
 
@@ -124,9 +128,36 @@ function turnstileSiteKey(): string
 }
 
 /**
+ * 入力値 1 件をサニタイズして返す。制御文字を除去し、前後の空白をトリムする。
+ *
+ * 文字列以外（name[]=x のような配列）と不正な UTF-8 は空文字にする。
+ * 配列パラメータの各要素（$_POST['tables'][0]['name'] 等）にはこちらを直接使う。
+ */
+function sanitizeValue(mixed $value): string
+{
+    if (!is_string($value)) {
+        return '';
+    }
+    // /u 付きの preg_replace は不正な UTF-8 で null を返す
+    return preg_replace('/[\x00-\x1F\x7F]/u', '', trim($value)) ?? '';
+}
+
+/**
  * POST入力値をサニタイズして返す。制御文字を除去し、前後の空白をトリムする。
  */
 function sanitizeInput(string $key): string
 {
-    return preg_replace('/[\x00-\x1F\x7F]/u', '', trim($_POST[$key] ?? ''));
+    return sanitizeValue($_POST[$key] ?? '');
+}
+
+/**
+ * 配列で送られる POST パラメータ（player_ids[] 等）を取得する。
+ * 未送信や、配列以外（player_ids=1 のような文字列）で送られた場合は空配列を返す。
+ *
+ * @return array<int|string, mixed>
+ */
+function postArray(string $key): array
+{
+    $value = $_POST[$key] ?? [];
+    return is_array($value) ? $value : [];
 }

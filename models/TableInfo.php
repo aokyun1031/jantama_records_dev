@@ -273,6 +273,48 @@ class TableInfo
     }
 
     /**
+     * 対局結果（牌譜URL・スコア）を保存して卓を完了にし、順位を再計算する。
+     *
+     * すべて 1 トランザクションで行う（途中で失敗すると牌譜URLだけ残る、といった中途半端な状態を作らない）。
+     * 最初に「未完了 → 完了」の更新で卓の行ロックを取るため、同じ卓への並行送信は後続が待たされ、
+     * 既に完了済みとして何も保存せず false を返す。
+     *
+     * @param array<int, string> $urls game_number => url（空文字は保存しない）
+     * @param array<int, array<array{player_id: int, score: float}>> $allGameScores game_number => スコア一覧
+     * @return bool 保存して完了にできたら true。既に完了済みの卓なら false
+     */
+    public static function completeWithResults(
+        int $tableId,
+        int $tournamentId,
+        int $roundNumber,
+        array $urls,
+        array $allGameScores
+    ): bool {
+        $pdo = getDbConnection();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('UPDATE tables_info SET done = true WHERE id = ? AND done = false');
+            $stmt->execute([$tableId]);
+            if ($stmt->rowCount() !== 1) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            TablePaifuUrl::saveAll($tableId, array_filter($urls, fn($url) => $url !== ''));
+            foreach ($allGameScores as $gameNumber => $scores) {
+                RoundResult::saveScores($tournamentId, $roundNumber, $scores, (int) $gameNumber);
+            }
+            Standing::updateTotals($tournamentId);
+
+            $pdo->commit();
+            return true;
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
      * 卓を削除する（table_players も CASCADE で削除）。
      */
     public static function delete(int $id): void

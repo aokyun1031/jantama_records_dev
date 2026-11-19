@@ -109,9 +109,18 @@ async function handleStatic(request, originUrl, ctx) {
     /no-store|private/.test(originCacheControl) ||
     response.headers.has("Set-Cookie")
   ) {
-    const uncached = new Response(response.body, response);
-    uncached.headers.set("Cache-Control", "no-store");
-    return uncached;
+    return withoutCache(response);
+  }
+
+  // `?v=` はオリジンのファイル更新時刻（PHP の asset() が付与する filemtime）。
+  // 実ファイルの更新時刻と一致しない v をキャッシュすると、デプロイ前に「次の v」を先回りで要求して
+  // 旧ファイルを新しい URL に 1 年固定できてしまうため、一致する場合だけキャッシュする。
+  const version = new URL(request.url).searchParams.get("v");
+  if (version !== null) {
+    const lastModified = Date.parse(response.headers.get("Last-Modified") || "");
+    if (!Number.isFinite(lastModified) || String(Math.floor(lastModified / 1000)) !== version) {
+      return withoutCache(response);
+    }
   }
 
   // エッジキャッシュ用に s-maxage を追加
@@ -123,6 +132,13 @@ async function handleStatic(request, originUrl, ctx) {
 
   ctx.waitUntil(cache.put(cacheKey, newResponse.clone()));
   return newResponse;
+}
+
+// オリジンの応答をエッジにも下流（ブラウザ）にもキャッシュさせずに返す
+function withoutCache(response) {
+  const uncached = new Response(response.body, response);
+  uncached.headers.set("Cache-Control", "no-store");
+  return uncached;
 }
 
 async function proxyToOrigin(request, workerUrl, originUrl) {

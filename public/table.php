@@ -26,6 +26,9 @@ $meta = $tournament['meta'];
 $rk = 'round_' . $table['round_number'];
 // 保存済みの値が範囲外でも入力欄を際限なく生成しないよう上限で打ち切る
 $gameCount = max(1, min(MAX_GAME_COUNT, (int) ($meta[$rk . '_game_count'] ?? 1)));
+// 対局人数に満たない席は「代打ち」（スコア入力なし）。代打ちを含む卓は合計が 0 にならない
+$playerMode = (int) ($meta[$rk . '_player_mode'] ?? $meta['player_mode'] ?? 4);
+$subCount = max(0, $playerMode - count($table['players']));
 
 // 牌譜URL取得
 $paifuUrls = TablePaifuUrl::byTable($tableId);
@@ -90,7 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                     break;
                 }
                 $url = extractUrl($raw);
-                if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                // リンクとして表示・Discord へ送信するため http(s) のみ受け付ける（javascript: 等を弾く）
+                if (!isHttpUrl($url)) {
                     $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . '有効なURLを入力してください。';
                     $hasError = true;
                     break;
@@ -108,31 +112,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                         break 2;
                     }
                     $score = filter_var($rawScore, FILTER_VALIDATE_FLOAT);
-                    if ($score === false) {
+                    if ($score === false || !is_finite($score) || abs($score) > MAX_ABS_SCORE) {
                         $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . h($p['nickname'] ?? $p['name']) . 'のスコアが不正です。';
                         $hasError = true;
                         break 2;
                     }
                     $scores[] = [
                         'player_id' => $pid,
-                        'score' => $score,
+                        // DB は小数 1 桁（numeric(10,1)）。検算も保存される値で行う
+                        'score' => round($score, 1),
                     ];
+                }
+                // 画面の検算（table.js）と同じ条件: 代打ちを含まない卓は合計が 0 になること
+                if ($subCount === 0 && abs(array_sum(array_column($scores, 'score'))) >= 0.05) {
+                    $validationError = ($gameCount > 1 ? $g . '局目: ' : '') . 'スコアの合計が 0 になっていません。';
+                    $hasError = true;
+                    break;
                 }
                 $allGameScores[$g] = $scores;
             }
             if (!$hasError) {
                 try {
-                    TablePaifuUrl::saveAll($tableId, $urls);
-                    foreach ($allGameScores as $g => $gameScores) {
-                        RoundResult::saveScores($tournamentId, (int) $table['round_number'], $gameScores, $g);
+                    $completed = TableInfo::completeWithResults(
+                        $tableId,
+                        $tournamentId,
+                        (int) $table['round_number'],
+                        $urls,
+                        $allGameScores
+                    );
+                    if ($completed) {
+                        announceDiscordTableResult($tableId);
+                        $_SESSION['flash'] = Tournament::processRoundCompletion($tournamentId, (int) $table['round_number']);
+                        regenerateCsrfToken();
+                        header('Location: tournament?id=' . $tournamentId);
+                        exit;
                     }
-                    TableInfo::markDone($tableId);
-                    Standing::updateTotals($tournamentId);
-                    announceDiscordTableResult($tableId);
-                    $_SESSION['flash'] = Tournament::processRoundCompletion($tournamentId, (int) $table['round_number']);
-                    regenerateCsrfToken();
-                    header('Location: tournament?id=' . $tournamentId);
-                    exit;
+                    // 並行リクエストで先に完了されていた（結果は上書きしない）
+                    $validationError = 'この卓は既に完了しています。';
                 } catch (PDOException $e) {
                     error_log('[DB] ' . $e->getMessage());
                     $validationError = '保存に失敗しました。';
@@ -150,6 +166,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
             for ($g = 1; $g <= $gameCount; $g++) {
                 $rawUrl = sanitizeInput('paifu_url_' . $g);
                 $bulkUrls[$g] = $rawUrl !== '' ? extractUrl($rawUrl) : '';
+                if ($bulkUrls[$g] !== '' && !isHttpUrl($bulkUrls[$g])) {
+                    $validationError = $g . '局目: 有効なURLを入力してください。';
+                    $hasError = true;
+                    break;
+                }
                 $scores = [];
                 foreach ($table['players'] as $p) {
                     $pid = (int) $p['player_id'];
@@ -176,18 +197,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isDone) {
                     $prevTime = (string) ($table['played_time'] ?? '');
                     TableInfo::updateSchedule($tableId, $playedDate ?: null, $dayOfWeek, $playedTime);
                     syncDiscordTableEvent($tableId, $prevDate, $prevTime);
-                    TablePaifuUrl::saveAll($tableId, $bulkUrls);
-                    foreach ($allGameScores as $g => $scores) {
-                        RoundResult::saveScores($tournamentId, (int) $table['round_number'], $scores, $g);
+                    $completed = TableInfo::completeWithResults(
+                        $tableId,
+                        $tournamentId,
+                        (int) $table['round_number'],
+                        $bulkUrls,
+                        $allGameScores
+                    );
+                    if ($completed) {
+                        announceDiscordTableResult($tableId);
+                        $_SESSION['flash'] = Tournament::processRoundCompletion($tournamentId, (int) $table['round_number']);
+                        regenerateCsrfToken();
+                        header('Location: tournament?id=' . $tournamentId);
+                        exit;
                     }
-                    TableInfo::markDone($tableId);
-                    Standing::updateTotals($tournamentId);
-                    announceDiscordTableResult($tableId);
-
-                    $_SESSION['flash'] = Tournament::processRoundCompletion($tournamentId, (int) $table['round_number']);
-                    regenerateCsrfToken();
-                    header('Location: tournament?id=' . $tournamentId);
-                    exit;
+                    $validationError = 'この卓は既に完了しています。';
                 } catch (PDOException $e) {
                     error_log('[DB] ' . $e->getMessage());
                     $validationError = '保存に失敗しました。';
@@ -238,8 +262,6 @@ require __DIR__ . '/../templates/header.php';
   <?php endif; ?>
 
   <!-- 参加選手 -->
-  <?php $playerMode = (int) ($meta[$rk . '_player_mode'] ?? $meta['player_mode'] ?? 4); ?>
-  <?php $subCount = max(0, $playerMode - count($table['players'])); ?>
   <div class="tb-section">
     <div class="tb-section-title">参加選手</div>
     <div class="tb-players">
@@ -310,7 +332,12 @@ require __DIR__ . '/../templates/header.php';
         <?php if ($url !== ''): ?>
           <div style="margin-bottom: 12px;">
             <span class="tb-label">牌譜</span>
-            <a href="<?= h($url) ?>" class="tb-paifu-link" target="_blank" rel="noopener noreferrer"><?= h($url) ?></a>
+            <?php if (isHttpUrl($url)): ?>
+              <a href="<?= h($url) ?>" class="tb-paifu-link" target="_blank" rel="noopener noreferrer"><?= h($url) ?></a>
+            <?php else: ?>
+              <?php // 過去に保存された http(s) 以外の値はリンクにせず文字として表示する ?>
+              <span class="tb-paifu-link"><?= h($url) ?></span>
+            <?php endif; ?>
           </div>
         <?php endif; ?>
         <div class="tb-score-grid">

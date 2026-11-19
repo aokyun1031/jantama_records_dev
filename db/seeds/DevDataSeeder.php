@@ -20,8 +20,27 @@ class DevDataSeeder extends AbstractSeed
         return [];
     }
 
+    /** ローカルの DB とみなす接続先ホスト（docker-compose の db サービスとループバック） */
+    private const LOCAL_HOSTS = ['db', 'localhost', '127.0.0.1', '::1'];
+
     public function run(): void
     {
+        // 全テーブルを TRUNCATE するため、ローカル以外の DB（Neon dev / 本番）では実行しない。
+        // .env の DATABASE_URL を切り替えたまま seed:run して全データを消す事故を防ぐ。
+        // 意図的にリモートの開発 DB を巻き戻す場合のみ SEED_ALLOW_REMOTE=1 を付けて実行する。
+        $host = (string) $this->getAdapter()->getOption('host');
+        $appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+        $allowRemote = ($_ENV['SEED_ALLOW_REMOTE'] ?? getenv('SEED_ALLOW_REMOTE')) === '1';
+        if ($appEnv === 'production') {
+            throw new RuntimeException('DevDataSeeder は本番環境（APP_ENV=production）では実行できません。');
+        }
+        if (!in_array($host, self::LOCAL_HOSTS, true) && !$allowRemote) {
+            throw new RuntimeException(
+                "DevDataSeeder はローカル DB 専用です（接続先ホスト: {$host}）。"
+                . ' リモートの開発 DB を意図的にリセットする場合のみ SEED_ALLOW_REMOTE=1 を指定してください。'
+            );
+        }
+
         $sqlPath = __DIR__ . '/../seed_data.sql';
         $sql = file_get_contents($sqlPath);
         if ($sql === false) {
