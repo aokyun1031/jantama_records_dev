@@ -34,6 +34,8 @@ services:
       - ./db/seed_data.sql:/var/www/html/db/seed_data.sql:ro
       # 隔離できているかを global-setup が確かめるための診断エンドポイント（このスタックにしか存在しない）
       - ./tests/e2e/support/e2e-canary.php:/var/www/html/public/__e2e_canary.php:ro
+      # 現行モデルの戻り値を書き出すスクリプト（tests/characterization/run.mjs がコンテナ内で実行する）
+      - ./tests/characterization:/var/www/html/tests/characterization:ro
     healthcheck:
       test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/health') === 'ok' ? 0 : 1);"]
       interval: 2s

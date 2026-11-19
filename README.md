@@ -158,6 +158,7 @@ graph TB
 ├── db/migrations/     Phinxマイグレーション
 ├── db/seeds/          Phinxシーダー
 ├── tests/e2e/         E2Eテスト（Playwright）
+├── tests/characterization/  現行コードの計算結果の記録（リニューアル時の照合用）
 ├── cloudflare-worker/ Cloudflare Workerリバースプロキシ
 ├── docs/              ドキュメント（DB設計書等）
 └── .devcontainer/     GitHub Codespaces設定
