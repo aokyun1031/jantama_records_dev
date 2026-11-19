@@ -9,16 +9,17 @@ ensureCsrfToken();
 
 header('Content-Type: application/json; charset=utf-8');
 
-// --- メソッド + CSRF 検証 ---
+// --- メソッド + CSRF + Turnstile 検証 ---
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     http_response_code(405);
     echo json_encode(['ok' => false, 'error' => 'method not allowed'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
     exit;
 }
 
-if (!validateCsrfToken()) {
-    http_response_code(403);
-    echo json_encode(['ok' => false, 'error' => 'csrf'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+// validatePost() が 403 を設定済み
+$postError = validatePost();
+if ($postError !== null) {
+    echo json_encode(['ok' => false, 'error' => $postError], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
     exit;
 }
 
@@ -74,14 +75,17 @@ if ($onlyPlayerId) {
 }
 
 // --- DM送信 ---
+// 大会名は誰でも編集できるため、Markdown として解釈される箇所へは無害化して埋め込む
+$safeName = discordEscape($tournament['name']);
+
 $counts = dispatchDmToTargets(
     $targets,
-    function (array $p) use ($tournamentId, $roundNumber, $tournament) {
+    function (array $p) use ($tournamentId, $roundNumber, $safeName) {
         $responseUrl = SITE_URL . '/schedule_response?tournament_id=' . $tournamentId
             . '&round_number=' . $roundNumber . '&player_id=' . (int) $p['id'];
         $embed = [
             'title' => '📅 ' . $roundNumber . '回戦 参加可能日アンケート',
-            'description' => $tournament['name'],
+            'description' => $safeName,
             'color' => 0x9b8ce8,
             'url' => $responseUrl,
             'fields' => [
@@ -98,11 +102,14 @@ $counts = dispatchDmToTargets(
             ],
             'footer' => ['text' => SITE_NAME],
         ];
-        $content = "📅 **{$tournament['name']}** {$roundNumber}回戦の参加可能日アンケートが届きました。\n"
+        $content = "📅 **{$safeName}** {$roundNumber}回戦の参加可能日アンケートが届きました。\n"
             . "こちらから参加可能な日程を選択してください:\n"
             . $responseUrl;
         return ['embed' => $embed, 'content' => $content];
     }
 );
 
+// ここでは regenerateCsrfToken() を呼ばない。このエンドポイントはページ表示直後に裏で自動実行されるため、
+// セッション ID とトークンを差し替えると、同じセッションで開いている他ページのフォームが 403 になる。
+// 連続実行は送信ごとに必要な Turnstile トークン（1 回使い切り）で抑止する。
 echo json_encode(['ok' => true] + $counts, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);

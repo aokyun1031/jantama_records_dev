@@ -19,6 +19,21 @@
     }, 2400);
   }
 
+  // Turnstile トークンを取得してから cb を呼ぶ。
+  // ウィジェットは本番のみ描画される（templates/footer.php）。開発環境では空文字で即時に呼ぶ。
+  // ページ表示直後の自動送信ではトークン未取得のことがあるため、最大 15 秒待つ。
+  function withTurnstileToken(cb) {
+    var ts = window.appTurnstile;
+    if (!ts) { cb(''); return; }
+    var waited = 0;
+    (function poll() {
+      var t = ts.token();
+      if (t || waited >= 15000) { cb(t); return; }
+      waited += 200;
+      setTimeout(poll, 200);
+    })();
+  }
+
   function dispatch(tournamentId, roundNumber, playerId, btn) {
     var origText = btn ? btn.textContent : '';
     if (btn) {
@@ -32,29 +47,38 @@
     body.append('round_number', String(roundNumber));
     if (playerId) body.append('player_id', String(playerId));
 
-    return fetch('/dispatch_schedule_dm', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-      credentials: 'same-origin',
-    })
-      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
-      .then(function (data) {
-        if (!data || !data.ok) {
-          showToast('送信失敗: ' + (data && data.error ? data.error : '不明エラー'), true);
-          if (btn) { btn.disabled = false; btn.textContent = origText; }
-          return;
-        }
-        var msg = 'DM送信完了: 成功' + (data.sent || 0) + '名';
-        if (data.failed) msg += ' / 失敗' + data.failed + '名';
-        if (data.no_discord_id) msg += ' / 未登録' + data.no_discord_id + '名';
-        showToast(msg, (data.failed || 0) > 0);
-        setTimeout(function () { window.location.reload(); }, 2600);
+    // 失敗時: ボタンを戻し、消費済みの Turnstile トークンを取り直す（成功時はリロードで取り直される）
+    function restore() {
+      if (btn) { btn.disabled = false; btn.textContent = origText; }
+      if (window.appTurnstile) window.appTurnstile.reset();
+    }
+
+    withTurnstileToken(function (turnstileToken) {
+      if (turnstileToken) body.append('cf-turnstile-response', turnstileToken);
+      fetch('/dispatch_schedule_dm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+        credentials: 'same-origin',
       })
-      .catch(function () {
-        showToast('通信エラー', true);
-        if (btn) { btn.disabled = false; btn.textContent = origText; }
-      });
+        .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+        .then(function (data) {
+          if (!data || !data.ok) {
+            showToast('送信失敗: ' + (data && data.error ? data.error : '不明エラー'), true);
+            restore();
+            return;
+          }
+          var msg = 'DM送信完了: 成功' + (data.sent || 0) + '名';
+          if (data.failed) msg += ' / 失敗' + data.failed + '名';
+          if (data.no_discord_id) msg += ' / 未登録' + data.no_discord_id + '名';
+          showToast(msg, (data.failed || 0) > 0);
+          setTimeout(function () { window.location.reload(); }, 2600);
+        })
+        .catch(function () {
+          showToast('通信エラー', true);
+          restore();
+        });
+    });
   }
 
   document.addEventListener('click', function (e) {

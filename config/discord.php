@@ -85,6 +85,80 @@ function discordRequest(string $method, string $path, ?array $body = null): ?arr
 }
 
 /**
+ * ユーザー入力由来の文字列を Discord メッセージ本文へ埋め込む前に無害化する。
+ *
+ * 大会名・卓名・選手名などは誰でも編集できるため、Markdown 記法（太字・見出し・
+ * マスクリンク [text](url) 等）とメンション記法（@everyone / <@id> 等）に使われる記号を
+ * バックスラッシュでエスケープする。メッセージ本文（content）と Embed の description に埋め込む値へ必ず通す。
+ * 通知の抑止そのものは discordAllowedMentions() が担う（こちらは表示の偽装対策）。
+ */
+function discordEscape(string $text): string
+{
+    return preg_replace('/([\\\\*_~`|>\[\]()<@#])/u', '\\\\$1', $text) ?? '';
+}
+
+/**
+ * マスクリンク [text](url) に埋め込む URL を整形する。
+ *
+ * http(s) 以外のスキームは空文字を返す（呼び出し側はリンクにしない）。
+ * 括弧・山括弧・バックスラッシュ・空白はリンク記法を途中で閉じられるためパーセントエンコードする。
+ */
+function discordLinkUrl(string $url): string
+{
+    if (preg_match('#^https?://#i', $url) !== 1) {
+        return '';
+    }
+    return strtr($url, [
+        '(' => '%28', ')' => '%29', '<' => '%3C', '>' => '%3E', '\\' => '%5C', ' ' => '%20',
+    ]);
+}
+
+/**
+ * 行の配列から Discord 連携済みのユーザー ID を取り出す（メンション許可リスト用）。
+ *
+ * @param array<int, array<string, mixed>> $rows discord_user_id キーを持つ行
+ * @return string[]
+ */
+function discordMentionIds(array $rows): array
+{
+    $ids = [];
+    foreach ($rows as $row) {
+        $id = (string) ($row['discord_user_id'] ?? '');
+        if ($id !== '') {
+            $ids[] = $id;
+        }
+    }
+    return $ids;
+}
+
+/**
+ * 送信ボディに付ける allowed_mentions を組み立てる。
+ *
+ * 未指定だと本文中のメンション記法がすべて解釈され、ユーザー入力経由で @everyone 等を
+ * 発火させられるため、全送信で必ず指定する。通知するのは $userIds に挙げた ID のみで、
+ * @everyone / @here / ロールメンションは常に無効（parse を空にする）。
+ * https://docs.discord.com/developers/resources/message#allowed-mentions-object
+ *
+ * @param string[] $userIds 通知してよい Discord ユーザー ID（最大 100 件）
+ * @return array{parse: array<int, string>, users?: string[]}
+ */
+function discordAllowedMentions(array $userIds = []): array
+{
+    $ids = [];
+    foreach ($userIds as $id) {
+        $id = (string) $id;
+        if (preg_match('/^\d+$/', $id) === 1) {
+            $ids[$id] = $id;
+        }
+    }
+    $allowed = ['parse' => []];
+    if (!empty($ids)) {
+        $allowed['users'] = array_slice(array_values($ids), 0, 100);
+    }
+    return $allowed;
+}
+
+/**
  * 指定 Discord ユーザーへ DM を送る。
  *
  * 失敗時 / Token 未設定時 / DM 拒否設定時 は false を返すのみで例外は投げない。
@@ -103,7 +177,10 @@ function discordSendDm(string $userId, string $content): bool
     }
 
     $channelId = (string) $dm['body']['id'];
-    $msg = discordRequest('POST', '/channels/' . $channelId . '/messages', ['content' => $content]);
+    $msg = discordRequest('POST', '/channels/' . $channelId . '/messages', [
+        'content' => $content,
+        'allowed_mentions' => discordAllowedMentions(),
+    ]);
     if (!$msg || $msg['status'] >= 400) {
         error_log('[Discord] send message failed: user=' . $userId . ' status=' . ($msg['status'] ?? '-'));
         return false;
@@ -357,14 +434,20 @@ function discordAnnounceChannelId(): string
  *
  * Bot に対象チャンネルの View Channel + Send Messages 権限が必要。
  * 失敗・Token 未設定時は false を返すのみで例外は投げない。
+ *
+ * @param string[] $mentionUserIds 本文中の <@id> で通知してよい Discord ユーザー ID。
+ *                                 ここに無い ID・@everyone・ロールは本文に含まれていても通知されない
  */
-function discordPostChannelMessage(string $channelId, string $content): bool
+function discordPostChannelMessage(string $channelId, string $content, array $mentionUserIds = []): bool
 {
     if ($channelId === '' || $content === '' || !discordEnabled()) {
         return false;
     }
 
-    $res = discordRequest('POST', '/channels/' . $channelId . '/messages', ['content' => $content]);
+    $res = discordRequest('POST', '/channels/' . $channelId . '/messages', [
+        'content' => $content,
+        'allowed_mentions' => discordAllowedMentions($mentionUserIds),
+    ]);
     if (!$res || $res['status'] >= 400) {
         error_log('[Discord] post channel message failed: channel=' . $channelId . ' status=' . ($res['status'] ?? '-'));
         return false;
@@ -430,8 +513,10 @@ function syncDiscordTableEvent(int $tableId, ?string $previousDate = null, ?stri
     // 表示要素を組み立てる
     // - $playerNames: 素のテキスト名（イベント description 用、メンションは押下不可なので名前で）
     // - $playerTokens: <@id> or 名前（チャンネル投稿用、連携済みはメンションして通知を飛ばす）
+    // - $mentionIds: チャンネル投稿で通知を許可する ID（allowed_mentions 用）
     $playerNames = [];
     $playerTokens = [];
+    $mentionIds = discordMentionIds($table['players'] ?? []);
     foreach ($table['players'] ?? [] as $p) {
         $name = (string) ($p['nickname'] ?? $p['name'] ?? '');
         if ($name !== '') {
@@ -441,7 +526,7 @@ function syncDiscordTableEvent(int $tableId, ?string $previousDate = null, ?stri
         if ($discordId !== '') {
             $playerTokens[] = '<@' . $discordId . '>';
         } elseif ($name !== '') {
-            $playerTokens[] = $name;
+            $playerTokens[] = discordEscape($name);
         }
     }
     $ruleTags = buildRuleTags($tournament['meta'] ?? []);
@@ -478,7 +563,7 @@ function syncDiscordTableEvent(int $tableId, ?string $previousDate = null, ?stri
                     $playerTokens,
                     $existing['discord_event_id']
                 );
-                discordPostChannelMessage($announceChannelId, $announceContent);
+                discordPostChannelMessage($announceChannelId, $announceContent, $mentionIds);
             }
         }
         return;
@@ -506,7 +591,7 @@ function syncDiscordTableEvent(int $tableId, ?string $previousDate = null, ?stri
             $playerTokens,
             $eventId
         );
-        discordPostChannelMessage($announceChannelId, $announceContent);
+        discordPostChannelMessage($announceChannelId, $announceContent, $mentionIds);
     }
 }
 
@@ -552,7 +637,8 @@ function formatDiscordPreviousSchedule(string $previousDate, string $previousTim
     } catch (Exception $e) {
         // フォールバックへ
     }
-    return trim($previousDate . ' ' . $previousTime);
+    // 形式不正な保存値（自由入力）がそのまま本文に出るため無害化する
+    return discordEscape(trim($previousDate . ' ' . $previousTime));
 }
 
 /**
@@ -589,7 +675,7 @@ function announceDiscordTableResult(int $tableId): void
     }
 
     $content = buildDiscordTableResultAnnouncement($tournament, $table, $paifuMap);
-    discordPostChannelMessage($channelId, $content);
+    discordPostChannelMessage($channelId, $content, discordMentionIds($table['players'] ?? []));
 }
 
 /**
@@ -617,7 +703,7 @@ function buildDiscordTableResultAnnouncement(array $tournament, array $table, ar
     $tokens = [];
     $nameById = [];
     foreach ($players as $p) {
-        $name = (string) ($p['nickname'] ?? $p['name'] ?? '');
+        $name = discordEscape((string) ($p['nickname'] ?? $p['name'] ?? ''));
         $nameById[(int) $p['player_id']] = $name;
         $discordId = (string) ($p['discord_user_id'] ?? '');
         if ($discordId !== '') {
@@ -627,7 +713,7 @@ function buildDiscordTableResultAnnouncement(array $tournament, array $table, ar
         }
     }
 
-    $title = $tournament['name'] . ' ' . $table['round_number'] . '回戦 ' . $table['table_name'];
+    $title = discordEscape($tournament['name'] . ' ' . $table['round_number'] . '回戦 ' . $table['table_name']);
 
     $lines = [];
     $lines[] = '## 🏁 対局結果';
@@ -641,8 +727,9 @@ function buildDiscordTableResultAnnouncement(array $tournament, array $table, ar
     ksort($gameScores);
     foreach ($gameScores as $gameNumber => $scores) {
         $heading = $gameCount > 1 ? $gameNumber . '局目' : '結果';
-        if (!empty($paifuMap[$gameNumber])) {
-            $heading .= ' — [牌譜](' . $paifuMap[$gameNumber] . ')';
+        $paifuUrl = discordLinkUrl((string) ($paifuMap[$gameNumber] ?? ''));
+        if ($paifuUrl !== '') {
+            $heading .= ' — [牌譜](' . $paifuUrl . ')';
         }
         $lines[] = '';
         $lines[] = '### ' . $heading;
@@ -662,7 +749,7 @@ function buildDiscordTableResultAnnouncement(array $tournament, array $table, ar
         $sortedPlayers = $players;
         usort($sortedPlayers, fn($a, $b) => (float) ($b['score'] ?? 0) <=> (float) ($a['score'] ?? 0));
         foreach ($sortedPlayers as $i => $p) {
-            $name = (string) ($p['nickname'] ?? $p['name'] ?? '?');
+            $name = discordEscape((string) ($p['nickname'] ?? $p['name'] ?? '?'));
             $lines[] = ($i + 1) . '位 ' . $name . ' ' . formatDiscordScore((float) ($p['score'] ?? 0));
         }
     }
@@ -700,7 +787,7 @@ function announceDiscordRoundTablesAssigned(int $tournamentId, int $roundNumber)
 
     foreach ($tables as $table) {
         $content = buildDiscordTableAssignment($tournament, $roundNumber, $table);
-        discordPostChannelMessage($channelId, $content);
+        discordPostChannelMessage($channelId, $content, discordMentionIds($table['players']));
         // チャンネル投稿のレート制限（5 msg / 5sec 程度）に余裕を持たせる
         usleep(200000);
     }
@@ -723,14 +810,14 @@ function buildDiscordTableAssignment(array $tournament, int $roundNumber, array 
         if ($discordId !== '') {
             $memberTokens[] = '<@' . $discordId . '>';
         } else {
-            $memberTokens[] = (string) ($p['nickname'] ?? $p['name'] ?? '');
+            $memberTokens[] = discordEscape((string) ($p['nickname'] ?? $p['name'] ?? ''));
         }
     }
 
     $lines = [];
-    $lines[] = '## 🪑 ' . $tournament['name'] . ' ' . $roundNumber . '回戦 — 卓割り発表';
+    $lines[] = '## 🪑 ' . discordEscape($tournament['name']) . ' ' . $roundNumber . '回戦 — 卓割り発表';
     $lines[] = '';
-    $lines[] = '**' . $table['table_name'] . '**';
+    $lines[] = '**' . discordEscape($table['table_name']) . '**';
     $lines[] = implode(' ', $memberTokens);
     $lines[] = '';
     $lines[] = 'メンバー間で **対局日時** を相談のうえ、卓ページから登録してください。';
@@ -764,7 +851,8 @@ function announceDiscordTournamentCompleted(int $tournamentId): void
     }
 
     $content = buildDiscordTournamentCompletedAnnouncement($tournament, $standings);
-    discordPostChannelMessage($channelId, $content);
+    // メンションするのは優勝者（先頭）のみ
+    discordPostChannelMessage($channelId, $content, discordMentionIds(array_slice($standings, 0, 1)));
 }
 
 /**
@@ -782,14 +870,14 @@ function buildDiscordTournamentCompletedAnnouncement(array $tournament, array $s
     $lines = [];
     $lines[] = '# 🏆 大会終了 — 優勝者発表！';
     $lines[] = '';
-    $lines[] = '## **' . $tournament['name'] . '**';
+    $lines[] = '## **' . discordEscape($tournament['name']) . '**';
     $lines[] = '';
     $lines[] = '> 接戦の末、頂点を掴んだのは──';
     $lines[] = '';
 
     foreach ($top3 as $i => $s) {
         $medal = $medals[$i] ?? (($i + 1) . '位');
-        $name = (string) ($s['nickname'] ?? $s['name'] ?? '');
+        $name = discordEscape((string) ($s['nickname'] ?? $s['name'] ?? ''));
         $total = formatDiscordScore((float) ($s['total'] ?? 0));
         $discordId = (string) ($s['discord_user_id'] ?? '');
 
@@ -841,13 +929,13 @@ function announceDiscordTournamentCreated(int $tournamentId): void
  */
 function buildDiscordTournamentAnnouncement(array $tournament): string
 {
-    $ruleTags = buildRuleTags($tournament['meta'] ?? []);
+    $ruleTags = array_map('discordEscape', buildRuleTags($tournament['meta'] ?? []));
     $url = SITE_URL . '/tournament_view?id=' . (int) $tournament['id'];
 
     $lines = [];
     $lines[] = '# 🏆 新大会、開催決定！';
     $lines[] = '';
-    $lines[] = '## **' . $tournament['name'] . '**';
+    $lines[] = '## **' . discordEscape($tournament['name']) . '**';
     $lines[] = '';
     $lines[] = '> 雀士たちよ、卓へ集え！';
     $lines[] = '> 新たな闘いの幕が上がります。';
@@ -879,7 +967,7 @@ function formatDiscordSchedule(DateTimeImmutable $start, string $dayShort): stri
  *
  * @param array<string, mixed> $tournament
  * @param array<string, mixed> $table
- * @param string[] $playerTokens 各要素は <@discord_id> もしくは素のテキスト名
+ * @param string[] $playerTokens 各要素は <@discord_id> もしくは discordEscape 済みのテキスト名
  */
 function buildDiscordTableUpdateAnnouncement(
     array $tournament,
@@ -891,7 +979,7 @@ function buildDiscordTableUpdateAnnouncement(
     array $playerTokens,
     string $eventId
 ): string {
-    $title = $tournament['name'] . ' ' . $table['round_number'] . '回戦 ' . $table['table_name'];
+    $title = discordEscape($tournament['name'] . ' ' . $table['round_number'] . '回戦 ' . $table['table_name']);
     $oldPretty = formatDiscordPreviousSchedule($previousDate, $previousTime);
     $newPretty = formatDiscordSchedule($start, $dayShort);
     $eventUrl = 'https://discord.com/events/' . discordGuildId() . '/' . $eventId;
@@ -917,7 +1005,7 @@ function buildDiscordTableUpdateAnnouncement(
  *
  * @param array<string, mixed> $tournament
  * @param array<string, mixed> $table
- * @param string[] $playerTokens 各要素は <@discord_id> もしくは素のテキスト名
+ * @param string[] $playerTokens 各要素は <@discord_id> もしくは discordEscape 済みのテキスト名
  */
 function buildDiscordTableAnnouncement(
     array $tournament,
@@ -927,7 +1015,7 @@ function buildDiscordTableAnnouncement(
     array $playerTokens,
     string $eventId
 ): string {
-    $title = $tournament['name'] . ' ' . $table['round_number'] . '回戦 ' . $table['table_name'];
+    $title = discordEscape($tournament['name'] . ' ' . $table['round_number'] . '回戦 ' . $table['table_name']);
     $datePretty = formatDiscordSchedule($start, $dayShort);
     $eventUrl = 'https://discord.com/events/' . discordGuildId() . '/' . $eventId;
 
@@ -967,7 +1055,8 @@ function discordSendDmEmbed(string $userId, array $embed, string $content = ''):
 
     $channelId = (string) $dm['body']['id'];
     // content も併送する。クライアント設定で Embed 非表示の選手にも本文が届くようにする。
-    $payload = ['embeds' => [$embed]];
+    // DM ではメンション通知が不要なため一切解釈させない
+    $payload = ['embeds' => [$embed], 'allowed_mentions' => discordAllowedMentions()];
     if ($content !== '') {
         $payload['content'] = $content;
     }

@@ -67,6 +67,7 @@
 (function(){
   document.documentElement.classList.add('ts-pending');
   var token='';
+  var widgetId=null;
   function syncToken(){
     document.querySelectorAll('form').forEach(function(f){
       var inp=f.querySelector('input[name="cf-turnstile-response"]');
@@ -77,8 +78,17 @@
   document.addEventListener('submit',function(e){
     if(document.documentElement.classList.contains('ts-pending'))e.preventDefault();
   },true);
+  // fetch で POST するスクリプト（dispatch-dm.js 等）向け。トークンは 1 回の検証で消費されるため、
+  // 送信後は reset() で取り直す（取り直し完了までフォーム送信は ts-pending で止まる）。
+  window.appTurnstile={
+    token:function(){return token;},
+    reset:function(){
+      token='';syncToken();document.documentElement.classList.add('ts-pending');
+      if(widgetId!==null&&window.turnstile)turnstile.reset(widgetId);
+    }
+  };
   window.onTurnstileLoad=function(){
-    turnstile.render('#turnstile-container',{
+    widgetId=turnstile.render('#turnstile-container',{
       sitekey:<?= json_encode(turnstileSiteKey(), JSON_HEX_TAG) ?>,
       callback:function(t){token=t;syncToken();document.documentElement.classList.remove('ts-pending');},
       'expired-callback':function(){token='';syncToken();document.documentElement.classList.add('ts-pending');},
