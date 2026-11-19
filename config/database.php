@@ -18,6 +18,7 @@ function isProduction(): bool
 function getDbConnection(): PDO
 {
     static $pdo = null;
+    static $connectFailure = null;
     if ($pdo !== null) {
         try {
             $pdo->query('SELECT 1');
@@ -25,6 +26,12 @@ function getDbConnection(): PDO
         } catch (PDOException) {
             $pdo = null;
         }
+    }
+
+    // 同一リクエスト内で一度接続に失敗したら再試行しない。1 ページで fetchData() を何度も呼ぶため、
+    // 毎回リトライすると DB 障害時に待ち時間が呼び出し回数分だけ積み上がり、ワーカーを占有してしまう。
+    if ($connectFailure !== null) {
+        throw $connectFailure;
     }
 
     $databaseUrl = $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL');
@@ -76,6 +83,11 @@ function getDbConnection(): PDO
         }
     }
 
+    $connectFailure = $lastException;
+    // DB に接続できないページは 503 で返す（200 のままだと Worker の KV フォールバックも働かない）
+    if (!headers_sent()) {
+        http_response_code(503);
+    }
     throw $lastException;
 }
 
