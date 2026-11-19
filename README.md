@@ -161,6 +161,7 @@ graph TB
 ├── tests/characterization/  現行コードの計算結果の記録（リニューアル時の照合用）
 ├── cloudflare-worker/ Cloudflare Workerリバースプロキシ
 ├── docs/              ドキュメント（DB設計書等）
+├── .github/workflows/ GitHub Actions（CI）
 └── .devcontainer/     GitHub Codespaces設定
 ```
 
@@ -325,7 +326,7 @@ E2E 専用スタックは、テストが外部に副作用を出さないよう�
 
 ポート 8081 が使用中の場合は `E2E_PORT=18081 npx playwright test` のように変更できる。接続先を別の URL に向ける手段は用意していない（隔離を確認できない環境に書き込みテストを流さないため）。
 
-push 前に各自で `cd tests/e2e && npx playwright test` を手動実行する運用。
+push 前に各自で `cd tests/e2e && npx playwright test` を実行する。PR と `main` への push では GitHub Actions（`.github/workflows/ci.yml`）が同じテストに加えて、lint・型チェック、PHP の構文チェック、`tests/characterization` の照合を実行する。
 
 | ディレクトリ | 内容 |
 |---|---|

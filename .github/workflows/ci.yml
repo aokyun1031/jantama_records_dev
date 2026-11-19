@@ -1,0 +1,78 @@
+name: CI
+
+# PR と main への push で、構文チェック・E2E・計算結果の照合を実行する。
+# すべて E2E 専用スタック（docker-compose.test.yml）の中で動くので、シークレットは使わない。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+
+      - name: E2E の依存パッケージをインストール
+        working-directory: tests/e2e
+        run: npm ci
+
+      - name: E2E コードの lint と型チェック
+        working-directory: tests/e2e
+        run: |
+          npm run lint
+          npm run typecheck
+
+      - name: E2E 専用スタックをビルドして起動
+        run: docker compose -f docker-compose.test.yml up -d --build --wait
+
+      - name: PHP の構文チェック
+        # イメージに入っている全 PHP ファイル（vendor を除く）と、マウントしたテスト用スクリプトが対象
+        run: |
+          docker compose -f docker-compose.test.yml exec -T web bash -c '
+            set -o pipefail
+            find . -name "*.php" -not -path "./vendor/*" -print0 \
+              | xargs -0 -n1 php -d display_errors=1 -l \
+              | { grep -v "^No syntax errors detected" || true; }
+          '
+
+      - name: Playwright のブラウザをインストール
+        working-directory: tests/e2e
+        run: npx playwright install chromium --with-deps
+
+      - name: E2E テスト
+        working-directory: tests/e2e
+        run: npx playwright test --reporter=list,github
+
+      - name: 現行モデルの戻り値を記録と照合
+        run: node tests/characterization/run.mjs check
+
+      - name: 失敗時にコンテナのログを保存
+        if: failure()
+        run: docker compose -f docker-compose.test.yml logs --no-color > compose-logs.txt 2>&1 || true
+
+      - name: 失敗時の成果物をアップロード
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-failure-${{ github.run_id }}
+          path: |
+            tests/e2e/test-results/
+            compose-logs.txt
+          if-no-files-found: ignore
+          retention-days: 7
